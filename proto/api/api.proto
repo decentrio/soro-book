@@ -1,0 +1,26 @@
+syntax = "proto3";
+package api;
+
+// option go_package = "github.com/decentrio/stellar-indexder/api/";
+
+// APIServices is the protobuf service definition for interaction with indexer layers.
+service APIServices {
+    rpc Start(StartRequest) returns (StartResponse) {}
+    rpc Stop(StopRequest) returns (StopResponse) {}
+}
+
+message StartRequest {
+
+}
+
+message StartResponse {
+
+}
+
+message StopRequest {
+
+}
+
+message StopResponse {
+
+}

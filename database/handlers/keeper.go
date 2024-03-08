@@ -23,7 +23,7 @@ func createConnection() *gorm.DB {
 	sqlUrl, ok := os.LookupEnv("POSTGRES_URL")
 
 	if !ok {
-		log.Fatalf("Error loading .env file")
+		log.Fatalf("Error get POSTGRES_URL")
 	}
 
 	// Open the connection

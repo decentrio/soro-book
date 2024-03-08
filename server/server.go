@@ -38,7 +38,7 @@ func (s *GRPCServer) OnStart() error {
 
 	s.listener = ln
 	s.server = grpc.NewServer()
-	apitypes.RegisterAPIServicesServer(s.server, &gprcApplication{})
+	apitypes.RegisterAPIServicesServer(s.server, &gprcApplication{Application: s.app})
 
 	go s.server.Serve(s.listener)
 	return nil

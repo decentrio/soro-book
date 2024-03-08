@@ -40,12 +40,7 @@ func (s *GRPCServer) OnStart() error {
 	s.server = grpc.NewServer()
 	apitypes.RegisterAPIServicesServer(s.server, &gprcApplication{})
 
-	// s.Logger.Info("Listening", "proto", s.proto, "addr", s.addr)
-	// go func() {
-	// 	if err := s.server.Serve(s.listener); err != nil {
-	// 		s.Logger.Error("Error serving gRPC server", "err", err)
-	// 	}
-	// }()
+	go s.server.Serve(s.listener)
 	return nil
 }
 

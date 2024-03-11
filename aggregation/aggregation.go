@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -89,7 +91,7 @@ func (as *Aggregation) OnStart() error {
 			continue
 		}
 
-		for seq := fromSeq; seq <= fromSeq+step; seq++ {
+		for seq := fromSeq; seq < fromSeq+step; seq++ {
 			txReader, err := ingest.NewLedgerTransactionReader(
 				ctx, backend, aggConfig.Config.NetworkPassphrase, seq,
 			)
@@ -121,7 +123,7 @@ func (as *Aggregation) OnStart() error {
 			}
 			go as.process()
 		}
-		fromSeq += step + 1
+		fromSeq += step
 	}
 }
 
@@ -166,21 +168,36 @@ func panicIf(err error) {
 	}
 }
 
+// to limit computational resources
 func pauseWaitLedger(err error) error {
 	if !strings.Contains(err.Error(), "is greater than max available in history archives") {
-		// if not err by LatestLedger: is greater than max available in history archives
+		// if not err by LatestLedger: xxx is greater than max available in history archives yyy
 		return err
 	}
+
+	re := regexp.MustCompile(`(\d+)`)
+	matches := re.FindAllString(err.Error(), -1)
+	seqHistoryArchives, err := strconv.Atoi(matches[1])
+
+	if err != nil {
+		return err
+	}
+	estimateSeqNext := int64(seqHistoryArchives) + 64
 
 	latestLedger, err := rpc.GetLatestLedger()
 	if err != nil {
 		return err
 	}
-	// Ledger closing time is 4s/ledger
-	ledgerClosingTime := 4 * time.Second
 
-	numLedgerWait := 64 - int64(latestLedger-fromSeq)
-	timeWait := numLedgerWait * ledgerClosingTime.Nanoseconds()
-	time.Sleep(time.Duration(timeWait))
+	numLedgerWait := estimateSeqNext - int64(latestLedger) + 1
+
+	if numLedgerWait < 0 {
+		return nil
+	}
+	// Ledger closing time is ~4s/ledger
+	ledgerClosingTime := 4 * time.Second
+	estimateTimeWait := numLedgerWait * ledgerClosingTime.Nanoseconds()
+
+	time.Sleep(time.Duration(estimateTimeWait))
 	return nil
 }

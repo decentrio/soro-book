@@ -120,9 +120,8 @@ func (as *Aggregation) OnStart() error {
 				}
 			}
 			go as.process()
-
-			fromSeq += step + 1
 		}
+		fromSeq += step + 1
 	}
 }
 

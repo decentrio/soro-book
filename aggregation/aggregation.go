@@ -35,7 +35,7 @@ type txInfo struct {
 type Aggregation struct {
 	service.BaseService
 
-	cfg config.AggregationConfig
+	cfg *config.AggregationConfig
 
 	// txQueue channel for trigger new tx
 	txQueue chan txInfo
@@ -51,7 +51,7 @@ type Aggregation struct {
 type AggregationOption func(*Aggregation)
 
 func NewAggregation(
-	cfg config.AggregationConfig,
+	cfg *config.AggregationConfig,
 	options ...AggregationOption,
 ) *Aggregation {
 	as := &Aggregation{

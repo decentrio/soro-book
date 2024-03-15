@@ -22,7 +22,7 @@ import (
 
 const (
 	txQueueSize = 1000
-	step        = 64
+	step        = 1
 )
 
 // receive data from Ledger sequence
@@ -33,9 +33,15 @@ type txInfo struct {
 }
 
 type Aggregation struct {
+	ctx context.Context
+
+	log *log.Entry
+
+	config backends.CaptiveCoreConfig
+
 	service.BaseService
 
-	cfg config.AggregationConfig
+	cfg *config.AggregationConfig
 
 	// txQueue channel for trigger new tx
 	txQueue chan txInfo
@@ -51,7 +57,7 @@ type Aggregation struct {
 type AggregationOption func(*Aggregation)
 
 func NewAggregation(
-	cfg config.AggregationConfig,
+	cfg *config.AggregationConfig,
 	options ...AggregationOption,
 ) *Aggregation {
 	as := &Aggregation{
@@ -65,66 +71,21 @@ func NewAggregation(
 		opt(as)
 	}
 
+	as.ctx = context.Background()
+	as.log = log.New()
+	as.log.SetLevel(logrus.ErrorLevel)
+	aggConfig.Config.Log = as.log
+
 	return as
 }
 
 func (as *Aggregation) OnStart() error {
-	ctx := context.Background()
-	// Only log errors from the backend to keep output cleaner.
-	lg := log.New()
-	lg.SetLevel(logrus.ErrorLevel)
-	aggConfig.Config.Log = lg
+	// Note that when using goroutines, you need to be careful to ensure that no
+	// race conditions occur when accessing the txQueue.
+	as.aggregation()
 
-	backend, err := backends.NewCaptive(aggConfig.Config)
-	panicIf(err)
-	defer backend.Close()
-
-	for {
-		ledgerRange := backends.BoundedRange(fromSeq, fromSeq+step)
-		err = backend.PrepareRange(ctx, ledgerRange)
-		if err != nil {
-			//"is greater than max available in history archives"
-			err = pauseWaitLedger(err)
-			if err != nil {
-				return err
-			}
-			continue
-		}
-
-		for seq := fromSeq; seq < fromSeq+step; seq++ {
-			txReader, err := ingest.NewLedgerTransactionReader(
-				ctx, backend, aggConfig.Config.NetworkPassphrase, seq,
-			)
-			panicIf(err)
-			defer txReader.Close()
-
-			// Read each transaction within the ledger, extract its operations, and
-			// accumulate the statistics we're interested in.
-			for {
-				tx, err := txReader.Read()
-				if err == io.EOF {
-					break
-				}
-
-				if err != nil {
-					return err
-				}
-
-				if tx.Result.Successful() {
-					newTxInfo := txInfo{
-						txHash: tx.Result.TransactionHash.HexString(),
-					}
-
-					go func(tx txInfo) {
-						// add txInfo chan txQueue <- tx
-						as.txQueue <- tx
-					}(newTxInfo)
-				}
-			}
-			go as.process()
-		}
-		fromSeq += step
-	}
+	go as.process()
+	return nil
 }
 
 func (as *Aggregation) OnStop() error {
@@ -169,7 +130,7 @@ func panicIf(err error) {
 }
 
 // to limit computational resources
-func pauseWaitLedger(err error) error {
+func pauseWaitLedger(config backends.CaptiveCoreConfig, err error) error {
 	if !strings.Contains(err.Error(), "is greater than max available in history archives") {
 		// if not err by LatestLedger: xxx is greater than max available in history archives yyy
 		return err
@@ -182,9 +143,9 @@ func pauseWaitLedger(err error) error {
 	if err != nil {
 		return err
 	}
-	estimateSeqNext := int64(seqHistoryArchives) + 64
+	estimateSeqNext := int64(seqHistoryArchives) + step
 
-	latestLedger, err := rpc.GetLatestLedger()
+	latestLedger, err := rpc.GetLatestLedger(config)
 	if err != nil {
 		return err
 	}
@@ -199,5 +160,58 @@ func pauseWaitLedger(err error) error {
 	estimateTimeWait := numLedgerWait * ledgerClosingTime.Nanoseconds()
 
 	time.Sleep(time.Duration(estimateTimeWait))
+	return nil
+}
+
+func (as *Aggregation) aggregation() error {
+	backend, err := backends.NewCaptive(aggConfig.Config)
+	panicIf(err)
+	defer backend.Close()
+
+	for {
+		ledgerRange := backends.BoundedRange(fromSeq, fromSeq+step)
+		err = backend.PrepareRange(as.ctx, ledgerRange)
+		if err != nil {
+			//"is greater than max available in history archives"
+			err = pauseWaitLedger(as.config, err)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+		for seq := fromSeq; seq < fromSeq+step; seq++ {
+			txReader, err := ingest.NewLedgerTransactionReader(
+				as.ctx, backend, aggConfig.Config.NetworkPassphrase, seq,
+			)
+			panicIf(err)
+			defer txReader.Close()
+
+			// Read each transaction within the ledger, extract its operations, and
+			// accumulate the statistics we're interested in.
+			for {
+				tx, err := txReader.Read()
+				if err == io.EOF {
+					break
+				}
+
+				if err != nil {
+					return err
+				}
+
+				if tx.Result.Successful() {
+					newTxInfo := txInfo{
+						txHash: tx.Result.TransactionHash.HexString(),
+					}
+
+					go func(tx txInfo) {
+						// add txInfo chan txQueue <- tx
+						as.txQueue <- tx
+					}(newTxInfo)
+				}
+			}
+		}
+		fromSeq += step
+		break
+	}
 	return nil
 }

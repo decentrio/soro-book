@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	backends "github.com/stellar/go/ingest/ledgerbackend"
 )
 
-func GetLatestLedger() (uint32, error) {
+func GetLatestLedger(config backends.CaptiveCoreConfig) (uint32, error) {
 	requestData := map[string]interface{}{
 		"jsonrpc": "2.0",
 		"id":      8675309,
@@ -16,20 +18,31 @@ func GetLatestLedger() (uint32, error) {
 
 	requestBody, err := json.Marshal(requestData)
 	if err != nil {
-		fmt.Println("Lỗi khi chuyển đổi dữ liệu JSON:", err)
+		fmt.Println("Error converting JSON data:", err)
 		return 0, err
 	}
 
-	response, err := http.Post("https://soroban-testnet.stellar.org", "application/json", bytes.NewBuffer(requestBody))
+	if config.NetworkPassphrase != "Test SDF Network ; September 2015" {
+		// todo: mainnet
+		return rpcGetLatestLedger("", requestBody)
+
+	}
+
+	url := "https://soroban-testnet.stellar.org"
+	return rpcGetLatestLedger(url, requestBody)
+}
+
+func rpcGetLatestLedger(url string, requestBody []byte) (uint32, error) {
+	response, err := http.Post(url, "application/json", bytes.NewBuffer(requestBody))
 	if err != nil {
-		fmt.Println("Lỗi khi gửi yêu cầu POST:", err)
+		fmt.Println("Error sending POST request:", err)
 		return 0, err
 	}
 	defer response.Body.Close()
 
 	var responseData map[string]interface{}
 	if err := json.NewDecoder(response.Body).Decode(&responseData); err != nil {
-		fmt.Println("Lỗi khi đọc phản hồi JSON:", err)
+		fmt.Println("Error reading JSON response:", err)
 		return 0, err
 	}
 

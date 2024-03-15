@@ -7,18 +7,22 @@ import (
 )
 
 var (
-	Config = captiveCoreConfig()
+	Config = CaptiveCoreConfigDefauTestNet()
 )
 
-func captiveCoreConfig() ledgerbackend.CaptiveCoreConfig {
+func CaptiveCoreConfigDefauTestNet() ledgerbackend.CaptiveCoreConfig {
 	archiveURLs := []string{
 		"https://history.stellar.org/prd/core-testnet/core_testnet_001",
 		"https://history.stellar.org/prd/core-testnet/core_testnet_002",
 		"https://history.stellar.org/prd/core-testnet/core_testnet_003",
 	}
-
 	networkPassphrase := "Test SDF Network ; September 2015"
+	binaryPath := "/usr/local/bin/stellar-core"
 
+	return CaptiveCoreConfig(archiveURLs, networkPassphrase, binaryPath)
+}
+
+func CaptiveCoreConfig(archiveURLs []string, networkPassphrase string, binaryPath string) ledgerbackend.CaptiveCoreConfig {
 	captiveCoreToml, err := ledgerbackend.NewCaptiveCoreToml(ledgerbackend.CaptiveCoreTomlParams{
 		NetworkPassphrase:  networkPassphrase,
 		HistoryArchiveURLs: archiveURLs,
@@ -30,7 +34,7 @@ func captiveCoreConfig() ledgerbackend.CaptiveCoreConfig {
 
 	return ledgerbackend.CaptiveCoreConfig{
 		// Change these based on your environment:
-		BinaryPath:         "/usr/local/bin/stellar-core",
+		BinaryPath:         binaryPath,
 		NetworkPassphrase:  networkPassphrase,
 		HistoryArchiveURLs: archiveURLs,
 		Toml:               captiveCoreToml,

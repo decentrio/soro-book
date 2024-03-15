@@ -9,7 +9,7 @@ run := .
 count := 1
 
 install:
-	CGO_ENABLED=$(CGO_ENABLED) go install $(BUILD_FLAGS) ./cmd 
+	CGO_ENABLED=$(CGO_ENABLED) go install $(BUILD_FLAGS) ./cmd/sorobook
 
 ## help: Show this help message
 help: Makefile

@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 
 	"github.com/decentrio/soro-book/config"
-	"github.com/decentrio/soro-book/lib/cli"
 	"github.com/decentrio/soro-book/manager"
 	"github.com/spf13/cobra"
 )
@@ -57,12 +55,4 @@ func NewRunNodeCmd() *cobra.Command {
 	}
 
 	return cmd
-}
-
-func main() {
-	rootCmd.AddCommand(NewRunNodeCmd())
-	cmd := cli.PrepareBaseCmd(rootCmd, "CMT", os.ExpandEnv(filepath.Join("$HOME", DefaultCometDir)))
-	if err := cmd.Execute(); err != nil {
-		panic(err)
-	}
 }

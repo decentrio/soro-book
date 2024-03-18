@@ -2,6 +2,7 @@ package aggregation
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/stellar/go/ingest/ledgerbackend"
 )
@@ -17,8 +18,17 @@ func CaptiveCoreConfigDefauTestNet() ledgerbackend.CaptiveCoreConfig {
 		"https://history.stellar.org/prd/core-testnet/core_testnet_003",
 	}
 	networkPassphrase := "Test SDF Network ; September 2015"
-	// binary
-	binaryPath := "../bin/stellar-core-mac"
+
+	var binaryPath string
+	os := runtime.GOOS
+	switch os {
+	case "darwin":
+		binaryPath = "../bin/stellar-core-mac"
+	case "linux":
+		binaryPath = "../bin/stellar-core-linux"
+	default:
+		fmt.Printf("%s.\n", os)
+	}
 
 	return CaptiveCoreConfig(archiveURLs, networkPassphrase, binaryPath)
 }

@@ -2,7 +2,6 @@ package aggregation
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"regexp"
 	"strconv"
@@ -20,11 +19,8 @@ import (
 
 const (
 	txQueueSize = 1000
-	step        = 1
+	prepareStep = 64
 )
-
-// receive data from Ledger sequence
-var fromSeq = uint32(485951)
 
 type Aggregation struct {
 	ctx context.Context
@@ -116,8 +112,6 @@ func (as *Aggregation) dataProcessing() {
 
 // handleReceiveTx
 func (as *Aggregation) handleReceiveTx(tx ingest.LedgerTransaction) {
-	// filter
-	fmt.Println("HandleReceiveTx: ", tx)
 	// Check if tx metadata is v3
 	txMetaV3, ok := tx.UnsafeMeta.GetV3()
 	if !ok {
@@ -148,7 +142,9 @@ func (as *Aggregation) aggregation() {
 }
 
 func (as *Aggregation) getNewTx() {
-	ledgerRange := backends.BoundedRange(as.sequence, as.sequence+step)
+	from := as.sequence
+	to := as.sequence + prepareStep
+	ledgerRange := backends.BoundedRange(from, to)
 	err := as.backend.PrepareRange(as.ctx, ledgerRange)
 	if err != nil {
 		//"is greater than max available in history archives"
@@ -160,7 +156,7 @@ func (as *Aggregation) getNewTx() {
 
 		return
 	}
-	for seq := as.sequence; seq < as.sequence+step; seq++ {
+	for seq := from; seq < to; seq++ {
 		txReader, err := ingest.NewLedgerTransactionReader(
 			as.ctx, as.backend, Config.NetworkPassphrase, seq,
 		)
@@ -183,7 +179,6 @@ func (as *Aggregation) getNewTx() {
 			if tx.Result.Successful() {
 				// log success
 				go func(txi ingest.LedgerTransaction) {
-					fmt.Println("Add tx to txQueue")
 					as.txQueue <- txi
 				}(tx)
 			} else {
@@ -191,7 +186,7 @@ func (as *Aggregation) getNewTx() {
 			}
 		}
 	}
-	as.sequence += step
+	as.sequence = to
 }
 
 // Method allow trigger for resync
@@ -213,7 +208,7 @@ func pauseWaitLedger(config backends.CaptiveCoreConfig, err error) error {
 	if err != nil {
 		return err
 	}
-	estimateSeqNext := int64(seqHistoryArchives) + step
+	estimateSeqNext := int64(seqHistoryArchives) + prepareStep
 
 	latestLedger, err := GetLatestLedger(config)
 	if err != nil {

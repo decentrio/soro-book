@@ -118,6 +118,19 @@ func (as *Aggregation) dataProcessing() {
 func (as *Aggregation) handleReceiveTx(tx ingest.LedgerTransaction) {
 	// filter
 	fmt.Println("HandleReceiveTx: ", tx)
+	// Check if tx metadata is v3
+	txMetaV3, ok := tx.UnsafeMeta.GetV3()
+	if !ok {
+		// log
+		return
+	}
+
+	if txMetaV3.SorobanMeta == nil {
+		// log
+		return
+	}
+
+	//
 
 	// callback
 }

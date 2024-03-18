@@ -14,37 +14,40 @@ import (
 	backends "github.com/stellar/go/ingest/ledgerbackend"
 	"github.com/stellar/go/support/log"
 
-	aggConfig "github.com/decentrio/soro-book/aggregation/config"
-	"github.com/decentrio/soro-book/aggregation/rpc"
 	"github.com/decentrio/soro-book/config"
 	"github.com/decentrio/soro-book/lib/service"
 )
 
 const (
 	txQueueSize = 1000
-	step        = 64
+	step        = 1
 )
 
 // receive data from Ledger sequence
 var fromSeq = uint32(485951)
 
-type txInfo struct {
-	txHash string
-}
-
 type Aggregation struct {
+	ctx context.Context
+
+	log *log.Entry
+
+	config backends.CaptiveCoreConfig
+
 	service.BaseService
 
 	cfg *config.AggregationConfig
 
+	backend *backends.CaptiveStellarCore
+
 	// txQueue channel for trigger new tx
-	txQueue chan txInfo
+	txQueue chan ingest.LedgerTransaction
 
 	// isReSync is flag represent if services is
 	// re-synchronize
 	isReSync bool
 
 	// subscribe services
+	sequence uint32
 }
 
 // AggregationOption sets an optional parameter on the State.
@@ -56,7 +59,7 @@ func NewAggregation(
 ) *Aggregation {
 	as := &Aggregation{
 		cfg:      cfg,
-		txQueue:  make(chan txInfo, txQueueSize),
+		txQueue:  make(chan ingest.LedgerTransaction, txQueueSize),
 		isReSync: false,
 	}
 
@@ -65,74 +68,35 @@ func NewAggregation(
 		opt(as)
 	}
 
+	as.ctx = context.Background()
+	as.log = log.New()
+	as.log.SetLevel(logrus.ErrorLevel)
+	Config.Log = as.log
+
+	as.sequence = uint32(100_000)
+
+	var err error
+	as.backend, err = backends.NewCaptive(Config)
+	panicIf(err)
+
 	return as
 }
 
 func (as *Aggregation) OnStart() error {
-	ctx := context.Background()
-	// Only log errors from the backend to keep output cleaner.
-	lg := log.New()
-	lg.SetLevel(logrus.ErrorLevel)
-	aggConfig.Config.Log = lg
-
-	backend, err := backends.NewCaptive(aggConfig.Config)
-	panicIf(err)
-	defer backend.Close()
-
-	for {
-		ledgerRange := backends.BoundedRange(fromSeq, fromSeq+step)
-		err = backend.PrepareRange(ctx, ledgerRange)
-		if err != nil {
-			//"is greater than max available in history archives"
-			err = pauseWaitLedger(err)
-			if err != nil {
-				return err
-			}
-			continue
-		}
-
-		for seq := fromSeq; seq < fromSeq+step; seq++ {
-			txReader, err := ingest.NewLedgerTransactionReader(
-				ctx, backend, aggConfig.Config.NetworkPassphrase, seq,
-			)
-			panicIf(err)
-			defer txReader.Close()
-
-			// Read each transaction within the ledger, extract its operations, and
-			// accumulate the statistics we're interested in.
-			for {
-				tx, err := txReader.Read()
-				if err == io.EOF {
-					break
-				}
-
-				if err != nil {
-					return err
-				}
-
-				if tx.Result.Successful() {
-					newTxInfo := txInfo{
-						txHash: tx.Result.TransactionHash.HexString(),
-					}
-
-					go func(tx txInfo) {
-						// add txInfo chan txQueue <- tx
-						as.txQueue <- tx
-					}(newTxInfo)
-				}
-			}
-			go as.process()
-		}
-		fromSeq += step
-	}
+	go as.dataProcessing()
+	// Note that when using goroutines, you need to be careful to ensure that no
+	// race conditions occur when accessing the txQueue.
+	go as.aggregation()
+	return nil
 }
 
 func (as *Aggregation) OnStop() error {
+	as.backend.Close()
 	return nil
 }
 
 // aggregation process
-func (as *Aggregation) process() {
+func (as *Aggregation) dataProcessing() {
 	for {
 		// Block until state have sync successful
 		if as.isReSync {
@@ -151,10 +115,70 @@ func (as *Aggregation) process() {
 }
 
 // handleReceiveTx
-func (as *Aggregation) handleReceiveTx(tx txInfo) {
+func (as *Aggregation) handleReceiveTx(tx ingest.LedgerTransaction) {
 	// filter
+	fmt.Println("HandleReceiveTx: ", tx)
 
 	// callback
+}
+
+func (as *Aggregation) aggregation() {
+	for {
+		select {
+		// Terminate process
+		case <-as.BaseService.Terminate():
+			return
+		default:
+			as.getNewTx()
+		}
+	}
+}
+
+func (as *Aggregation) getNewTx() {
+	ledgerRange := backends.BoundedRange(as.sequence, as.sequence+step)
+	err := as.backend.PrepareRange(as.ctx, ledgerRange)
+	if err != nil {
+		//"is greater than max available in history archives"
+		err = pauseWaitLedger(as.config, err)
+		if err != nil {
+			// return err
+			// error log
+		}
+
+		return
+	}
+	for seq := as.sequence; seq < as.sequence+step; seq++ {
+		txReader, err := ingest.NewLedgerTransactionReader(
+			as.ctx, as.backend, Config.NetworkPassphrase, seq,
+		)
+		panicIf(err)
+		defer txReader.Close()
+
+		// Read each transaction within the ledger, extract its operations, and
+		// accumulate the statistics we're interested in.
+		for {
+			tx, err := txReader.Read()
+			if err == io.EOF {
+				break
+			}
+
+			if err != nil {
+				// return err
+				// error log
+			}
+
+			if tx.Result.Successful() {
+				// log success
+				go func(txi ingest.LedgerTransaction) {
+					fmt.Println("Add tx to txQueue")
+					as.txQueue <- txi
+				}(tx)
+			} else {
+				// log error
+			}
+		}
+	}
+	as.sequence += step
 }
 
 // Method allow trigger for resync
@@ -162,14 +186,8 @@ func (as *Aggregation) ReSync(block uint64) {
 	as.isReSync = true
 }
 
-func panicIf(err error) {
-	if err != nil {
-		panic(fmt.Errorf("an error occurred, panicking: %s", err))
-	}
-}
-
 // to limit computational resources
-func pauseWaitLedger(err error) error {
+func pauseWaitLedger(config backends.CaptiveCoreConfig, err error) error {
 	if !strings.Contains(err.Error(), "is greater than max available in history archives") {
 		// if not err by LatestLedger: xxx is greater than max available in history archives yyy
 		return err
@@ -182,9 +200,9 @@ func pauseWaitLedger(err error) error {
 	if err != nil {
 		return err
 	}
-	estimateSeqNext := int64(seqHistoryArchives) + 64
+	estimateSeqNext := int64(seqHistoryArchives) + step
 
-	latestLedger, err := rpc.GetLatestLedger()
+	latestLedger, err := GetLatestLedger(config)
 	if err != nil {
 		return err
 	}

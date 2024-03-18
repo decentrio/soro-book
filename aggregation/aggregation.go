@@ -77,7 +77,7 @@ func NewAggregation(
 	as.log.SetLevel(logrus.ErrorLevel)
 	Config.Log = as.log
 
-	as.sequence = uint32(600_000)
+	as.sequence = uint32(100_000)
 
 	var err error
 	as.backend, err = backends.NewCaptive(Config)
@@ -113,6 +113,7 @@ func (as *Aggregation) dataProcessing() {
 			as.handleReceiveTx(tx)
 		// Terminate process
 		case <-as.BaseService.Terminate():
+			fmt.Println("Terminate dataProcessing")
 			return
 		}
 	}
@@ -130,8 +131,9 @@ func (as *Aggregation) aggregation() {
 		select {
 		// Terminate process
 		case <-as.BaseService.Terminate():
+			fmt.Println("Terminate aggregation")
+			return
 		default:
-			fmt.Println("aggregation")
 			as.getNewTx()
 		}
 	}
@@ -141,7 +143,6 @@ func (as *Aggregation) getNewTx() {
 	ledgerRange := backends.BoundedRange(as.sequence, as.sequence+step)
 	err := as.backend.PrepareRange(as.ctx, ledgerRange)
 	if err != nil {
-		fmt.Println("Prepare Error")
 		//"is greater than max available in history archives"
 		err = pauseWaitLedger(as.config, err)
 		if err != nil {
@@ -152,7 +153,6 @@ func (as *Aggregation) getNewTx() {
 		return
 	}
 	for seq := as.sequence; seq < as.sequence+step; seq++ {
-		fmt.Println("NewLedgerTransactionReader")
 		txReader, err := ingest.NewLedgerTransactionReader(
 			as.ctx, as.backend, Config.NetworkPassphrase, seq,
 		)
@@ -162,10 +162,8 @@ func (as *Aggregation) getNewTx() {
 		// Read each transaction within the ledger, extract its operations, and
 		// accumulate the statistics we're interested in.
 		for {
-			fmt.Println("Reading")
 			tx, err := txReader.Read()
 			if err == io.EOF {
-				fmt.Println("Reading EOF")
 				break
 			}
 
@@ -175,6 +173,7 @@ func (as *Aggregation) getNewTx() {
 			}
 
 			if tx.Result.Successful() {
+				// log success
 				newTxInfo := txInfo{
 					txHash: tx.Result.TransactionHash.HexString(),
 				}
@@ -184,6 +183,8 @@ func (as *Aggregation) getNewTx() {
 					// add txInfo chan txQueue <- tx
 					as.txQueue <- tx
 				}(newTxInfo)
+			} else {
+				// log error
 			}
 		}
 	}

@@ -17,7 +17,9 @@ func CaptiveCoreConfigDefauTestNet() ledgerbackend.CaptiveCoreConfig {
 		"https://history.stellar.org/prd/core-testnet/core_testnet_003",
 	}
 	networkPassphrase := "Test SDF Network ; September 2015"
-	binaryPath := "/usr/local/bin/stellar-core"
+	// binary
+	binaryPath := "../bin/stellar-core-mac"
+	// /Users/gnad/decentrio/stellar/soro-book/bin/stellar-core-mac
 
 	return CaptiveCoreConfig(archiveURLs, networkPassphrase, binaryPath)
 }

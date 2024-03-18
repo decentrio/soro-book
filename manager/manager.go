@@ -1,6 +1,9 @@
 package manager
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/decentrio/soro-book/aggregation"
 	"github.com/decentrio/soro-book/config"
 	"github.com/decentrio/soro-book/lib/service"
@@ -11,7 +14,7 @@ type Manager struct {
 	service.BaseService
 
 	// config of Manager
-	cfg config.ManagerConfig
+	cfg *config.ManagerConfig
 
 	// aggregation services
 	as *aggregation.Aggregation
@@ -22,7 +25,7 @@ type ManagerOption func(*Manager)
 
 // NewBaseService creates a new manager.
 func NewManager(
-	cfg config.ManagerConfig,
+	cfg *config.ManagerConfig,
 	as *aggregation.Aggregation,
 	options ...ManagerOption,
 ) *Manager {
@@ -40,11 +43,14 @@ func NewManager(
 }
 
 func (m *Manager) OnStart() error {
+	fmt.Println("Manager Start")
 	m.as.Start()
 	return nil
 }
 
 func (m *Manager) OnStop() error {
+	fmt.Println("Manager Stop")
 	m.as.Stop()
+	time.Sleep(time.Second)
 	return nil
 }

@@ -2,6 +2,7 @@ package aggregation
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"regexp"
 	"strconv"
@@ -40,6 +41,8 @@ type Aggregation struct {
 
 	cfg *config.AggregationConfig
 
+	backend *backends.CaptiveStellarCore
+
 	// txQueue channel for trigger new tx
 	txQueue chan txInfo
 
@@ -48,6 +51,7 @@ type Aggregation struct {
 	isReSync bool
 
 	// subscribe services
+	sequence uint32
 }
 
 // AggregationOption sets an optional parameter on the State.
@@ -73,24 +77,30 @@ func NewAggregation(
 	as.log.SetLevel(logrus.ErrorLevel)
 	Config.Log = as.log
 
+	as.sequence = uint32(600_000)
+
+	var err error
+	as.backend, err = backends.NewCaptive(Config)
+	panicIf(err)
+
 	return as
 }
 
 func (as *Aggregation) OnStart() error {
+	go as.dataProcessing()
 	// Note that when using goroutines, you need to be careful to ensure that no
 	// race conditions occur when accessing the txQueue.
-	as.aggregation()
-
-	go as.process()
+	go as.aggregation()
 	return nil
 }
 
 func (as *Aggregation) OnStop() error {
+	as.backend.Close()
 	return nil
 }
 
 // aggregation process
-func (as *Aggregation) process() {
+func (as *Aggregation) dataProcessing() {
 	for {
 		// Block until state have sync successful
 		if as.isReSync {
@@ -111,8 +121,73 @@ func (as *Aggregation) process() {
 // handleReceiveTx
 func (as *Aggregation) handleReceiveTx(tx txInfo) {
 	// filter
-
+	fmt.Println("HandleReceiveTx")
 	// callback
+}
+
+func (as *Aggregation) aggregation() {
+	for {
+		select {
+		// Terminate process
+		case <-as.BaseService.Terminate():
+		default:
+			fmt.Println("aggregation")
+			as.getNewTx()
+		}
+	}
+}
+
+func (as *Aggregation) getNewTx() {
+	ledgerRange := backends.BoundedRange(as.sequence, as.sequence+step)
+	err := as.backend.PrepareRange(as.ctx, ledgerRange)
+	if err != nil {
+		fmt.Println("Prepare Error")
+		//"is greater than max available in history archives"
+		err = pauseWaitLedger(as.config, err)
+		if err != nil {
+			// return err
+			// error log
+		}
+
+		return
+	}
+	for seq := as.sequence; seq < as.sequence+step; seq++ {
+		fmt.Println("NewLedgerTransactionReader")
+		txReader, err := ingest.NewLedgerTransactionReader(
+			as.ctx, as.backend, Config.NetworkPassphrase, seq,
+		)
+		panicIf(err)
+		defer txReader.Close()
+
+		// Read each transaction within the ledger, extract its operations, and
+		// accumulate the statistics we're interested in.
+		for {
+			fmt.Println("Reading")
+			tx, err := txReader.Read()
+			if err == io.EOF {
+				fmt.Println("Reading EOF")
+				break
+			}
+
+			if err != nil {
+				// return err
+				// error log
+			}
+
+			if tx.Result.Successful() {
+				newTxInfo := txInfo{
+					txHash: tx.Result.TransactionHash.HexString(),
+				}
+
+				go func(tx txInfo) {
+					fmt.Println("Add tx to txQueue")
+					// add txInfo chan txQueue <- tx
+					as.txQueue <- tx
+				}(newTxInfo)
+			}
+		}
+	}
+	as.sequence += step
 }
 
 // Method allow trigger for resync
@@ -151,58 +226,5 @@ func pauseWaitLedger(config backends.CaptiveCoreConfig, err error) error {
 	estimateTimeWait := numLedgerWait * ledgerClosingTime.Nanoseconds()
 
 	time.Sleep(time.Duration(estimateTimeWait))
-	return nil
-}
-
-func (as *Aggregation) aggregation() error {
-	backend, err := backends.NewCaptive(Config)
-	panicIf(err)
-	defer backend.Close()
-
-	for {
-		ledgerRange := backends.BoundedRange(fromSeq, fromSeq+step)
-		err = backend.PrepareRange(as.ctx, ledgerRange)
-		if err != nil {
-			//"is greater than max available in history archives"
-			err = pauseWaitLedger(as.config, err)
-			if err != nil {
-				return err
-			}
-			continue
-		}
-		for seq := fromSeq; seq < fromSeq+step; seq++ {
-			txReader, err := ingest.NewLedgerTransactionReader(
-				as.ctx, backend, Config.NetworkPassphrase, seq,
-			)
-			panicIf(err)
-			defer txReader.Close()
-
-			// Read each transaction within the ledger, extract its operations, and
-			// accumulate the statistics we're interested in.
-			for {
-				tx, err := txReader.Read()
-				if err == io.EOF {
-					break
-				}
-
-				if err != nil {
-					return err
-				}
-
-				if tx.Result.Successful() {
-					newTxInfo := txInfo{
-						txHash: tx.Result.TransactionHash.HexString(),
-					}
-
-					go func(tx txInfo) {
-						// add txInfo chan txQueue <- tx
-						as.txQueue <- tx
-					}(newTxInfo)
-				}
-			}
-		}
-		fromSeq += step
-		break
-	}
 	return nil
 }

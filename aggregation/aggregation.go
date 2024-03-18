@@ -26,10 +26,6 @@ const (
 // receive data from Ledger sequence
 var fromSeq = uint32(485951)
 
-type txInfo struct {
-	txHash string
-}
-
 type Aggregation struct {
 	ctx context.Context
 
@@ -44,7 +40,7 @@ type Aggregation struct {
 	backend *backends.CaptiveStellarCore
 
 	// txQueue channel for trigger new tx
-	txQueue chan txInfo
+	txQueue chan ingest.LedgerTransaction
 
 	// isReSync is flag represent if services is
 	// re-synchronize
@@ -63,7 +59,7 @@ func NewAggregation(
 ) *Aggregation {
 	as := &Aggregation{
 		cfg:      cfg,
-		txQueue:  make(chan txInfo, txQueueSize),
+		txQueue:  make(chan ingest.LedgerTransaction, txQueueSize),
 		isReSync: false,
 	}
 
@@ -113,16 +109,16 @@ func (as *Aggregation) dataProcessing() {
 			as.handleReceiveTx(tx)
 		// Terminate process
 		case <-as.BaseService.Terminate():
-			fmt.Println("Terminate dataProcessing")
 			return
 		}
 	}
 }
 
 // handleReceiveTx
-func (as *Aggregation) handleReceiveTx(tx txInfo) {
+func (as *Aggregation) handleReceiveTx(tx ingest.LedgerTransaction) {
 	// filter
-	fmt.Println("HandleReceiveTx")
+	fmt.Println("HandleReceiveTx: ", tx)
+
 	// callback
 }
 
@@ -131,7 +127,6 @@ func (as *Aggregation) aggregation() {
 		select {
 		// Terminate process
 		case <-as.BaseService.Terminate():
-			fmt.Println("Terminate aggregation")
 			return
 		default:
 			as.getNewTx()
@@ -174,15 +169,10 @@ func (as *Aggregation) getNewTx() {
 
 			if tx.Result.Successful() {
 				// log success
-				newTxInfo := txInfo{
-					txHash: tx.Result.TransactionHash.HexString(),
-				}
-
-				go func(tx txInfo) {
+				go func(txi ingest.LedgerTransaction) {
 					fmt.Println("Add tx to txQueue")
-					// add txInfo chan txQueue <- tx
-					as.txQueue <- tx
-				}(newTxInfo)
+					as.txQueue <- txi
+				}(tx)
 			} else {
 				// log error
 			}

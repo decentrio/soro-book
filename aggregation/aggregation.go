@@ -2,7 +2,6 @@ package aggregation
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"regexp"
 	"strconv"
@@ -14,8 +13,6 @@ import (
 	backends "github.com/stellar/go/ingest/ledgerbackend"
 	"github.com/stellar/go/support/log"
 
-	aggConfig "github.com/decentrio/soro-book/aggregation/config"
-	"github.com/decentrio/soro-book/aggregation/rpc"
 	"github.com/decentrio/soro-book/config"
 	"github.com/decentrio/soro-book/lib/service"
 )
@@ -74,7 +71,7 @@ func NewAggregation(
 	as.ctx = context.Background()
 	as.log = log.New()
 	as.log.SetLevel(logrus.ErrorLevel)
-	aggConfig.Config.Log = as.log
+	Config.Log = as.log
 
 	return as
 }
@@ -123,12 +120,6 @@ func (as *Aggregation) ReSync(block uint64) {
 	as.isReSync = true
 }
 
-func panicIf(err error) {
-	if err != nil {
-		panic(fmt.Errorf("an error occurred, panicking: %s", err))
-	}
-}
-
 // to limit computational resources
 func pauseWaitLedger(config backends.CaptiveCoreConfig, err error) error {
 	if !strings.Contains(err.Error(), "is greater than max available in history archives") {
@@ -145,7 +136,7 @@ func pauseWaitLedger(config backends.CaptiveCoreConfig, err error) error {
 	}
 	estimateSeqNext := int64(seqHistoryArchives) + step
 
-	latestLedger, err := rpc.GetLatestLedger(config)
+	latestLedger, err := GetLatestLedger(config)
 	if err != nil {
 		return err
 	}
@@ -164,7 +155,7 @@ func pauseWaitLedger(config backends.CaptiveCoreConfig, err error) error {
 }
 
 func (as *Aggregation) aggregation() error {
-	backend, err := backends.NewCaptive(aggConfig.Config)
+	backend, err := backends.NewCaptive(Config)
 	panicIf(err)
 	defer backend.Close()
 
@@ -181,7 +172,7 @@ func (as *Aggregation) aggregation() error {
 		}
 		for seq := fromSeq; seq < fromSeq+step; seq++ {
 			txReader, err := ingest.NewLedgerTransactionReader(
-				as.ctx, backend, aggConfig.Config.NetworkPassphrase, seq,
+				as.ctx, backend, Config.NetworkPassphrase, seq,
 			)
 			panicIf(err)
 			defer txReader.Close()

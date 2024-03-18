@@ -1,7 +1,6 @@
 package manager
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/decentrio/soro-book/aggregation"
@@ -43,13 +42,11 @@ func NewManager(
 }
 
 func (m *Manager) OnStart() error {
-	fmt.Println("Manager Start")
 	m.as.Start()
 	return nil
 }
 
 func (m *Manager) OnStop() error {
-	fmt.Println("Manager Stop")
 	m.as.Stop()
 	time.Sleep(time.Second)
 	return nil

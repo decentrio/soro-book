@@ -2,6 +2,8 @@ package service
 
 import (
 	"errors"
+
+	"github.com/decentrio/soro-book/lib/log"
 )
 
 var (
@@ -30,6 +32,7 @@ type Service interface {
 }
 
 type BaseService struct {
+	Logger    log.Logger
 	name      string
 	isStarted bool
 	terminate chan struct{}
@@ -45,6 +48,11 @@ func NewBaseService(name string, impl Service) *BaseService {
 		isStarted: false,
 		impl:      impl,
 	}
+}
+
+// SetLogger implements Service by setting a logger.
+func (bs *BaseService) SetLogger(l log.Logger) {
+	bs.Logger = l
 }
 
 // Start servies

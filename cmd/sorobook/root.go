@@ -7,11 +7,15 @@ import (
 	"syscall"
 
 	"github.com/decentrio/soro-book/config"
+	"github.com/decentrio/soro-book/lib/log"
 	"github.com/decentrio/soro-book/manager"
 	"github.com/spf13/cobra"
 )
 
-var DefaultCometDir = ".soro-book"
+var (
+	DefaultCometDir = ".soro-book"
+	logger          = log.NewSRLogger(log.NewSyncWriter(os.Stdout))
+)
 
 var rootCmd = &cobra.Command{
 	Use: "sorobook",
@@ -29,7 +33,7 @@ func NewRunNodeCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// TODO: We need to read config
 			cfg := &config.ManagerConfig{}
-			m := manager.DefaultNewManager(cfg)
+			m := manager.DefaultNewManager(cfg, logger)
 
 			if err := m.Start(); err != nil {
 				return fmt.Errorf("failed to start node: %w", err)

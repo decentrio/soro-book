@@ -2,16 +2,18 @@ package aggregation
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/decentrio/soro-book/lib/log"
 	"github.com/sirupsen/logrus"
 	"github.com/stellar/go/ingest"
 	backends "github.com/stellar/go/ingest/ledgerbackend"
-	"github.com/stellar/go/support/log"
+	stellar_log "github.com/stellar/go/support/log"
 
 	"github.com/decentrio/soro-book/config"
 	"github.com/decentrio/soro-book/lib/service"
@@ -25,7 +27,7 @@ const (
 type Aggregation struct {
 	ctx context.Context
 
-	log *log.Entry
+	log *stellar_log.Entry
 
 	config backends.CaptiveCoreConfig
 
@@ -51,6 +53,7 @@ type AggregationOption func(*Aggregation)
 
 func NewAggregation(
 	cfg *config.AggregationConfig,
+	logger log.Logger,
 	options ...AggregationOption,
 ) *Aggregation {
 	as := &Aggregation{
@@ -64,8 +67,10 @@ func NewAggregation(
 		opt(as)
 	}
 
+	as.BaseService.SetLogger(logger.With("module", "aggregation"))
+
 	as.ctx = context.Background()
-	as.log = log.New()
+	as.log = stellar_log.New()
 	as.log.SetLevel(logrus.ErrorLevel)
 	Config.Log = as.log
 
@@ -79,6 +84,7 @@ func NewAggregation(
 }
 
 func (as *Aggregation) OnStart() error {
+	as.Logger.Info("Start")
 	go as.dataProcessing()
 	// Note that when using goroutines, you need to be careful to ensure that no
 	// race conditions occur when accessing the txQueue.
@@ -87,6 +93,7 @@ func (as *Aggregation) OnStart() error {
 }
 
 func (as *Aggregation) OnStop() error {
+	as.Logger.Info("Stop")
 	as.backend.Close()
 	return nil
 }
@@ -115,12 +122,12 @@ func (as *Aggregation) handleReceiveTx(tx ingest.LedgerTransaction) {
 	// Check if tx metadata is v3
 	txMetaV3, ok := tx.UnsafeMeta.GetV3()
 	if !ok {
-		// log
+		as.Logger.Error("receive tx not a metadata v3")
 		return
 	}
 
 	if txMetaV3.SorobanMeta == nil {
-		// log
+		as.Logger.Error("nil soroban meta")
 		return
 	}
 
@@ -150,8 +157,7 @@ func (as *Aggregation) getNewTx() {
 		//"is greater than max available in history archives"
 		err = pauseWaitLedger(as.config, err)
 		if err != nil {
-			// return err
-			// error log
+			as.Logger.Error(err.Error())
 		}
 
 		return
@@ -172,17 +178,14 @@ func (as *Aggregation) getNewTx() {
 			}
 
 			if err != nil {
-				// return err
-				// error log
+				as.Logger.Error(err.Error())
 			}
 
 			if tx.Result.Successful() {
-				// log success
+				as.Logger.Info(fmt.Sprintf("tx received %s", tx.Result.TransactionHash.HexString()))
 				go func(txi ingest.LedgerTransaction) {
 					as.txQueue <- txi
 				}(tx)
-			} else {
-				// log error
 			}
 		}
 	}

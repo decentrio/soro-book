@@ -5,6 +5,7 @@ import (
 
 	"github.com/decentrio/soro-book/aggregation"
 	"github.com/decentrio/soro-book/config"
+	"github.com/decentrio/soro-book/lib/log"
 	"github.com/decentrio/soro-book/lib/service"
 )
 
@@ -26,6 +27,7 @@ type ManagerOption func(*Manager)
 func NewManager(
 	cfg *config.ManagerConfig,
 	as *aggregation.Aggregation,
+	log log.Logger,
 	options ...ManagerOption,
 ) *Manager {
 	m := &Manager{
@@ -38,15 +40,19 @@ func NewManager(
 		opt(m)
 	}
 
+	m.BaseService.SetLogger(log.With("module", "manager"))
+
 	return m
 }
 
 func (m *Manager) OnStart() error {
+	m.Logger.Info("Start")
 	m.as.Start()
 	return nil
 }
 
 func (m *Manager) OnStop() error {
+	m.Logger.Info("Stop")
 	m.as.Stop()
 	time.Sleep(time.Second)
 	return nil

@@ -1,11 +1,15 @@
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
+CGO_ENABLED ?= 0
 
 # Define pkgs, run, and cover vairables for test so that we can override them in
 # the terminal more easily.
 pkgs := $(shell go list ./...)
 run := .
 count := 1
+
+install:
+	CGO_ENABLED=$(CGO_ENABLED) go install $(BUILD_FLAGS) ./cmd/sorobook
 
 ## help: Show this help message
 help: Makefile

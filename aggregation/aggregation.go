@@ -16,6 +16,8 @@ import (
 	stellar_log "github.com/stellar/go/support/log"
 
 	"github.com/decentrio/soro-book/config"
+	db "github.com/decentrio/soro-book/database/handlers"
+	"github.com/decentrio/soro-book/database/models"
 	"github.com/decentrio/soro-book/lib/service"
 )
 
@@ -46,6 +48,8 @@ type Aggregation struct {
 
 	// subscribe services
 	sequence uint32
+
+	db *db.DBHandler
 }
 
 // AggregationOption sets an optional parameter on the State.
@@ -68,6 +72,8 @@ func NewAggregation(
 	}
 
 	as.BaseService.SetLogger(logger.With("module", "aggregation"))
+
+	as.db = db.NewDBHandler()
 
 	as.ctx = context.Background()
 	as.log = stellar_log.New()
@@ -131,9 +137,15 @@ func (as *Aggregation) handleReceiveTx(tx ingest.LedgerTransaction) {
 		return
 	}
 
-	//
+	event := &models.Event{
+		// Type: txMetaV3.SorobanMeta.Events,
+		Ledger: int32(tx.Index),
+	}
 
-	// callback
+	_, err := as.db.CreateEvent(event)
+	if err != nil {
+		as.Logger.Error(err.Error())
+	}
 }
 
 func (as *Aggregation) aggregation() {

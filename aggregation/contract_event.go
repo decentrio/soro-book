@@ -3,16 +3,15 @@ package aggregation
 import (
 	"encoding/json"
 
+	"github.com/decentrio/soro-book/database/models"
 	"github.com/pkg/errors"
 
 	"github.com/stellar/go/xdr"
 )
 
-type EventType int
-
 const (
 	// Implemented
-	EventTypeTransfer EventType = iota
+	EventTypeTransfer models.EventType = iota
 	EventTypeMint
 	EventTypeClawback
 	EventTypeBurn
@@ -24,7 +23,7 @@ const (
 )
 
 var (
-	STELLAR_ASSET_CONTRACT_TOPICS = map[xdr.ScSymbol]EventType{
+	STELLAR_ASSET_CONTRACT_TOPICS = map[xdr.ScSymbol]models.EventType{
 		xdr.ScSymbol("transfer"): EventTypeTransfer,
 		xdr.ScSymbol("mint"):     EventTypeMint,
 		xdr.ScSymbol("clawback"): EventTypeClawback,
@@ -41,17 +40,8 @@ var (
 	ErrNotBurnEvent     = errors.New("this is not burn event")
 )
 
-type ContractEvent struct {
-	Id           string
-	ContractId   string
-	LedgerNumber uint32
-	TxHash       string
-	Type         EventType
-	Data         string
-}
-
-func ContractEventJSON(event xdr.ContractEvent) (ContractEvent, error) {
-	evt := ContractEvent{}
+func ContractEventJSON(event xdr.ContractEvent) (*models.ContractEvent, error) {
+	evt := &models.ContractEvent{}
 
 	evt.ContractId = event.ContractId.HexString()
 

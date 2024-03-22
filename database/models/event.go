@@ -1,21 +1,18 @@
 package models
 
-import (
-	"github.com/stellar/go/xdr"
-)
-
 type Event struct {
 	Type   string `json:"type"`
 	Ledger int32  `json:"ledger"`
 	ID     string `json:"id"`
 }
 
-type EventTx struct {
-	Id           string
-	ContractId   xdr.Hash
-	LedgerNumber uint32
-	TxHash       xdr.Hash
-	Type         xdr.ContractEventType
-	Topics       []byte
-	Data         []byte
+type EventType int
+
+type ContractEvent struct {
+	Id         string    `json:"admin,omitempty"`
+	ContractId string    `json:"contract_id,omitempty"`
+	LedgerSeq  uint32    `json:"ledger_seq,omitempty"`
+	TxHash     string    `json:"tx_hash,omitempty"`
+	Type       EventType `json:"type,omitempty"`
+	Data       string    `json:"data,omitempty"`
 }

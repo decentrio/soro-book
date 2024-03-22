@@ -17,7 +17,6 @@ import (
 
 	"github.com/decentrio/soro-book/config"
 	db "github.com/decentrio/soro-book/database/handlers"
-	"github.com/decentrio/soro-book/database/models"
 	"github.com/decentrio/soro-book/lib/service"
 )
 
@@ -25,6 +24,11 @@ const (
 	txQueueSize = 1000
 	prepareStep = 64
 )
+
+type txInfo struct {
+	tx        ingest.LedgerTransaction
+	ledgerSeq uint32
+}
 
 type Aggregation struct {
 	ctx context.Context
@@ -40,7 +44,7 @@ type Aggregation struct {
 	backend *backends.CaptiveStellarCore
 
 	// txQueue channel for trigger new tx
-	txQueue chan ingest.LedgerTransaction
+	txQueue chan txInfo
 
 	// isReSync is flag represent if services is
 	// re-synchronize
@@ -62,7 +66,7 @@ func NewAggregation(
 ) *Aggregation {
 	as := &Aggregation{
 		cfg:      cfg,
-		txQueue:  make(chan ingest.LedgerTransaction, txQueueSize),
+		txQueue:  make(chan txInfo, txQueueSize),
 		isReSync: false,
 	}
 
@@ -124,9 +128,9 @@ func (as *Aggregation) dataProcessing() {
 }
 
 // handleReceiveTx
-func (as *Aggregation) handleReceiveTx(tx ingest.LedgerTransaction) {
+func (as *Aggregation) handleReceiveTx(txInfo txInfo) {
 	// Check if tx metadata is v3
-	txMetaV3, ok := tx.UnsafeMeta.GetV3()
+	txMetaV3, ok := txInfo.tx.UnsafeMeta.GetV3()
 	if !ok {
 		as.Logger.Error("receive tx not a metadata v3")
 		return
@@ -137,23 +141,20 @@ func (as *Aggregation) handleReceiveTx(tx ingest.LedgerTransaction) {
 		return
 	}
 
-	event := &models.Event{
-		// Type: txMetaV3.SorobanMeta.Events,
-		Ledger: int32(tx.Index),
-	}
+	for _, event := range txMetaV3.SorobanMeta.Events {
+		eventJson, err := ContractEventJSON(event)
+		if err != nil {
+			as.Logger.Error(err.Error())
+			continue
+		}
 
-	// for _, event := range txMetaV3.SorobanMeta.Events {
-	// contractEvent, ok := event.Body.GetV0()
-	// if !ok {
-	// 	as.Logger.Error("Error Soroban event")
-	// 	return
-	// }
-	// topics := contractEvent.Topics
-	// }
+		eventJson.LedgerSeq = txInfo.ledgerSeq
+		eventJson.TxHash = txInfo.tx.Result.TransactionHash.HexString()
 
-	_, err := as.db.CreateEvent(event)
-	if err != nil {
-		as.Logger.Error(err.Error())
+		_, err = as.db.CreateEvent(eventJson)
+		if err != nil {
+			as.Logger.Error(err.Error())
+		}
 	}
 }
 
@@ -204,9 +205,13 @@ func (as *Aggregation) getNewTx() {
 
 			if tx.Result.Successful() {
 				as.Logger.Info(fmt.Sprintf("tx received %s", tx.Result.TransactionHash.HexString()))
-				go func(txi ingest.LedgerTransaction) {
-					as.txQueue <- txi
-				}(tx)
+				go func(txi ingest.LedgerTransaction, seq uint32) {
+					txInfo := txInfo{
+						tx:        txi,
+						ledgerSeq: seq,
+					}
+					as.txQueue <- txInfo
+				}(tx, seq)
 			}
 		}
 	}

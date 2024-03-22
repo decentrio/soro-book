@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/decentrio/soro-book/database/models"
 	"github.com/decentrio/soro-book/database/handlers"
+	"github.com/decentrio/soro-book/database/models"
 )
 
 func CreateEvent(h *handlers.DBHandler) gin.HandlerFunc {
@@ -34,4 +34,3 @@ func HelloEvent(h *handlers.DBHandler) gin.HandlerFunc {
 		c.JSON(http.StatusBadRequest, gin.H{"hello": "ok"})
 	}
 }
-

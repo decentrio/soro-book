@@ -142,6 +142,15 @@ func (as *Aggregation) handleReceiveTx(tx ingest.LedgerTransaction) {
 		Ledger: int32(tx.Index),
 	}
 
+	// for _, event := range txMetaV3.SorobanMeta.Events {
+	// contractEvent, ok := event.Body.GetV0()
+	// if !ok {
+	// 	as.Logger.Error("Error Soroban event")
+	// 	return
+	// }
+	// topics := contractEvent.Topics
+	// }
+
 	_, err := as.db.CreateEvent(event)
 	if err != nil {
 		as.Logger.Error(err.Error())

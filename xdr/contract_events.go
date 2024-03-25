@@ -17,7 +17,7 @@ var (
 	ErrNotBurnEvent     = errors.New("this is not burn event")
 )
 
-func ContractEventJSON(event models.ContractEvent, topics []models.Topics) (*models.ContractEventJSON, error) {
+func ConvertContractEventJSON(event models.ContractEvent, topics []models.Topics) (*models.ContractEventJSON, error) {
 	evt := &models.ContractEventJSON{}
 
 	evt.Id = event.Id

@@ -19,6 +19,17 @@ type Transaction struct {
 	SourceAddress    string `json:"source_address,omitempty"`
 }
 
+type TransactionJSON struct {
+	Hash             string `json:"hash,omitempty"`
+	Status           string `json:"status,omitempty"`
+	Ledger           uint32 `json:"ledger,omitempty"`
+	ApplicationOrder uint32 `json:"application_order,omitempty"`
+	EnvelopeJSON     []byte `json:"envelope_xdr,omitempty"`
+	ResultJSON       []byte `json:"result_xdr,omitempty"`
+	ResultMetaJSON   []byte `json:"result_meta_xdr,omitempty"`
+	SourceAddress    string `json:"source_address,omitempty"`
+}
+
 type ContractEvent struct {
 	Id         string `json:"id,omitempty"`
 	ContractId string `json:"contract_id,omitempty"`

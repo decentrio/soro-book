@@ -77,7 +77,7 @@ func (operation *transactionOperationWrapper) GetContractEvents() map[models.Con
 			LedgerSeq:  operation.ledgerSequence,
 			TxHash:     operation.transaction.Result.TransactionHash.HexString(),
 			EventType:  eventType,
-			Value:      string(valueBz),
+			Value:      valueBz,
 		}
 
 		eventsMap[event] = topics

@@ -13,9 +13,9 @@ type Transaction struct {
 	Status           string `json:"status,omitempty"`
 	Ledger           uint32 `json:"ledger,omitempty"`
 	ApplicationOrder uint32 `json:"application_order,omitempty"`
-	EnvelopeXdr      string `json:"envelope_xdr,omitempty"`
-	ResultXdr        string `json:"result_xdr,omitempty"`
-	ResultMetaXdr    string `json:"result_meta_xdr,omitempty"`
+	EnvelopeXdr      []byte `json:"envelope_xdr,omitempty"`
+	ResultXdr        []byte `json:"result_xdr,omitempty"`
+	ResultMetaXdr    []byte `json:"result_meta_xdr,omitempty"`
 	SourceAddress    string `json:"source_address,omitempty"`
 }
 
@@ -25,7 +25,7 @@ type ContractEvent struct {
 	LedgerSeq  uint32 `json:"ledger_seq,omitempty"`
 	TxHash     string `json:"tx_hash,omitempty"`
 	EventType  string `json:"event_type,omitempty"`
-	Value      string `json:"value,omitempty"`
+	Value      []byte `json:"value,omitempty"`
 }
 
 type ContractEventJSON struct {
@@ -39,6 +39,6 @@ type ContractEventJSON struct {
 
 type Topics struct {
 	EventId    string `json:"event_id,omitempty"`
-	TopicXdr   string `json:"topic_xdr,omitempty"`
+	TopicXdr   []byte `json:"topic_xdr,omitempty"`
 	TopicIndex int32  `json:"topic_index,omitempty"`
 }

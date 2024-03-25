@@ -57,9 +57,9 @@ func (tw TransactionWrapper) GetApplicationOrder() uint32 {
 	return tw.Tx.Index
 }
 
-func (tw TransactionWrapper) GetEnvelopeXdr() string {
+func (tw TransactionWrapper) GetEnvelopeXdr() []byte {
 	bz, _ := tw.Tx.Envelope.MarshalBinary()
-	return string(bz)
+	return bz
 }
 
 func (tw TransactionWrapper) GetResultXdr() string {
@@ -67,7 +67,7 @@ func (tw TransactionWrapper) GetResultXdr() string {
 	return string(bz)
 }
 
-func (tw TransactionWrapper) GetResultMetaXdr() string {
+func (tw TransactionWrapper) GetResultMetaXdr() []byte {
 	txResultMeta := xdr.TransactionResultMeta{
 		Result:            tw.Tx.Result,
 		FeeProcessing:     tw.Tx.FeeChanges,
@@ -76,7 +76,7 @@ func (tw TransactionWrapper) GetResultMetaXdr() string {
 
 	bz, _ := txResultMeta.MarshalBinary()
 
-	return string(bz)
+	return bz
 }
 
 func (tw TransactionWrapper) GetModelsTransaction() *models.Transaction {
@@ -86,7 +86,8 @@ func (tw TransactionWrapper) GetModelsTransaction() *models.Transaction {
 		Ledger:           tw.GetLedgerSequence(),
 		ApplicationOrder: tw.GetApplicationOrder(),
 		EnvelopeXdr:      tw.GetEnvelopeXdr(),
-		ResultXdr:        tw.GetResultXdr(),
-		ResultMetaXdr:    tw.GetResultMetaXdr(),
+		// ResultXdr: tw.GetResultXdr(),
+		// ResultMetaXdr: tw.GetResultMetaXdr(),
+		SourceAddress: tw.Tx.Envelope.SourceAccount().ToAccountId().Address(),
 	}
 }

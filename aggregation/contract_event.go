@@ -11,10 +11,10 @@ import (
 
 const (
 	// Implemented
-	EventTypeTransfer models.EventType = iota
-	EventTypeMint
-	EventTypeClawback
-	EventTypeBurn
+	EventTypeTransfer = "transfer"
+	EventTypeMint     = "mint"
+	EventTypeClawback = "clawback"
+	EventTypeBurn     = "burn"
 	// TODO: Not implemented
 	EventTypeIncrAllow
 	EventTypeDecrAllow
@@ -23,7 +23,7 @@ const (
 )
 
 var (
-	STELLAR_ASSET_CONTRACT_TOPICS = map[xdr.ScSymbol]models.EventType{
+	STELLAR_ASSET_CONTRACT_TOPICS = map[xdr.ScSymbol]string{
 		xdr.ScSymbol("transfer"): EventTypeTransfer,
 		xdr.ScSymbol("mint"):     EventTypeMint,
 		xdr.ScSymbol("clawback"): EventTypeClawback,

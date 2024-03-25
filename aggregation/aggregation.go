@@ -44,7 +44,7 @@ type Aggregation struct {
 	backend *backends.CaptiveStellarCore
 
 	// txQueue channel for trigger new tx
-	txQueue chan txInfo
+	txQueue chan transactionOperationWrapper
 
 	// isReSync is flag represent if services is
 	// re-synchronize
@@ -66,7 +66,7 @@ func NewAggregation(
 ) *Aggregation {
 	as := &Aggregation{
 		cfg:      cfg,
-		txQueue:  make(chan txInfo, txQueueSize),
+		txQueue:  make(chan transactionOperationWrapper, txQueueSize),
 		isReSync: false,
 	}
 
@@ -128,9 +128,9 @@ func (as *Aggregation) dataProcessing() {
 }
 
 // handleReceiveTx
-func (as *Aggregation) handleReceiveTx(txInfo txInfo) {
+func (as *Aggregation) handleReceiveTx(op transactionOperationWrapper) {
 	// Check if tx metadata is v3
-	txMetaV3, ok := txInfo.tx.UnsafeMeta.GetV3()
+	txMetaV3, ok := op.transaction.UnsafeMeta.GetV3()
 	if !ok {
 		as.Logger.Error("receive tx not a metadata v3")
 		return
@@ -141,15 +141,16 @@ func (as *Aggregation) handleReceiveTx(txInfo txInfo) {
 		return
 	}
 
-	for _, event := range txMetaV3.SorobanMeta.Events {
+	for index, event := range txMetaV3.SorobanMeta.Events {
 		eventJson, err := ContractEventJSON(event)
 		if err != nil {
 			as.Logger.Error(err.Error())
 			continue
 		}
 
-		eventJson.LedgerSeq = txInfo.ledgerSeq
-		eventJson.TxHash = txInfo.tx.Result.TransactionHash.HexString()
+		eventJson.Id = fmt.Sprintf("%019d-%010d", op.ID(), index) // ID should be combine from operation ID and event index
+		eventJson.LedgerSeq = op.ledgerSequence
+		eventJson.TxHash = op.transaction.Result.TransactionHash.HexString()
 
 		_, err = as.db.CreateEvent(eventJson)
 		if err != nil {
@@ -206,11 +207,14 @@ func (as *Aggregation) getNewTx() {
 			if tx.Result.Successful() {
 				as.Logger.Info(fmt.Sprintf("tx received %s", tx.Result.TransactionHash.HexString()))
 				go func(txi ingest.LedgerTransaction, seq uint32) {
-					txInfo := txInfo{
-						tx:        txi,
-						ledgerSeq: seq,
+					opi := txi.Envelope.Operations()
+					op := transactionOperationWrapper{
+						index:          0, // soroban contract tx should only have 1 operations so it should always be 0
+						transaction:    txi,
+						operation:      opi[0],
+						ledgerSequence: seq,
 					}
-					as.txQueue <- txInfo
+					as.txQueue <- op
 				}(tx, seq)
 			}
 		}

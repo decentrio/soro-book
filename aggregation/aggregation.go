@@ -16,6 +16,7 @@ import (
 
 	"github.com/decentrio/soro-book/config"
 	db "github.com/decentrio/soro-book/database/handlers"
+	"github.com/decentrio/soro-book/database/models"
 	"github.com/decentrio/soro-book/lib/service"
 )
 
@@ -25,7 +26,7 @@ const (
 )
 
 type LedgerWrapper struct {
-	ledger Ledger
+	ledger models.Ledger
 	txs    []TransactionWrapper
 }
 
@@ -76,7 +77,7 @@ func NewAggregation(
 
 	as.BaseService.SetLogger(logger.With("module", "aggregation"))
 
-	// as.db = db.NewDBHandler()
+	as.db = db.NewDBHandler()
 
 	as.ctx = context.Background()
 	as.log = stellar_log.New()
@@ -129,8 +130,18 @@ func (as *Aggregation) dataProcessing() {
 // handleReceiveTx
 func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 	// Create Ledger
-
+	_, err := as.db.CreateLedger(&lw.ledger)
+	if err != nil {
+		as.Logger.Error(err.Error())
+	}
 	// Create Tx
+	for _, tw := range lw.txs {
+		tx := tw.GetModelsTransaction()
+		_, err := as.db.CreateTransaction(tx)
+		if err != nil {
+			as.Logger.Error(err.Error())
+		}
+	}
 
 	// Create Event
 	// Check if tx metadata is v3
@@ -212,6 +223,8 @@ func (as *Aggregation) getNewLedger() {
 				as.Logger.Error(err.Error())
 			}
 
+			tx.Result.Successful()
+
 			txWrapper := NewTransactionWrapper(tx, seq)
 
 			txWrappers = append(txWrappers, txWrapper)
@@ -223,7 +236,7 @@ func (as *Aggregation) getNewLedger() {
 		ledger.Operations = operations
 
 		lw := LedgerWrapper{
-			ledger: *ledger,
+			ledger: ledger,
 			txs:    txWrappers,
 		}
 

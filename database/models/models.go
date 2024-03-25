@@ -1,11 +1,11 @@
 package models
 
 type Ledger struct {
-	Hash        string `json:"hash,omitempty"`
-	PrevHash    string `json:"prev_hash,omitempty"`
-	Sequence    uint32 `json:"sequence,omitempty"`
-	Transaction uint32 `json:"transaction,omitempty"`
-	Operations  uint32 `json:"operations,omitempty"`
+	Hash         string `json:"hash,omitempty"`
+	PrevHash     string `json:"prev_hash,omitempty"`
+	Sequence     uint32 `json:"sequence,omitempty"`
+	Transactions uint32 `json:"transaction,omitempty"`
+	Operations   uint32 `json:"operations,omitempty"`
 }
 
 type Transaction struct {

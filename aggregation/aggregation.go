@@ -134,36 +134,36 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 	if err != nil {
 		as.Logger.Error(err.Error())
 	}
-	// Create Tx
+
+	// Create Tx and Soroban events
 	for _, tw := range lw.txs {
 		tx := tw.GetModelsTransaction()
 		_, err := as.db.CreateTransaction(tx)
 		if err != nil {
 			as.Logger.Error(err.Error())
 		}
+
+		// Check if tx metadata is v3
+		txMetaV3, ok := tw.Tx.UnsafeMeta.GetV3()
+		if !ok {
+			continue
+		}
+
+		if txMetaV3.SorobanMeta == nil {
+			continue
+		}
+
+		// Create Event
+		for _, op := range tw.Ops {
+			events := op.GetContractEvents()
+			for _, event := range events {
+				_, err := as.db.CreateEvent(&event)
+				if err != nil {
+					as.Logger.Error(err.Error())
+				}
+			}
+		}
 	}
-
-	// Create Event
-	// Check if tx metadata is v3
-	// txMetaV3, ok := op.transaction.UnsafeMeta.GetV3()
-	// if !ok {
-	// 	as.Logger.Error("receive tx not a metadata v3")
-	// 	return
-	// }
-
-	// if txMetaV3.SorobanMeta == nil {
-	// 	// as.Logger.Error("nil soroban meta")
-	// 	return
-	// }
-
-	// events := op.GetContractEvents()
-
-	// for _, event := range events {
-	// 	_, err := as.db.CreateEvent(&event)
-	// 	if err != nil {
-	// 		as.Logger.Error(err.Error())
-	// 	}
-	// }
 }
 
 func (as *Aggregation) aggregation() {

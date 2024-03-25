@@ -12,16 +12,10 @@ const (
 )
 
 type TransactionWrapper struct {
-	ledgerSequence uint32
-	tx             ingest.LedgerTransaction
-	ops            []transactionOperationWrapper
+	LedgerSequence uint32
+	Tx             ingest.LedgerTransaction
+	Ops            []transactionOperationWrapper
 }
-
-// type TransactionResultMeta struct {
-// 	Result            TransactionResultPair
-// 	FeeProcessing     LedgerEntryChanges
-// 	TxApplyProcessing TransactionMeta
-// }
 
 func NewTransactionWrapper(tx ingest.LedgerTransaction, seq uint32) TransactionWrapper {
 	var ops []transactionOperationWrapper
@@ -37,18 +31,18 @@ func NewTransactionWrapper(tx ingest.LedgerTransaction, seq uint32) TransactionW
 	}
 
 	return TransactionWrapper{
-		ledgerSequence: seq,
-		tx:             tx,
-		ops:            ops,
+		LedgerSequence: seq,
+		Tx:             tx,
+		Ops:            ops,
 	}
 }
 
 func (tw TransactionWrapper) GetTransactionHash() string {
-	return tw.tx.Result.TransactionHash.HexString()
+	return tw.Tx.Result.TransactionHash.HexString()
 }
 
 func (tw TransactionWrapper) GetStatus() string {
-	if tw.tx.Result.Successful() {
+	if tw.Tx.Result.Successful() {
 		return SUCCESS
 	}
 
@@ -56,28 +50,28 @@ func (tw TransactionWrapper) GetStatus() string {
 }
 
 func (tw TransactionWrapper) GetLedgerSequence() uint32 {
-	return tw.ledgerSequence
+	return tw.LedgerSequence
 }
 
 func (tw TransactionWrapper) GetApplicationOrder() uint32 {
-	return tw.tx.Index
+	return tw.Tx.Index
 }
 
 func (tw TransactionWrapper) GetEnvelopeXdr() string {
-	bz, _ := tw.tx.Envelope.MarshalBinary()
+	bz, _ := tw.Tx.Envelope.MarshalBinary()
 	return string(bz)
 }
 
 func (tw TransactionWrapper) GetResultXdr() string {
-	bz, _ := tw.tx.Result.MarshalBinary()
+	bz, _ := tw.Tx.Result.MarshalBinary()
 	return string(bz)
 }
 
 func (tw TransactionWrapper) GetResultMetaXdr() string {
 	txResultMeta := xdr.TransactionResultMeta{
-		Result:            tw.tx.Result,
-		FeeProcessing:     tw.tx.FeeChanges,
-		TxApplyProcessing: tw.tx.UnsafeMeta,
+		Result:            tw.Tx.Result,
+		FeeProcessing:     tw.Tx.FeeChanges,
+		TxApplyProcessing: tw.Tx.UnsafeMeta,
 	}
 
 	bz, _ := txResultMeta.MarshalBinary()

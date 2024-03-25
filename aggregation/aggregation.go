@@ -16,6 +16,7 @@ import (
 
 	"github.com/decentrio/soro-book/config"
 	db "github.com/decentrio/soro-book/database/handlers"
+	"github.com/decentrio/soro-book/database/models"
 	"github.com/decentrio/soro-book/lib/service"
 )
 
@@ -25,7 +26,7 @@ const (
 )
 
 type LedgerWrapper struct {
-	ledger Ledger
+	ledger models.Ledger
 	txs    []TransactionWrapper
 }
 
@@ -76,7 +77,7 @@ func NewAggregation(
 
 	as.BaseService.SetLogger(logger.With("module", "aggregation"))
 
-	// as.db = db.NewDBHandler()
+	as.db = db.NewDBHandler()
 
 	as.ctx = context.Background()
 	as.log = stellar_log.New()
@@ -129,30 +130,54 @@ func (as *Aggregation) dataProcessing() {
 // handleReceiveTx
 func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 	// Create Ledger
+	_, err := as.db.CreateLedger(&lw.ledger)
+	if err != nil {
+		as.Logger.Error(err.Error())
+	}
 
-	// Create Tx
+	// Create Tx and Soroban events
+	for _, tw := range lw.txs {
+		tx := tw.GetModelsTransaction()
+		_, err := as.db.CreateTransaction(tx)
+		if err != nil {
+			as.Logger.Error(err.Error())
+		}
 
-	// Create Event
-	// Check if tx metadata is v3
-	// txMetaV3, ok := op.transaction.UnsafeMeta.GetV3()
-	// if !ok {
-	// 	as.Logger.Error("receive tx not a metadata v3")
-	// 	return
-	// }
+		// Check if tx metadata is v3
+		txMetaV3, ok := tw.Tx.UnsafeMeta.GetV3()
+		if !ok {
+			continue
+		}
 
-	// if txMetaV3.SorobanMeta == nil {
-	// 	// as.Logger.Error("nil soroban meta")
-	// 	return
-	// }
+		if txMetaV3.SorobanMeta == nil {
+			continue
+		}
 
-	// events := op.GetContractEvents()
+		// Create Event
+		for _, op := range tw.Ops {
+			events := op.GetContractEvents()
+			for event, topics := range events {
+				_, err := as.db.CreateEvent(&event)
+				if err != nil {
+					as.Logger.Error(err.Error())
+					continue
+				}
 
-	// for _, event := range events {
-	// 	_, err := as.db.CreateEvent(&event)
-	// 	if err != nil {
-	// 		as.Logger.Error(err.Error())
-	// 	}
-	// }
+				for index, topic := range topics {
+					tp := models.Topics{
+						EventId:    event.Id,
+						TopicXdr:   topic,
+						TopicIndex: int32(index),
+					}
+
+					_, err := as.db.CreateTopics(&tp)
+					if err != nil {
+						as.Logger.Error(err.Error())
+					}
+				}
+			}
+		}
+	}
 }
 
 func (as *Aggregation) aggregation() {
@@ -212,6 +237,8 @@ func (as *Aggregation) getNewLedger() {
 				as.Logger.Error(err.Error())
 			}
 
+			tx.Result.Successful()
+
 			txWrapper := NewTransactionWrapper(tx, seq)
 
 			txWrappers = append(txWrappers, txWrapper)
@@ -223,7 +250,7 @@ func (as *Aggregation) getNewLedger() {
 		ledger.Operations = operations
 
 		lw := LedgerWrapper{
-			ledger: *ledger,
+			ledger: ledger,
 			txs:    txWrappers,
 		}
 

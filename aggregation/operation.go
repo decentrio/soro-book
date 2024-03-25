@@ -46,16 +46,17 @@ func (operation *transactionOperationWrapper) OperationType() xdr.OperationType 
 	return operation.operation.Body.Type
 }
 
-func (operation *transactionOperationWrapper) GetContractEvents() []models.ContractEvent {
-	var events []models.ContractEvent
+func (operation *transactionOperationWrapper) GetContractEvents() map[models.ContractEvent][]string {
+	var eventsMap = make(map[models.ContractEvent][]string)
 	var order = uint32(1)
+
 	for _, event := range operation.transaction.UnsafeMeta.V3.SorobanMeta.Events {
+		var topics []string
 		eventType, found := getEventType(event.Body)
 		if !found {
 			continue
 		}
 
-		var topics []string
 		for _, topic := range event.Body.V0.Topics {
 			bz, err := topic.MarshalBinary()
 			if err != nil {
@@ -76,14 +77,13 @@ func (operation *transactionOperationWrapper) GetContractEvents() []models.Contr
 			LedgerSeq:  operation.ledgerSequence,
 			TxHash:     operation.transaction.Result.TransactionHash.HexString(),
 			EventType:  eventType,
-			Topics:     topics,
 			Value:      string(valueBz),
 		}
 
-		events = append(events, event)
+		eventsMap[event] = topics
 
 		order++
 	}
 
-	return events
+	return eventsMap
 }

@@ -141,18 +141,10 @@ func (as *Aggregation) handleReceiveTx(op transactionOperationWrapper) {
 		return
 	}
 
-	for index, event := range txMetaV3.SorobanMeta.Events {
-		eventJson, err := ContractEventJSON(event)
-		if err != nil {
-			as.Logger.Error(err.Error())
-			continue
-		}
+	events := op.GetContractEvents()
 
-		eventJson.Id = fmt.Sprintf("%019d-%010d", op.ID(), index) // ID should be combine from operation ID and event index
-		eventJson.LedgerSeq = op.ledgerSequence
-		eventJson.TxHash = op.transaction.Result.TransactionHash.HexString()
-
-		_, err = as.db.CreateEvent(eventJson)
+	for _, event := range events {
+		_, err := as.db.CreateEvent(&event)
 		if err != nil {
 			as.Logger.Error(err.Error())
 		}

@@ -3,7 +3,6 @@ package aggregation
 import (
 	"encoding/json"
 
-	"github.com/decentrio/soro-book/database/models"
 	"github.com/pkg/errors"
 
 	"github.com/stellar/go/xdr"
@@ -40,83 +39,104 @@ var (
 	ErrNotBurnEvent     = errors.New("this is not burn event")
 )
 
-func ContractEventJSON(event xdr.ContractEvent) (*models.ContractEvent, error) {
-	evt := &models.ContractEvent{}
-
-	evt.ContractId = event.ContractId.HexString()
-
-	topics := event.Body.V0.Topics
-	value := event.Body.V0.Data
+func getEventType(eventBody xdr.ContractEventBody) (string, bool) {
+	topics := eventBody.V0.Topics
 
 	if len(topics) <= 2 {
-		return evt, ErrNotStellarAssetContract
+		return "", false
 	}
 
 	// Filter out events for function calls we don't care about
 	fn, ok := topics[0].GetSym()
 	if !ok {
-		return evt, ErrNotStellarAssetContract
+		return "", false
 	}
 
-	if eventType, found := STELLAR_ASSET_CONTRACT_TOPICS[fn]; !found {
-		return evt, ErrNotStellarAssetContract
-	} else {
-		evt.Type = eventType
+	eventType, found := STELLAR_ASSET_CONTRACT_TOPICS[fn]
+	if !found {
+		return "", false
 	}
 
-	rawAsset := topics[len(topics)-1]
-	assetSc, ok := rawAsset.GetStr()
-	if !ok || assetSc == "" {
-		return evt, ErrNotStellarAssetContract
-	}
-
-	switch evt.Type {
-	case EventTypeTransfer:
-		transferEvent := TransferEvent{}
-		transferEvent.parse(topics, value)
-
-		bz, err := transferEvent.MarshalJSON()
-		if err != nil {
-			return evt, err
-		}
-
-		evt.Data = string(bz)
-	case EventTypeMint:
-		mintEvent := MintEvent{}
-		mintEvent.parse(topics, value)
-
-		bz, err := mintEvent.MarshalJSON()
-		if err != nil {
-			return evt, err
-		}
-
-		evt.Data = string(bz)
-	case EventTypeClawback:
-		cbEvent := ClawbackEvent{}
-		cbEvent.parse(topics, value)
-
-		bz, err := cbEvent.MarshalJSON()
-		if err != nil {
-			return evt, err
-		}
-
-		evt.Data = string(bz)
-	case EventTypeBurn:
-		burnEvent := BurnEvent{}
-		burnEvent.parse(topics, value)
-
-		bz, err := burnEvent.MarshalJSON()
-		if err != nil {
-			return evt, err
-		}
-
-		evt.Data = string(bz)
-	default:
-		return evt, errors.Wrapf(ErrEventUnsupported, "event not supported %s", evt.Type)
-	}
-
-	return evt, nil
+	return eventType, true
 }
+
+// func ContractEventJSON(event xdr.ContractEvent) (*models.ContractEvent, error) {
+// 	evt := &models.ContractEvent{}
+
+// 	evt.ContractId = event.ContractId.HexString()
+
+// 	topics := event.Body.V0.Topics
+// 	value := event.Body.V0.Data
+
+// 	if len(topics) <= 2 {
+// 		return evt, ErrNotStellarAssetContract
+// 	}
+
+// 	// Filter out events for function calls we don't care about
+// 	fn, ok := topics[0].GetSym()
+// 	if !ok {
+// 		return evt, ErrNotStellarAssetContract
+// 	}
+
+// 	if eventType, found := STELLAR_ASSET_CONTRACT_TOPICS[fn]; !found {
+// 		return evt, ErrNotStellarAssetContract
+// 	} else {
+// 		evt.EventType = eventType
+// 	}
+
+// 	rawAsset := topics[len(topics)-1]
+// 	assetSc, ok := rawAsset.GetStr()
+// 	if !ok || assetSc == "" {
+// 		return evt, ErrNotStellarAssetContract
+// 	}
+
+// 	switch evt.EventType {
+// 	case EventTypeTransfer:
+// 		transferEvent := TransferEvent{}
+// 		transferEvent.parse(topics, value)
+
+// 		bz, err := transferEvent.MarshalJSON()
+// 		if err != nil {
+// 			return evt, err
+// 		}
+
+// 		evt.Data = string(bz)
+// 	case EventTypeMint:
+// 		mintEvent := MintEvent{}
+// 		mintEvent.parse(topics, value)
+
+// 		bz, err := mintEvent.MarshalJSON()
+// 		if err != nil {
+// 			return evt, err
+// 		}
+
+// 		evt.Data = string(bz)
+// 	case EventTypeClawback:
+// 		cbEvent := ClawbackEvent{}
+// 		cbEvent.parse(topics, value)
+
+// 		bz, err := cbEvent.MarshalJSON()
+// 		if err != nil {
+// 			return evt, err
+// 		}
+
+// 		evt.Data = string(bz)
+// 	case EventTypeBurn:
+// 		burnEvent := BurnEvent{}
+// 		burnEvent.parse(topics, value)
+
+// 		bz, err := burnEvent.MarshalJSON()
+// 		if err != nil {
+// 			return evt, err
+// 		}
+
+// 		evt.Data = string(bz)
+// 	default:
+// 		return evt, errors.Wrapf(ErrEventUnsupported, "event not supported %s", evt.Type)
+// 	}
+
+// 	return evt, nil
+// }
 
 type Int128Parts struct {
 	Hi int64  `json:"hi,omitempty"`

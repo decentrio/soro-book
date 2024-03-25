@@ -1,6 +1,9 @@
 package aggregation
 
 import (
+	"fmt"
+
+	"github.com/decentrio/soro-book/database/models"
 	"github.com/stellar/go/ingest"
 	"github.com/stellar/go/toid"
 	"github.com/stellar/go/xdr"
@@ -41,4 +44,46 @@ func (operation *transactionOperationWrapper) SourceAccount() *xdr.MuxedAccount 
 // OperationType returns the operation type.
 func (operation *transactionOperationWrapper) OperationType() xdr.OperationType {
 	return operation.operation.Body.Type
+}
+
+func (operation *transactionOperationWrapper) GetContractEvents() []models.ContractEvent {
+	var events []models.ContractEvent
+	var order = uint32(1)
+	for _, event := range operation.transaction.UnsafeMeta.V3.SorobanMeta.Events {
+		eventType, found := getEventType(event.Body)
+		if !found {
+			continue
+		}
+
+		var topics []string
+		for _, topic := range event.Body.V0.Topics {
+			bz, err := topic.MarshalBinary()
+			if err != nil {
+				break
+			}
+
+			topics = append(topics, string(bz))
+		}
+
+		valueBz, err := event.Body.V0.Data.MarshalBinary()
+		if err != nil {
+			continue
+		}
+
+		event := models.ContractEvent{
+			Id:         fmt.Sprintf("%019d-%010d", operation.ID(), order), // ID should be combine from operation ID and event index
+			ContractId: event.ContractId.HexString(),
+			LedgerSeq:  operation.ledgerSequence,
+			TxHash:     operation.transaction.Result.TransactionHash.HexString(),
+			EventType:  eventType,
+			Topics:     topics,
+			Value:      string(valueBz),
+		}
+
+		events = append(events, event)
+
+		order++
+	}
+
+	return events
 }

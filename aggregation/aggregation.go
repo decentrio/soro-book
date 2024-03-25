@@ -2,7 +2,6 @@ package aggregation
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"regexp"
 	"strconv"
@@ -17,7 +16,6 @@ import (
 
 	"github.com/decentrio/soro-book/config"
 	db "github.com/decentrio/soro-book/database/handlers"
-	"github.com/decentrio/soro-book/database/models"
 	"github.com/decentrio/soro-book/lib/service"
 )
 
@@ -25,6 +23,11 @@ const (
 	txQueueSize = 1000
 	prepareStep = 64
 )
+
+type LedgerWrapper struct {
+	ledger Ledger
+	txs    []TransactionWrapper
+}
 
 type Aggregation struct {
 	ctx context.Context
@@ -40,7 +43,7 @@ type Aggregation struct {
 	backend *backends.CaptiveStellarCore
 
 	// txQueue channel for trigger new tx
-	txQueue chan ingest.LedgerTransaction
+	ledgerQueue chan LedgerWrapper
 
 	// isReSync is flag represent if services is
 	// re-synchronize
@@ -61,9 +64,9 @@ func NewAggregation(
 	options ...AggregationOption,
 ) *Aggregation {
 	as := &Aggregation{
-		cfg:      cfg,
-		txQueue:  make(chan ingest.LedgerTransaction, txQueueSize),
-		isReSync: false,
+		cfg:         cfg,
+		ledgerQueue: make(chan LedgerWrapper, txQueueSize),
+		isReSync:    false,
 	}
 
 	as.BaseService = *service.NewBaseService("Aggregation", as)
@@ -73,7 +76,7 @@ func NewAggregation(
 
 	as.BaseService.SetLogger(logger.With("module", "aggregation"))
 
-	as.db = db.NewDBHandler()
+	// as.db = db.NewDBHandler()
 
 	as.ctx = context.Background()
 	as.log = stellar_log.New()
@@ -114,8 +117,8 @@ func (as *Aggregation) dataProcessing() {
 
 		select {
 		// Receive a new tx
-		case tx := <-as.txQueue:
-			as.handleReceiveTx(tx)
+		case ledger := <-as.ledgerQueue:
+			as.handleReceiveNewLedger(ledger)
 		// Terminate process
 		case <-as.BaseService.Terminate():
 			return
@@ -124,28 +127,32 @@ func (as *Aggregation) dataProcessing() {
 }
 
 // handleReceiveTx
-func (as *Aggregation) handleReceiveTx(tx ingest.LedgerTransaction) {
+func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
+	// Create Ledger
+
+	// Create Tx
+
+	// Create Event
 	// Check if tx metadata is v3
-	txMetaV3, ok := tx.UnsafeMeta.GetV3()
-	if !ok {
-		as.Logger.Error("receive tx not a metadata v3")
-		return
-	}
+	// txMetaV3, ok := op.transaction.UnsafeMeta.GetV3()
+	// if !ok {
+	// 	as.Logger.Error("receive tx not a metadata v3")
+	// 	return
+	// }
 
-	if txMetaV3.SorobanMeta == nil {
-		as.Logger.Error("nil soroban meta")
-		return
-	}
+	// if txMetaV3.SorobanMeta == nil {
+	// 	// as.Logger.Error("nil soroban meta")
+	// 	return
+	// }
 
-	event := &models.Event{
-		// Type: txMetaV3.SorobanMeta.Events,
-		Ledger: int32(tx.Index),
-	}
+	// events := op.GetContractEvents()
 
-	_, err := as.db.CreateEvent(event)
-	if err != nil {
-		as.Logger.Error(err.Error())
-	}
+	// for _, event := range events {
+	// 	_, err := as.db.CreateEvent(&event)
+	// 	if err != nil {
+	// 		as.Logger.Error(err.Error())
+	// 	}
+	// }
 }
 
 func (as *Aggregation) aggregation() {
@@ -155,12 +162,12 @@ func (as *Aggregation) aggregation() {
 		case <-as.BaseService.Terminate():
 			return
 		default:
-			as.getNewTx()
+			as.getNewLedger()
 		}
 	}
 }
 
-func (as *Aggregation) getNewTx() {
+func (as *Aggregation) getNewLedger() {
 	from := as.sequence
 	to := as.sequence + prepareStep
 	ledgerRange := backends.BoundedRange(from, to)
@@ -175,6 +182,18 @@ func (as *Aggregation) getNewTx() {
 		return
 	}
 	for seq := from; seq < to; seq++ {
+		// get ledger
+		ledgerCloseMeta, err := as.backend.GetLedger(as.ctx, seq)
+		if err != nil {
+			continue
+		}
+
+		ledger := getLedgerFromCloseMeta(ledgerCloseMeta)
+
+		var txWrappers []TransactionWrapper
+		var transactions = uint32(0)
+		var operations = uint32(0)
+		// get tx
 		txReader, err := ingest.NewLedgerTransactionReader(
 			as.ctx, as.backend, Config.NetworkPassphrase, seq,
 		)
@@ -193,13 +212,24 @@ func (as *Aggregation) getNewTx() {
 				as.Logger.Error(err.Error())
 			}
 
-			if tx.Result.Successful() {
-				as.Logger.Info(fmt.Sprintf("tx received %s", tx.Result.TransactionHash.HexString()))
-				go func(txi ingest.LedgerTransaction) {
-					as.txQueue <- txi
-				}(tx)
-			}
+			txWrapper := NewTransactionWrapper(tx, seq)
+
+			txWrappers = append(txWrappers, txWrapper)
+			operations += uint32(len(tx.Envelope.Operations()))
+			transactions++
 		}
+
+		ledger.Transactions = transactions
+		ledger.Operations = operations
+
+		lw := LedgerWrapper{
+			ledger: *ledger,
+			txs:    txWrappers,
+		}
+
+		go func(lwi LedgerWrapper) {
+			as.ledgerQueue <- lwi
+		}(lw)
 	}
 	as.sequence = to
 }

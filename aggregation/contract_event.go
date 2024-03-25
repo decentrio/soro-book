@@ -62,7 +62,7 @@ func getEventType(eventBody xdr.ContractEventBody) (string, bool) {
 	return eventType, true
 }
 
-func ContractEventJSON(event models.ContractEvent) (*models.ContractEventJSON, error) {
+func ContractEventJSON(event models.ContractEvent, topics []models.Topics) (*models.ContractEventJSON, error) {
 	evt := &models.ContractEventJSON{}
 
 	evt.Id = event.Id
@@ -71,14 +71,14 @@ func ContractEventJSON(event models.ContractEvent) (*models.ContractEventJSON, e
 	evt.TxHash = event.TxHash
 	evt.EventType = event.EventType
 
-	var topics []xdr.ScVal
-	for _, topic := range event.Topics {
+	var xdrTopics []xdr.ScVal
+	for _, topic := range topics {
 		var xdrTopic xdr.ScVal
-		err := xdrTopic.UnmarshalBinary([]byte(topic))
+		err := xdrTopic.UnmarshalBinary([]byte(topic.TopicXdr))
 		if err != nil {
 			return evt, fmt.Errorf("Error Unmarshal topic binary")
 		}
-		topics = append(topics, xdrTopic)
+		xdrTopics = append(xdrTopics, xdrTopic)
 	}
 
 	var value xdr.ScVal
@@ -90,7 +90,7 @@ func ContractEventJSON(event models.ContractEvent) (*models.ContractEventJSON, e
 	switch evt.EventType {
 	case EventTypeTransfer:
 		transferEvent := TransferEvent{}
-		transferEvent.parse(topics, value)
+		transferEvent.parse(xdrTopics, value)
 
 		bz, err := transferEvent.ToJSON()
 		if err != nil {
@@ -100,7 +100,7 @@ func ContractEventJSON(event models.ContractEvent) (*models.ContractEventJSON, e
 		evt.Data = bz
 	case EventTypeMint:
 		mintEvent := MintEvent{}
-		mintEvent.parse(topics, value)
+		mintEvent.parse(xdrTopics, value)
 
 		bz, err := mintEvent.ToJSON()
 		if err != nil {
@@ -110,7 +110,7 @@ func ContractEventJSON(event models.ContractEvent) (*models.ContractEventJSON, e
 		evt.Data = bz
 	case EventTypeClawback:
 		cbEvent := ClawbackEvent{}
-		cbEvent.parse(topics, value)
+		cbEvent.parse(xdrTopics, value)
 
 		bz, err := cbEvent.ToJSON()
 		if err != nil {
@@ -120,7 +120,7 @@ func ContractEventJSON(event models.ContractEvent) (*models.ContractEventJSON, e
 		evt.Data = bz
 	case EventTypeBurn:
 		burnEvent := BurnEvent{}
-		burnEvent.parse(topics, value)
+		burnEvent.parse(xdrTopics, value)
 
 		bz, err := burnEvent.ToJSON()
 		if err != nil {

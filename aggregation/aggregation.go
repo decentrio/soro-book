@@ -2,7 +2,6 @@ package aggregation
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"regexp"
 	"strconv"
@@ -77,7 +76,7 @@ func NewAggregation(
 
 	as.BaseService.SetLogger(logger.With("module", "aggregation"))
 
-	as.db = db.NewDBHandler()
+	// as.db = db.NewDBHandler()
 
 	as.ctx = context.Background()
 	as.log = stellar_log.New()
@@ -137,7 +136,7 @@ func (as *Aggregation) handleReceiveTx(op transactionOperationWrapper) {
 	}
 
 	if txMetaV3.SorobanMeta == nil {
-		as.Logger.Error("nil soroban meta")
+		// as.Logger.Error("nil soroban meta")
 		return
 	}
 
@@ -197,7 +196,6 @@ func (as *Aggregation) getNewTx() {
 			}
 
 			if tx.Result.Successful() {
-				as.Logger.Info(fmt.Sprintf("tx received %s", tx.Result.TransactionHash.HexString()))
 				go func(txi ingest.LedgerTransaction, seq uint32) {
 					opi := txi.Envelope.Operations()
 					op := transactionOperationWrapper{

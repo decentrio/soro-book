@@ -2,7 +2,9 @@ package aggregation
 
 import (
 	"encoding/json"
+	"fmt"
 
+	"github.com/decentrio/soro-book/database/models"
 	"github.com/pkg/errors"
 
 	"github.com/stellar/go/xdr"
@@ -60,83 +62,78 @@ func getEventType(eventBody xdr.ContractEventBody) (string, bool) {
 	return eventType, true
 }
 
-// func ContractEventJSON(event xdr.ContractEvent) (*models.ContractEvent, error) {
-// 	evt := &models.ContractEvent{}
+func ContractEventJSON(event models.ContractEvent) (*models.ContractEventJSON, error) {
+	evt := &models.ContractEventJSON{}
 
-// 	evt.ContractId = event.ContractId.HexString()
+	evt.Id = event.Id
+	evt.ContractId = event.ContractId
+	evt.LedgerSeq = event.LedgerSeq
+	evt.TxHash = event.TxHash
+	evt.EventType = event.EventType
 
-// 	topics := event.Body.V0.Topics
-// 	value := event.Body.V0.Data
+	var topics []xdr.ScVal
+	for _, topic := range event.Topics {
+		var xdrTopic xdr.ScVal
+		err := xdrTopic.UnmarshalBinary([]byte(topic))
+		if err != nil {
+			return evt, fmt.Errorf("Error Unmarshal topic binary")
+		}
+		topics = append(topics, xdrTopic)
+	}
 
-// 	if len(topics) <= 2 {
-// 		return evt, ErrNotStellarAssetContract
-// 	}
+	var value xdr.ScVal
+	err := value.UnmarshalBinary([]byte(event.Value))
+	if err != nil {
+		return evt, fmt.Errorf("Error Unmarshal value binary")
+	}
 
-// 	// Filter out events for function calls we don't care about
-// 	fn, ok := topics[0].GetSym()
-// 	if !ok {
-// 		return evt, ErrNotStellarAssetContract
-// 	}
+	switch evt.EventType {
+	case EventTypeTransfer:
+		transferEvent := TransferEvent{}
+		transferEvent.parse(topics, value)
 
-// 	if eventType, found := STELLAR_ASSET_CONTRACT_TOPICS[fn]; !found {
-// 		return evt, ErrNotStellarAssetContract
-// 	} else {
-// 		evt.EventType = eventType
-// 	}
+		bz, err := transferEvent.ToJSON()
+		if err != nil {
+			return evt, err
+		}
 
-// 	rawAsset := topics[len(topics)-1]
-// 	assetSc, ok := rawAsset.GetStr()
-// 	if !ok || assetSc == "" {
-// 		return evt, ErrNotStellarAssetContract
-// 	}
+		evt.Data = bz
+	case EventTypeMint:
+		mintEvent := MintEvent{}
+		mintEvent.parse(topics, value)
 
-// 	switch evt.EventType {
-// 	case EventTypeTransfer:
-// 		transferEvent := TransferEvent{}
-// 		transferEvent.parse(topics, value)
+		bz, err := mintEvent.ToJSON()
+		if err != nil {
+			return evt, err
+		}
 
-// 		bz, err := transferEvent.MarshalJSON()
-// 		if err != nil {
-// 			return evt, err
-// 		}
+		evt.Data = bz
+	case EventTypeClawback:
+		cbEvent := ClawbackEvent{}
+		cbEvent.parse(topics, value)
 
-// 		evt.Data = string(bz)
-// 	case EventTypeMint:
-// 		mintEvent := MintEvent{}
-// 		mintEvent.parse(topics, value)
+		bz, err := cbEvent.ToJSON()
+		if err != nil {
+			return evt, err
+		}
 
-// 		bz, err := mintEvent.MarshalJSON()
-// 		if err != nil {
-// 			return evt, err
-// 		}
+		evt.Data = bz
+	case EventTypeBurn:
+		burnEvent := BurnEvent{}
+		burnEvent.parse(topics, value)
 
-// 		evt.Data = string(bz)
-// 	case EventTypeClawback:
-// 		cbEvent := ClawbackEvent{}
-// 		cbEvent.parse(topics, value)
+		bz, err := burnEvent.ToJSON()
+		if err != nil {
+			return evt, err
+		}
 
-// 		bz, err := cbEvent.MarshalJSON()
-// 		if err != nil {
-// 			return evt, err
-// 		}
+		evt.Data = bz
+	default:
+		return evt, errors.Wrapf(ErrEventUnsupported, "event not supported %s", evt.EventType)
+	}
 
-// 		evt.Data = string(bz)
-// 	case EventTypeBurn:
-// 		burnEvent := BurnEvent{}
-// 		burnEvent.parse(topics, value)
-
-// 		bz, err := burnEvent.MarshalJSON()
-// 		if err != nil {
-// 			return evt, err
-// 		}
-
-// 		evt.Data = string(bz)
-// 	default:
-// 		return evt, errors.Wrapf(ErrEventUnsupported, "event not supported %s", evt.Type)
-// 	}
-
-// 	return evt, nil
-// }
+	return evt, nil
+}
 
 type Int128Parts struct {
 	Hi int64  `json:"hi,omitempty"`
@@ -168,7 +165,7 @@ func (event *TransferEvent) parse(topics xdr.ScVec, value xdr.ScVal) error {
 	return nil
 }
 
-func (e TransferEvent) MarshalJSON() ([]byte, error) {
+func (e TransferEvent) ToJSON() ([]byte, error) {
 	return json.Marshal(e)
 }
 
@@ -197,7 +194,7 @@ func (event *MintEvent) parse(topics xdr.ScVec, value xdr.ScVal) error {
 	return nil
 }
 
-func (e MintEvent) MarshalJSON() ([]byte, error) {
+func (e MintEvent) ToJSON() ([]byte, error) {
 	return json.Marshal(e)
 }
 
@@ -226,7 +223,7 @@ func (event *ClawbackEvent) parse(topics xdr.ScVec, value xdr.ScVal) error {
 	return nil
 }
 
-func (e ClawbackEvent) MarshalJSON() ([]byte, error) {
+func (e ClawbackEvent) ToJSON() ([]byte, error) {
 	return json.Marshal(e)
 }
 
@@ -270,6 +267,6 @@ func (event *BurnEvent) parse(topics xdr.ScVec, value xdr.ScVal) error {
 	return nil
 }
 
-func (e BurnEvent) MarshalJSON() ([]byte, error) {
+func (e BurnEvent) ToJSON() ([]byte, error) {
 	return json.Marshal(e)
 }

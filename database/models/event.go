@@ -15,3 +15,12 @@ type ContractEvent struct {
 	Topics     []string `json:"topics,omitempty"`
 	Value      string   `json:"value,omitempty"`
 }
+
+type ContractEventJSON struct {
+	Id         string `json:"admin,omitempty"`
+	ContractId string `json:"contract_id,omitempty"`
+	LedgerSeq  uint32 `json:"ledger_seq,omitempty"`
+	TxHash     string `json:"tx_hash,omitempty"`
+	EventType  string `json:"type,omitempty"`
+	Data       []byte `json:"data,omitempty"`
+}

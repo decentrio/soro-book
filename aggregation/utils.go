@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pkg/errors"
-
 	backends "github.com/stellar/go/ingest/ledgerbackend"
 )
 
@@ -53,5 +51,3 @@ func rpcGetLatestLedger(url string, requestBody []byte) (uint32, error) {
 
 	return uint32(latestLedger), nil
 }
-
-var ErrNotBalanceChangeEvent = errors.New("event doesn't represent a balance change")

@@ -11,10 +11,11 @@ import (
 )
 
 var (
-	ErrNotTransferEvent = errors.New("this is not transfer event")
-	ErrNotMintEvent     = errors.New("this is not mint event")
-	ErrNotClawbackEvent = errors.New("this is not clawback event")
-	ErrNotBurnEvent     = errors.New("this is not burn event")
+	ErrNotBalanceChangeEvent = errors.New("event doesn't represent a balance change")
+	ErrNotTransferEvent      = errors.New("this is not transfer event")
+	ErrNotMintEvent          = errors.New("this is not mint event")
+	ErrNotClawbackEvent      = errors.New("this is not clawback event")
+	ErrNotBurnEvent          = errors.New("this is not burn event")
 )
 
 func ConvertContractEventJSON(event models.Event, topics []models.Topics) (*models.EventJSON, error) {
@@ -236,7 +237,7 @@ func parseBalanceChangeEvent(topics xdr.ScVec, value xdr.ScVal) (
 	amount Int128Parts,
 	err error,
 ) {
-	err = aggregation.ErrNotBalanceChangeEvent
+	err = ErrNotBalanceChangeEvent
 	if len(topics) != 4 {
 		return
 	}
@@ -247,7 +248,7 @@ func parseBalanceChangeEvent(topics xdr.ScVec, value xdr.ScVal) (
 	}
 	first, err = firstSc.String()
 	if err != nil {
-		err = errors.Wrap(err, aggregation.ErrNotBalanceChangeEvent.Error())
+		err = errors.Wrap(err, ErrNotBalanceChangeEvent.Error())
 		return
 	}
 
@@ -257,7 +258,7 @@ func parseBalanceChangeEvent(topics xdr.ScVec, value xdr.ScVal) (
 	}
 	second, err = secondSc.String()
 	if err != nil {
-		err = errors.Wrap(err, aggregation.ErrNotBalanceChangeEvent.Error())
+		err = errors.Wrap(err, ErrNotBalanceChangeEvent.Error())
 		return
 	}
 

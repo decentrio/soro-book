@@ -501,4 +501,58 @@ type TransactionV0Ext struct {
 	V int32
 }
 
-type TransactionV1Envelope struct{}
+type TransactionV1Envelope struct {
+	Tx         Transaction
+	Signatures []DecoratedSignature `xdrmaxsize:"20"`
+}
+
+type Transaction struct {
+	SourceAccount MuxedAccount
+	Fee           uint32
+	SeqNum        int64
+	Cond          Preconditions
+	Memo          Memo
+	Operations    []Operation `xdrmaxsize:"100"`
+	Ext           TransactionExt
+}
+
+type TransactionExt struct {
+	SorobanData *SorobanTransactionData
+}
+
+type SorobanTransactionData struct {
+	Ext         ExtensionPoint
+	Resources   SorobanResources
+	ResourceFee int64
+}
+
+type SorobanResources struct {
+	Footprint    LedgerFootprint
+	Instructions uint32
+	ReadBytes    uint32
+	WriteBytes   uint32
+}
+
+type LedgerFootprint struct {
+	ReadOnly  []LedgerKey
+	ReadWrite []LedgerKey
+}
+
+type Preconditions struct {
+	TimeBounds *TimeBounds
+	V2         *PreconditionsV2
+}
+
+type PreconditionsV2 struct {
+	TimeBounds      *TimeBounds
+	LedgerBounds    *LedgerBounds
+	MinSeqNum       *int64
+	MinSeqAge       uint64
+	MinSeqLedgerGap uint32
+	ExtraSigners    []SignerKey `xdrmaxsize:"2"`
+}
+
+type LedgerBounds struct {
+	MinLedger uint32
+	MaxLedger uint32
+}

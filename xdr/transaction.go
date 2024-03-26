@@ -1,6 +1,9 @@
 package xdr
 
-import "github.com/stellar/go/xdr"
+import (
+	"github.com/stellar/go/support/errors"
+	"github.com/stellar/go/xdr"
+)
 
 // func ConvertTransactionJSON(tx models.Transaction) models.TransactionJSON {
 // 	return models.TransactionJSON{}
@@ -46,11 +49,56 @@ func ConvertTransactionV0(tx xdr.TransactionV0) (TransactionV0, error) {
 }
 
 func ConvertTimeBounds(tb *xdr.TimeBounds) (*TimeBounds, error) {
-	return &TimeBounds{}, nil
+	return &TimeBounds{
+		MinTime: uint64(tb.MinTime),
+		MaxTime: uint64(tb.MaxTime),
+	}, nil
 }
 
 func ConvertMemo(memo xdr.Memo) (Memo, error) {
-	return Memo{}, nil
+	var result Memo
+
+	switch memo.Type {
+	case xdr.MemoTypeMemoNone:
+		return result, nil
+	case xdr.MemoTypeMemoText:
+		text, ok := memo.GetText()
+		if !ok {
+			return result, errors.Errorf("error invalid memo type text %v", memo)
+		}
+		result.Text = &text
+
+		return result, nil
+	case xdr.MemoTypeMemoId:
+		xdrId, ok := memo.GetId()
+		if !ok {
+			return result, errors.Errorf("error invalid memo type id %v", memo)
+		}
+		id := uint64(xdrId)
+		result.Id = &id
+
+		return result, nil
+	case xdr.MemoTypeMemoHash:
+		xdrHash, ok := memo.GetHash()
+		if !ok {
+			return result, errors.Errorf("error invalid memo type hash %v", memo)
+		}
+		hash := xdrHash.HexString()
+		result.Hash = &hash
+
+		return result, nil
+	case xdr.MemoTypeMemoReturn:
+		xdrRetHash, ok := memo.GetRetHash()
+		if !ok {
+			return result, errors.Errorf("error invalid memo type rethash%v", memo)
+		}
+		retHash := xdrRetHash.HexString()
+		result.RetHash = &retHash
+
+		return result, nil
+	default:
+		return result, errors.Errorf("error invalid memo %v", memo)
+	}
 }
 
 func ConvertOperation(op xdr.Operation) (Operation, error) {

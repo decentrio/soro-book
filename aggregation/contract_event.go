@@ -62,8 +62,8 @@ func getEventType(eventBody xdr.ContractEventBody) (string, bool) {
 	return eventType, true
 }
 
-func ContractEventJSON(event models.ContractEvent, topics []models.Topics) (*models.ContractEventJSON, error) {
-	evt := &models.ContractEventJSON{}
+func ContractEventJSON(event models.Event, topics []models.Topics) (*models.EventJSON, error) {
+	evt := &models.EventJSON{}
 
 	evt.Id = event.Id
 	evt.ContractId = event.ContractId

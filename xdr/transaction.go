@@ -7,6 +7,3 @@ import (
 func ConvertTransactionJSON(tx models.Transaction) models.TransactionJSON {
 	return models.TransactionJSON{}
 }
-
-type EnvelopeJSON struct {
-}

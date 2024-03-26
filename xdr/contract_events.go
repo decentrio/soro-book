@@ -90,11 +90,6 @@ func ConvertContractEventJSON(event models.Event, topics []models.Topics) (*mode
 	return evt, nil
 }
 
-type Int128Parts struct {
-	Hi int64  `json:"hi,omitempty"`
-	Lo uint64 `json:"lo,omitempty"`
-}
-
 type TransferEvent struct {
 	From   string      `json:"from,omitempty"`
 	To     string      `json:"to,omitempty"`

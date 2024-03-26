@@ -16,7 +16,7 @@ type TransactionV0Envelope struct {
 }
 
 type TransactionV0 struct {
-	SourceAccountEd25519 []byte           `json:"source_account_ed25519,omitempty"`
+	SourceAccountEd25519 string           `json:"source_account_ed25519,omitempty"`
 	Fee                  uint32           `json:"fee,omitempty"`
 	SeqNum               int64            `json:"seq_num,omitempty"`
 	TimeBounds           *TimeBounds      `json:"time_bounds,omitempty"`
@@ -48,13 +48,13 @@ type Operation struct {
 }
 
 type MuxedAccount struct {
-	Ed25519  *[]byte               `json:"ed25519,omitempty"`
+	Ed25519  *string               `json:"ed25519,omitempty"`
 	Med25519 *MuxedAccountMed25519 `json:"med25519,omitempty"`
 }
 
 type MuxedAccountMed25519 struct {
 	Id      uint64  `json:"id,omitempty"`
-	Ed25519 *[]byte `json:"ed25519,omitempty"`
+	Ed25519 *string `json:"ed25519,omitempty"`
 }
 
 type OperationBody struct {
@@ -86,7 +86,7 @@ type OperationBody struct {
 }
 
 type PublicKey struct {
-	Ed25519 []byte `json:"ed25519,omitempty"`
+	Ed25519 string `json:"ed25519,omitempty"`
 }
 
 type Asset struct {
@@ -152,14 +152,14 @@ type Signer struct {
 }
 
 type SignerKey struct {
-	Ed25519              *[]byte                        `json:"ed25519,omitempty"`
+	Ed25519              *string                        `json:"ed25519,omitempty"`
 	PreAuthTx            *[]byte                        `json:"pre_auth_tx,omitempty"`
 	HashX                *[]byte                        `json:"hash_x,omitempty"`
 	Ed25519SignedPayload *SignerKeyEd25519SignedPayload `json:"ed25519_signed_payload,omitempty"`
 }
 
 type SignerKeyEd25519SignedPayload struct {
-	Ed25519 []byte `json:"ed25519,omitempty"`
+	Ed25519 string `json:"ed25519,omitempty"`
 	Payload []byte `json:"payload,omitempty"`
 }
 

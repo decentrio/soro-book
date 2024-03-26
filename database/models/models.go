@@ -22,7 +22,6 @@ type Transaction struct {
 type Event struct {
 	Id         string `json:"id,omitempty"`
 	ContractId string `json:"contract_id,omitempty"`
-	LedgerSeq  uint32 `json:"ledger_seq,omitempty"`
 	TxHash     string `json:"tx_hash,omitempty"`
 	EventType  string `json:"event_type,omitempty"`
 	Value      []byte `json:"value,omitempty"`

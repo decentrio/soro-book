@@ -38,7 +38,7 @@ type EventJSON struct {
 }
 
 type Topics struct {
-	EventId    string `json:"event_id,omitempty"`
-	TopicXdr   []byte `json:"topic_xdr,omitempty"`
-	TopicIndex int32  `json:"topic_index,omitempty"`
+	EventId  string `json:"event_id,omitempty"`
+	TopicXdr []byte `json:"topic_xdr,omitempty"`
+	TopicIdx int32  `json:"topic_idx,omitempty"`
 }

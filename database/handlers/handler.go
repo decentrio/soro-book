@@ -35,5 +35,5 @@ func (h *DBHandler) CreateTopics(data *models.Topics) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s-%d", data.EventId, data.TopicIndex), nil
+	return fmt.Sprintf("%s-%d", data.EventId, data.TopicIdx), nil
 }

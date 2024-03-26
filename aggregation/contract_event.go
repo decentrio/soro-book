@@ -81,7 +81,7 @@ func ContractEventJSON(event models.Event, topics []models.Topics) (*models.Even
 	}
 
 	var value xdr.ScVal
-	err := value.UnmarshalBinary([]byte(event.Value))
+	err := value.UnmarshalBinary([]byte(event.ValueXdr))
 	if err != nil {
 		return evt, fmt.Errorf("Error Unmarshal value binary")
 	}

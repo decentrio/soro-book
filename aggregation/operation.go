@@ -82,7 +82,7 @@ func (operation *transactionOperationWrapper) GetContractEvents() []ContractEven
 				ContractId: event.ContractId.HexString(),
 				TxHash:     operation.transaction.Result.TransactionHash.HexString(),
 				EventType:  eventType,
-				Value:      valueBz,
+				ValueXdr:   valueBz,
 			},
 			topics: topics,
 		}

@@ -22,7 +22,7 @@ func (h *DBHandler) CreateTransaction(data *models.Transaction) (string, error) 
 	return data.Hash, nil
 }
 
-func (h *DBHandler) CreateEvent(data *models.ContractEvent) (string, error) {
+func (h *DBHandler) CreateEvent(data *models.Event) (string, error) {
 	if err := h.db.Create(data).Error; err != nil {
 		return "", err
 	}
@@ -35,5 +35,5 @@ func (h *DBHandler) CreateTopics(data *models.Topics) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s-%d", data.EventId, data.TopicIndex), nil
+	return fmt.Sprintf("%s-%d", data.EventId, data.TopicIdx), nil
 }

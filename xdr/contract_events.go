@@ -17,12 +17,11 @@ var (
 	ErrNotBurnEvent     = errors.New("this is not burn event")
 )
 
-func ConvertContractEventJSON(event models.ContractEvent, topics []models.Topics) (*models.ContractEventJSON, error) {
-	evt := &models.ContractEventJSON{}
+func ConvertContractEventJSON(event models.Event, topics []models.Topics) (*models.EventJSON, error) {
+	evt := &models.EventJSON{}
 
 	evt.Id = event.Id
 	evt.ContractId = event.ContractId
-	evt.LedgerSeq = event.LedgerSeq
 	evt.TxHash = event.TxHash
 	evt.EventType = event.EventType
 
@@ -37,7 +36,7 @@ func ConvertContractEventJSON(event models.ContractEvent, topics []models.Topics
 	}
 
 	var value xdr.ScVal
-	err := value.UnmarshalBinary([]byte(event.Value))
+	err := value.UnmarshalBinary([]byte(event.ValueXdr))
 	if err != nil {
 		return evt, fmt.Errorf("Error Unmarshal value binary")
 	}

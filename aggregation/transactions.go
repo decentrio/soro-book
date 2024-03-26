@@ -62,9 +62,9 @@ func (tw TransactionWrapper) GetEnvelopeXdr() []byte {
 	return bz
 }
 
-func (tw TransactionWrapper) GetResultXdr() string {
+func (tw TransactionWrapper) GetResultXdr() []byte {
 	bz, _ := tw.Tx.Result.MarshalBinary()
-	return string(bz)
+	return bz
 }
 
 func (tw TransactionWrapper) GetResultMetaXdr() []byte {
@@ -86,8 +86,8 @@ func (tw TransactionWrapper) GetModelsTransaction() *models.Transaction {
 		Ledger:           tw.GetLedgerSequence(),
 		ApplicationOrder: tw.GetApplicationOrder(),
 		EnvelopeXdr:      tw.GetEnvelopeXdr(),
-		// ResultXdr: tw.GetResultXdr(),
-		// ResultMetaXdr: tw.GetResultMetaXdr(),
-		SourceAddress: tw.Tx.Envelope.SourceAccount().ToAccountId().Address(),
+		ResultXdr:        tw.GetResultXdr(),
+		ResultMetaXdr:    tw.GetResultMetaXdr(),
+		SourceAddress:    tw.Tx.Envelope.SourceAccount().ToAccountId().Address(),
 	}
 }

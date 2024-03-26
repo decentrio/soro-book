@@ -16,6 +16,11 @@ type transactionOperationWrapper struct {
 	ledgerSequence uint32
 }
 
+type ContractEventWrapper struct {
+	contractEvent models.ContractEvent
+	topics        []string
+}
+
 // ID returns the ID for the operation.
 func (operation *transactionOperationWrapper) ID() int64 {
 	return toid.New(
@@ -46,8 +51,8 @@ func (operation *transactionOperationWrapper) OperationType() xdr.OperationType 
 	return operation.operation.Body.Type
 }
 
-func (operation *transactionOperationWrapper) GetContractEvents() map[models.ContractEvent][]string {
-	var eventsMap = make(map[models.ContractEvent][]string)
+func (operation *transactionOperationWrapper) GetContractEvents() []ContractEventWrapper {
+	var ceWrappers []ContractEventWrapper
 	var order = uint32(1)
 
 	for _, event := range operation.transaction.UnsafeMeta.V3.SorobanMeta.Events {
@@ -71,19 +76,21 @@ func (operation *transactionOperationWrapper) GetContractEvents() map[models.Con
 			continue
 		}
 
-		event := models.ContractEvent{
-			Id:         fmt.Sprintf("%019d-%010d", operation.ID(), order), // ID should be combine from operation ID and event index
-			ContractId: event.ContractId.HexString(),
-			LedgerSeq:  operation.ledgerSequence,
-			TxHash:     operation.transaction.Result.TransactionHash.HexString(),
-			EventType:  eventType,
-			Value:      valueBz,
+		ceWrapper := ContractEventWrapper{
+			contractEvent: models.ContractEvent{
+				Id:         fmt.Sprintf("%019d-%010d", operation.ID(), order), // ID should be combine from operation ID and event index
+				ContractId: event.ContractId.HexString(),
+				LedgerSeq:  operation.ledgerSequence,
+				TxHash:     operation.transaction.Result.TransactionHash.HexString(),
+				EventType:  eventType,
+				Value:      valueBz,
+			},
+			topics: topics,
 		}
 
-		eventsMap[event] = topics
-
+		ceWrappers = append(ceWrappers, ceWrapper)
 		order++
 	}
 
-	return eventsMap
+	return ceWrappers
 }

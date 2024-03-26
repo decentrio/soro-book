@@ -4,9 +4,10 @@ type Hash []byte
 type PoolId Hash
 type ScSymbol string
 
-type Envelope struct {
-	V0 *TransactionV0Envelope `json:"v0,omitempty"`
-	V1 *TransactionV1Envelope `json:"v1,omitempty"`
+type TransactionEnvelope struct {
+	V0      *TransactionV0Envelope      `json:"v0,omitempty"`
+	V1      *TransactionV1Envelope      `json:"v1,omitempty"`
+	FeeBump *FeeBumpTransactionEnvelope `json:"feebump,omitempty"`
 }
 
 type TransactionV0Envelope struct {
@@ -194,91 +195,91 @@ type ManageDataOp struct {
 }
 
 type BumpSequenceOp struct {
-	BumpTo int64
+	BumpTo int64 `json:"bump_to,omitempty"`
 }
 
 type ManageBuyOfferOp struct {
-	Selling   Asset
-	Buying    Asset
-	BuyAmount int64
-	Price     Price
-	OfferId   int64
+	Selling   Asset `json:"selling,omitempty"`
+	Buying    Asset `json:"buying,omitempty"`
+	BuyAmount int64 `json:"buy_amount,omitempty"`
+	Price     Price `json:"price,omitempty"`
+	OfferId   int64 `json:"offer_id,omitempty"`
 }
 
 type PathPaymentStrictSendOp struct {
-	SendAsset   Asset
-	SendAmount  int64
-	Destination MuxedAccount
-	DestAsset   Asset
-	DestMin     int64
-	Path        []Asset
+	SendAsset   Asset        `json:"send_asset,omitempty"`
+	SendAmount  int64        `json:"send_amount,omitempty"`
+	Destination MuxedAccount `json:"destination,omitempty"`
+	DestAsset   Asset        `json:"dest_asset,omitempty"`
+	DestMin     int64        `json:"dest_min,omitempty"`
+	Path        []Asset      `json:"path,omitempty"`
 }
 
 type CreateClaimableBalanceOp struct {
-	Asset     Asset
-	Amount    int64
-	Claimants []Claimant `xdrmaxsize:"10"`
+	Asset     Asset      `json:"asset,omitempty"`
+	Amount    int64      `json:"amount,omitempty"`
+	Claimants []Claimant `json:"claimants,omitempty"`
 }
 
 type Claimant struct {
-	V0 *ClaimantV0
+	V0 *ClaimantV0 `json:"v0,omitempty"`
 }
 
 type ClaimantV0 struct {
-	Destination PublicKey
-	Predicate   ClaimPredicate
+	Destination PublicKey      `json:"destination,omitempty"`
+	Predicate   ClaimPredicate `json:"predicate,omitempty"`
 }
 
 type ClaimPredicate struct {
-	AndPredicates *[]ClaimPredicate `xdrmaxsize:"2"`
-	OrPredicates  *[]ClaimPredicate `xdrmaxsize:"2"`
-	NotPredicate  **ClaimPredicate
-	AbsBefore     *int64
-	RelBefore     *int64
+	AndPredicates *[]ClaimPredicate `json:"and_predicates,omitempty"`
+	OrPredicates  *[]ClaimPredicate `json:"or_predicates,omitempty"`
+	NotPredicate  **ClaimPredicate  `json:"not_predicates,omitempty"`
+	AbsBefore     *int64            `json:"abs_before,omitempty"`
+	RelBefore     *int64            `json:"rel_before,omitempty"`
 }
 
 type ClaimClaimableBalanceOp struct {
-	BalanceId ClaimableBalanceId
+	BalanceId ClaimableBalanceId `json:"balance_id,omitempty"`
 }
 
 type ClaimableBalanceId struct {
-	V0 *string
+	V0 *string `json:"v0,omitempty"`
 }
 
 type BeginSponsoringFutureReservesOp struct {
-	SponsoredId PublicKey
+	SponsoredId PublicKey `json:"sponsored_id,omitempty"`
 }
 
 type RevokeSponsorshipOp struct {
-	LedgerKey *LedgerKey
-	Signer    *RevokeSponsorshipOpSigner
+	LedgerKey *LedgerKey                 `json:"ledger_key,omitempty"`
+	Signer    *RevokeSponsorshipOpSigner `json:"signer,omitempty"`
 }
 
 type RevokeSponsorshipOpSigner struct {
-	AccountId PublicKey
-	SignerKey SignerKey
+	AccountId PublicKey `json:"account_id,omitempty"`
+	SignerKey SignerKey `json:"signer_key,omitempty"`
 }
 
 type LedgerKey struct {
-	Account          *LedgerKeyAccount
-	TrustLine        *LedgerKeyTrustLine
-	Offer            *LedgerKeyOffer
-	Data             *LedgerKeyData
-	ClaimableBalance *LedgerKeyClaimableBalance
-	LiquidityPool    *LedgerKeyLiquidityPool
-	ContractData     *LedgerKeyContractData
-	ContractCode     *LedgerKeyContractCode
-	ConfigSetting    *LedgerKeyConfigSetting
-	Ttl              *LedgerKeyTtl
+	Account          *LedgerKeyAccount          `json:"account,omitempty"`
+	TrustLine        *LedgerKeyTrustLine        `json:"trust_line,omitempty"`
+	Offer            *LedgerKeyOffer            `json:"offer,omitempty"`
+	Data             *LedgerKeyData             `json:"data,omitempty"`
+	ClaimableBalance *LedgerKeyClaimableBalance `json:"claimable_balance,omitempty"`
+	LiquidityPool    *LedgerKeyLiquidityPool    `json:"liquidity_pool,omitempty"`
+	ContractData     *LedgerKeyContractData     `json:"contract_data,omitempty"`
+	ContractCode     *LedgerKeyContractCode     `json:"contract_code,omitempty"`
+	ConfigSetting    *LedgerKeyConfigSetting    `json:"config_setting,omitempty"`
+	Ttl              *LedgerKeyTtl              `json:"ttl,omitempty"`
 }
 
 type LedgerKeyAccount struct {
-	AccountId PublicKey
+	AccountId PublicKey `json:"account_id,omitempty"`
 }
 
 type LedgerKeyTrustLine struct {
-	AccountId PublicKey
-	Asset     TrustLineAsset
+	AccountId PublicKey      `json:"account_id,omitempty"`
+	Asset     TrustLineAsset `json:"asset,omitempty"`
 }
 
 type TrustLineAsset struct {
@@ -287,80 +288,80 @@ type TrustLineAsset struct {
 }
 
 type LedgerKeyOffer struct {
-	SellerId PublicKey
-	OfferId  int64
+	SellerId PublicKey `json:"seller_id,omitempty"`
+	OfferId  int64     `json:"offer_id,omitempty"`
 }
 
 type LedgerKeyData struct {
-	AccountId PublicKey
-	DataName  string
+	AccountId PublicKey `json:"account_id,omitempty"`
+	DataName  string    `json:"data_name,omitempty"`
 }
 
 type LedgerKeyClaimableBalance struct {
-	BalanceId ClaimableBalanceId
+	BalanceId ClaimableBalanceId `json:"balance_id,omitempty"`
 }
 
 type LedgerKeyLiquidityPool struct {
-	LiquidityPoolId PoolId
+	LiquidityPoolId PoolId `json:"liquidity_pool_id,omitempty"`
 }
 
 type LedgerKeyContractData struct {
-	Contract   ScAddress
-	Key        ScVal
-	Durability int32
+	Contract   ScAddress `json:"contract,omitempty"`
+	Key        ScVal     `json:"key,omitempty"`
+	Durability int32     `json:"durability,omitempty"`
 }
 
 type ScAddress struct {
-	AccountId  *PublicKey
-	ContractId *Hash
+	AccountId  *PublicKey `json:"account_id,omitempty"`
+	ContractId *Hash      `json:"contract_id,omitempty"`
 }
 
 type ScVal struct {
-	B         *bool
-	Error     *ScError
-	U32       *uint32
-	I32       *int32
-	U64       *uint64
-	I64       *int64
-	Timepoint *uint64
-	Duration  *uint64
-	U128      *UInt128Parts
-	I128      *Int128Parts
-	U256      *UInt256Parts
-	I256      *Int256Parts
-	Bytes     *ScBytes
-	Str       *string
-	Sym       *ScSymbol
-	Vec       **ScVal
-	Map       **ScMap
-	Address   *ScAddress
-	NonceKey  *ScNonceKey
-	Instance  *ScContractInstance
+	B         *bool               `json:"b,omitempty"`
+	Error     *ScError            `json:"error,omitempty"`
+	U32       *uint32             `json:"u32,omitempty"`
+	I32       *int32              `json:"i32,omitempty"`
+	U64       *uint64             `json:"u64,omitempty"`
+	I64       *int64              `json:"i64,omitempty"`
+	Timepoint *uint64             `json:"timepoint,omitempty"`
+	Duration  *uint64             `json:"duration,omitempty"`
+	U128      *UInt128Parts       `json:"u128,omitempty"`
+	I128      *Int128Parts        `json:"i128,omitempty"`
+	U256      *UInt256Parts       `json:"u256,omitempty"`
+	I256      *Int256Parts        `json:"i256,omitempty"`
+	Bytes     *ScBytes            `json:"bytes,omitempty"`
+	Str       *string             `json:"str,omitempty"`
+	Sym       *ScSymbol           `json:"sym,omitempty"`
+	Vec       **ScVal             `json:"vec,omitempty"`
+	Map       **ScMap             `json:"map,omitempty"`
+	Address   *ScAddress          `json:"address,omitempty"`
+	NonceKey  *ScNonceKey         `json:"nonce_key,omitempty"`
+	Instance  *ScContractInstance `json:"instance,omitempty"`
 }
 
 type ContractExecutable struct {
-	WasmHash *Hash
+	WasmHash *Hash `json:"wasm_hash,omitempty"`
 }
 
 type ScContractInstance struct {
-	Executable ContractExecutable
-	Storage    *ScMap
+	Executable ContractExecutable `json:"executable,omitempty"`
+	Storage    *ScMap             `json:"storage,omitempty"`
 }
 
 type ScNonceKey struct {
-	Nonce int64
+	Nonce int64 `json:"nonce,omitempty"`
 }
 
 type ScMap []ScMapEntry
 
 type ScMapEntry struct {
-	Key ScVal
-	Val ScVal
+	Key ScVal `json:"key,omitempty"`
+	Val ScVal `json:"val,omitempty"`
 }
 
 type UInt128Parts struct {
-	Hi uint64
-	Lo uint64
+	Hi uint64 `json:"hi,omitempty"`
+	Lo uint64 `json:"lo,omitempty"`
 }
 
 type Int128Parts struct {
@@ -369,190 +370,210 @@ type Int128Parts struct {
 }
 
 type UInt256Parts struct {
-	HiHi uint64
-	HiLo uint64
-	LoHi uint64
-	LoLo uint64
+	HiHi uint64 `json:"hihi,omitempty"`
+	HiLo uint64 `json:"hilo,omitempty"`
+	LoHi uint64 `json:"lohi,omitempty"`
+	LoLo uint64 `json:"lolo,omitempty"`
 }
 
 type Int256Parts struct {
-	HiHi int64
-	HiLo uint64
-	LoHi uint64
-	LoLo uint64
+	HiHi int64  `json:"hihi,omitempty"`
+	HiLo uint64 `json:"hilo,omitempty"`
+	LoHi uint64 `json:"lohi,omitempty"`
+	LoLo uint64 `json:"lolo,omitempty"`
 }
 
 type ScBytes []byte
 
 type ScError struct {
-	ContractCode *uint32
-	Code         *uint32
+	ContractCode *uint32 `json:"contract_code,omitempty"`
+	Code         *uint32 `json:"code,omitempty"`
 }
 
 type LedgerKeyContractCode struct {
-	Hash Hash
+	Hash Hash `json:"hash,omitempty"`
 }
 
 type LedgerKeyConfigSetting struct {
-	ConfigSettingId int32
+	ConfigSettingId int32 `json:"config_setting_id,omitempty"`
 }
 
 type LedgerKeyTtl struct {
-	KeyHash Hash
+	KeyHash Hash `json:"key_hash,omitempty"`
 }
 
 type ClawbackOp struct {
-	Asset  Asset
-	From   MuxedAccount
-	Amount int64
+	Asset  Asset        `json:"asset,omitempty"`
+	From   MuxedAccount `json:"from,omitempty"`
+	Amount int64        `json:"amount,omitempty"`
 }
 
 type ClawbackClaimableBalanceOp struct {
-	BalanceId ClaimableBalanceId
+	BalanceId ClaimableBalanceId `json:"balance_id,omitempty"`
 }
 
 type SetTrustLineFlagsOp struct {
-	Trustor    PublicKey
-	Asset      Asset
-	ClearFlags uint32
-	SetFlags   uint32
+	Trustor    PublicKey `json:"trustor,omitempty"`
+	Asset      Asset     `json:"asset,omitempty"`
+	ClearFlags uint32    `json:"clear_flags,omitempty"`
+	SetFlags   uint32    `json:"set_flags,omitempty"`
 }
 
 type LiquidityPoolDepositOp struct {
-	LiquidityPoolId PoolId
-	MaxAmountA      int64
-	MaxAmountB      int64
-	MinPrice        Price
-	MaxPrice        Price
+	LiquidityPoolId PoolId `json:"liquidity_pool_id,omitempty"`
+	MaxAmountA      int64  `json:"max_amount_a,omitempty"`
+	MaxAmountB      int64  `json:"max_amount_b,omitempty"`
+	MinPrice        Price  `json:"min_price,omitempty"`
+	MaxPrice        Price  `json:"max_price,omitempty"`
 }
 
 type LiquidityPoolWithdrawOp struct {
-	LiquidityPoolId PoolId
-	Amount          int64
-	MinAmountA      int64
-	MinAmountB      int64
+	LiquidityPoolId PoolId `json:"liquidity_pool_id,omitempty"`
+	Amount          int64  `json:"amount,omitempty"`
+	MinAmountA      int64  `json:"min_amount_a,omitempty"`
+	MinAmountB      int64  `json:"min_amount_b,omitempty"`
 }
 
 type InvokeHostFunctionOp struct {
-	HostFunction HostFunction
-	Auth         []SorobanAuthorizationEntry
+	HostFunction HostFunction                `json:"host_function,omitempty"`
+	Auth         []SorobanAuthorizationEntry `json:"auth,omitempty"`
 }
 
 type SorobanAuthorizationEntry struct {
-	Credentials    SorobanCredentials
-	RootInvocation SorobanAuthorizedInvocation
+	Credentials    SorobanCredentials          `json:"credentials,omitempty"`
+	RootInvocation SorobanAuthorizedInvocation `json:"root_invocation,omitempty"`
 }
 
 type SorobanCredentials struct {
-	Address *int32
+	Address *int32 `json:"address,omitempty"`
 }
 
 type SorobanAuthorizedInvocation struct {
-	Function       SorobanAuthorizedFunction
-	SubInvocations []SorobanAuthorizedInvocation
+	Function       SorobanAuthorizedFunction     `json:"function,omitempty"`
+	SubInvocations []SorobanAuthorizedInvocation `json:"sub_invocations,omitempty"`
 }
 
 type SorobanAuthorizedFunction struct {
-	ContractFn           *InvokeContractArgs
-	CreateContractHostFn *CreateContractArgs
+	ContractFn           *InvokeContractArgs `json:"contract_fn,omitempty"`
+	CreateContractHostFn *CreateContractArgs `json:"create_contract_host_fn,omitempty"`
 }
 
 type HostFunction struct {
-	InvokeContract *InvokeContractArgs
-	CreateContract *CreateContractArgs
-	Wasm           *[]byte
+	InvokeContract *InvokeContractArgs `json:"invoke_contract,omitempty"`
+	CreateContract *CreateContractArgs `json:"create_contract,omitempty"`
+	Wasm           *[]byte             `json:"wasm,omitempty"`
 }
 
 type InvokeContractArgs struct {
-	ContractAddress ScAddress
-	FunctionName    ScSymbol
-	Args            []ScVal
+	ContractAddress ScAddress `json:"contract_address,omitempty"`
+	FunctionName    ScSymbol  `json:"function_name,omitempty"`
+	Args            []ScVal   `json:"args,omitempty"`
 }
 
 type CreateContractArgs struct {
-	ContractIdPreimage ContractIdPreimage
-	Executable         ContractExecutable
+	ContractIdPreimage ContractIdPreimage `json:"contract_id_preimage,omitempty"`
+	Executable         ContractExecutable `json:"executable,omitempty"`
 }
 
 type ContractIdPreimage struct {
-	FromAddress *ContractIdPreimageFromAddress
-	FromAsset   *Asset
+	FromAddress *ContractIdPreimageFromAddress `json:"from_address,omitempty"`
+	FromAsset   *Asset                         `json:"from_asset,omitempty"`
 }
 
 type ContractIdPreimageFromAddress struct {
-	Address ScAddress
-	Salt    []byte
+	Address ScAddress `json:"address,omitempty"`
+	Salt    []byte    `json:"salt,omitempty"`
 }
 
 type ExtendFootprintTtlOp struct {
-	Ext      ExtensionPoint
-	ExtendTo uint32
+	Ext      ExtensionPoint `json:"ext,omitempty"`
+	ExtendTo uint32         `json:"extend_to,omitempty"`
 }
 
 type RestoreFootprintOp struct {
-	Ext ExtensionPoint
+	Ext ExtensionPoint `json:"ext,omitempty"`
 }
 
 type ExtensionPoint struct {
-	V int32
+	V int32 `json:"v,omitempty"`
 }
 
 type TransactionV0Ext struct {
-	V int32
+	V int32 `json:"v,omitempty"`
 }
 
 type TransactionV1Envelope struct {
-	Tx         Transaction
-	Signatures []DecoratedSignature `xdrmaxsize:"20"`
+	Tx         Transaction          `json:"tx,omitempty"`
+	Signatures []DecoratedSignature `json:"signatures,omitempty"`
 }
 
 type Transaction struct {
-	SourceAccount MuxedAccount
-	Fee           uint32
-	SeqNum        int64
-	Cond          Preconditions
-	Memo          Memo
-	Operations    []Operation `xdrmaxsize:"100"`
-	Ext           TransactionExt
+	SourceAccount MuxedAccount   `json:"source_account,omitempty"`
+	Fee           uint32         `json:"fee,omitempty"`
+	SeqNum        int64          `json:"seq_num,omitempty"`
+	Cond          Preconditions  `json:"cond,omitempty"`
+	Memo          Memo           `json:"memo,omitempty"`
+	Operations    []Operation    `json:"operations,omitempty"`
+	Ext           TransactionExt `json:"ext,omitempty"`
 }
 
 type TransactionExt struct {
-	SorobanData *SorobanTransactionData
+	SorobanData *SorobanTransactionData `json:"soroban_data,omitempty"`
 }
 
 type SorobanTransactionData struct {
-	Ext         ExtensionPoint
-	Resources   SorobanResources
-	ResourceFee int64
+	Ext         ExtensionPoint   `json:"ext,omitempty"`
+	Resources   SorobanResources `json:"resources,omitempty"`
+	ResourceFee int64            `json:"resource_fee,omitempty"`
 }
 
 type SorobanResources struct {
-	Footprint    LedgerFootprint
-	Instructions uint32
-	ReadBytes    uint32
-	WriteBytes   uint32
+	Footprint    LedgerFootprint `json:"footprint,omitempty"`
+	Instructions uint32          `json:"instructions,omitempty"`
+	ReadBytes    uint32          `json:"read_bytes,omitempty"`
+	WriteBytes   uint32          `json:"write_bytes,omitempty"`
 }
 
 type LedgerFootprint struct {
-	ReadOnly  []LedgerKey
-	ReadWrite []LedgerKey
+	ReadOnly  []LedgerKey `json:"read_only,omitempty"`
+	ReadWrite []LedgerKey `json:"read_write,omitempty"`
 }
 
 type Preconditions struct {
-	TimeBounds *TimeBounds
-	V2         *PreconditionsV2
+	TimeBounds *TimeBounds      `json:"time_bounds,omitempty"`
+	V2         *PreconditionsV2 `json:"v2,omitempty"`
 }
 
 type PreconditionsV2 struct {
-	TimeBounds      *TimeBounds
-	LedgerBounds    *LedgerBounds
-	MinSeqNum       *int64
-	MinSeqAge       uint64
-	MinSeqLedgerGap uint32
-	ExtraSigners    []SignerKey `xdrmaxsize:"2"`
+	TimeBounds      *TimeBounds   `json:"time_bounds,omitempty"`
+	LedgerBounds    *LedgerBounds `json:"ledger_bounds,omitempty"`
+	MinSeqNum       *int64        `json:"min_seq_num,omitempty"`
+	MinSeqAge       uint64        `json:"min_seq_age,omitempty"`
+	MinSeqLedgerGap uint32        `json:"min_seq_ledger_gap,omitempty"`
+	ExtraSigners    []SignerKey   `json:"extra_signers,omitempty"`
 }
 
 type LedgerBounds struct {
-	MinLedger uint32
-	MaxLedger uint32
+	MinLedger uint32 `json:"min_ledger,omitempty"`
+	MaxLedger uint32 `json:"max_ledger,omitempty"`
+}
+
+type FeeBumpTransactionEnvelope struct {
+	Tx         FeeBumpTransaction   `json:"tx,omitempty"`
+	Signatures []DecoratedSignature `json:"signatures,omitempty"`
+}
+
+type FeeBumpTransaction struct {
+	FeeSource MuxedAccount              `json:"fee_source,omitempty"`
+	Fee       int64                     `json:"fee,omitempty"`
+	InnerTx   FeeBumpTransactionInnerTx `json:"inner_tx,omitempty"`
+	Ext       FeeBumpTransactionExt     `json:"ext,omitempty"`
+}
+
+type FeeBumpTransactionInnerTx struct {
+	V1 *TransactionV1Envelope `json:"v1,omitempty"`
+}
+
+type FeeBumpTransactionExt struct {
+	V int32 `json:"v,omitempty"`
 }

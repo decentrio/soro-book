@@ -67,7 +67,6 @@ func ContractEventJSON(event models.Event, topics []models.Topics) (*models.Even
 
 	evt.Id = event.Id
 	evt.ContractId = event.ContractId
-	evt.LedgerSeq = event.LedgerSeq
 	evt.TxHash = event.TxHash
 	evt.EventType = event.EventType
 

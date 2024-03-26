@@ -19,7 +19,7 @@ type Transaction struct {
 	SourceAddress    string `json:"source_address,omitempty"`
 }
 
-type ContractEvent struct {
+type Event struct {
 	Id         string `json:"id,omitempty"`
 	ContractId string `json:"contract_id,omitempty"`
 	LedgerSeq  uint32 `json:"ledger_seq,omitempty"`
@@ -28,7 +28,7 @@ type ContractEvent struct {
 	Value      []byte `json:"value,omitempty"`
 }
 
-type ContractEventJSON struct {
+type EventJSON struct {
 	Id         string `json:"id,omitempty"`
 	ContractId string `json:"contract_id,omitempty"`
 	LedgerSeq  uint32 `json:"ledger_seq,omitempty"`

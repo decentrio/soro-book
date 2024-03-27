@@ -101,10 +101,6 @@ func ConvertMemo(memo xdr.Memo) (Memo, error) {
 	}
 }
 
-func ConvertOperation(op xdr.Operation) (Operation, error) {
-	return Operation{}, nil
-}
-
 func ConvertTxV0Ext(ext xdr.TransactionV0Ext) (TransactionV0Ext, error) {
 	return TransactionV0Ext{}, nil
 }

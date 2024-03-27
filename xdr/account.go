@@ -62,6 +62,105 @@ func ConvertMuxedAccount(ma xdr.MuxedAccount) (MuxedAccount, error) {
 	return MuxedAccount{}, errors.Errorf("error invalid muxed account type %v", ma.Type)
 }
 
+func ConvertLedgerKeyAccount(k xdr.LedgerKeyAccount) LedgerKeyAccount {
+	accountId := PublicKey{
+		Ed25519: ConvertEd25519(k.AccountId.Ed25519),
+	}
+
+	return LedgerKeyAccount{
+		AccountId: accountId,
+	}
+}
+
+func ConvertLedgerKeyTrustLine(k xdr.LedgerKeyTrustLine) (result LedgerKeyTrustLine, err error) {
+	accountID := PublicKey{
+		Ed25519: ConvertEd25519(k.AccountId.Ed25519),
+	}
+
+	asset, err := ConvertTrustLineAsset(k.Asset)
+	if err != nil {
+		return result, err
+	}
+
+	result.AccountId = accountID
+	result.Asset = asset
+
+	return result, nil
+}
+
+func ConvertLedgerKeyOffer(k xdr.LedgerKeyOffer) (result LedgerKeyOffer, err error) {
+	seller := PublicKey{
+		Ed25519: ConvertEd25519(k.SellerId.Ed25519),
+	}
+
+	result.SellerId = seller
+	result.OfferId = int64(k.OfferId)
+
+	return result, err
+}
+
+func ConvertLedgerKeyData(k xdr.LedgerKeyData) (LedgerKeyData, error) {
+	var result LedgerKeyData
+
+	accountID := PublicKey{
+		Ed25519: ConvertEd25519(k.AccountId.Ed25519),
+	}
+
+	result.AccountId = accountID
+	result.DataName = string(k.DataName)
+
+	return result, nil
+}
+
+func ConvertLedgerKeyClaimableBalance(k xdr.LedgerKeyClaimableBalance) (LedgerKeyClaimableBalance, error) {
+	var result LedgerKeyClaimableBalance
+
+	id, err := ConvertClaimableBalanceId(k.BalanceId)
+	if err != nil {
+		return result, err
+	}
+
+	result.BalanceId = id
+
+	return result, nil
+}
+
+func ConvertLedgerKeyLiquidityPool(k xdr.LedgerKeyLiquidityPool) (LedgerKeyLiquidityPool, error) {
+	var result LedgerKeyLiquidityPool
+
+	xdrHashPoolId := xdr.Hash(k.LiquidityPoolId)
+	lpId := PoolId(xdrHashPoolId[:])
+	result.LiquidityPoolId = lpId
+
+	return result, nil
+}
+
+func ConvertLedgerKeyContractData(k xdr.LedgerKeyContractData) (LedgerKeyContractData, error) {
+	var result LedgerKeyContractData
+}
+
+func ConvertLedgerKeyContractCode(k xdr.LedgerKeyContractCode) (LedgerKeyContractCode, error) {
+	var result LedgerKeyContractCode
+}
+
+func ConvertLedgerKeyConfigSetting(k xdr.LedgerKeyConfigSetting) (LedgerKeyConfigSetting, error) {
+	var result LedgerKeyConfigSetting
+}
+
+func ConvertLedgerKeyTtl(k xdr.LedgerKeyTtl) (LedgerKeyTtl, error) {
+	var result LedgerKeyTtl
+}
+
+// TODO: testing
+func ConvertLegerKey(k xdr.LedgerKey) (LedgerKey, error) {
+	var result LedgerKey
+}
+
+// TODO :testing
+func ConvertRevokeSponsorshipOpSigner(s xdr.RevokeSponsorshipOpSigner) (RevokeSponsorshipOpSigner, error) {
+	var result RevokeSponsorshipOpSigner
+}
+
 // TODO: testing
 func ConvertSignerKeyEd25519SignedPayload(inp *xdr.SignerKeyEd25519SignedPayload) SignerKeyEd25519SignedPayload {
 	result := SignerKeyEd25519SignedPayload{

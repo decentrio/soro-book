@@ -36,6 +36,22 @@ func ConvertAsset(as xdr.Asset) (Asset, error) {
 }
 
 // TODO: testing
+func ConvertTrustLineAsset(a xdr.TrustLineAsset) (TrustLineAsset, error) {
+	var result TrustLineAsset
+	asset, err := ConvertAsset(a.ToAsset())
+	if err != nil {
+		return result, err
+	}
+	result.Asset = &asset
+
+	xdrLpId := xdr.Hash(*a.LiquidityPoolId)
+	lpId := PoolId(xdrLpId[:])
+	result.LiquidityPoolId = &lpId
+
+	return result, nil
+}
+
+// TODO: testing
 func ConvertLiquidityPoolConstantProductParameters(
 	lpcpp xdr.LiquidityPoolConstantProductParameters,
 ) (LiquidityPoolConstantProductParameters, error) {

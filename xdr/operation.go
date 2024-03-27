@@ -357,8 +357,25 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 
 		return result, nil
 	case xdr.OperationTypeBeginSponsoringFutureReserves:
+		xdrBeginSponsoringFutureReservesOp := bd.BeginSponsoringFutureReservesOp
+
+		sponsoredId := PublicKey{
+			Ed25519: ConvertEd25519(xdrBeginSponsoringFutureReservesOp.SponsoredId.Ed25519),
+		}
+
+		xdrbeginSponsoringFutureReservesOp := BeginSponsoringFutureReservesOp{
+			SponsoredId: sponsoredId,
+		}
+		result.BeginSponsoringFutureReservesOp = &xdrbeginSponsoringFutureReservesOp
+
+		return result, nil
 	case xdr.OperationTypeEndSponsoringFutureReserves:
+		// void
+		return result, nil
 	case xdr.OperationTypeRevokeSponsorship:
+		xdrRevokeSponsorshipOp := bd.RevokeSponsorshipOp
+
+		RevokeSponsorshipOp := RevokeSponsorshipOp{}
 	case xdr.OperationTypeClawback:
 	case xdr.OperationTypeClawbackClaimableBalance:
 	case xdr.OperationTypeSetTrustLineFlags:

@@ -32,3 +32,10 @@ func ConvertAsset(as xdr.Asset) (Asset, error) {
 	}
 
 }
+
+func ConvertPrice(p xdr.Price) Price {
+	return Price{
+		N: int32(p.N),
+		D: int32(p.D),
+	}
+}

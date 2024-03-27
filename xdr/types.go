@@ -120,11 +120,11 @@ type Price struct {
 }
 
 type ManageSellOfferOp struct {
-	Selling Asset `json:"selling,omitempty"`
-	Buying  Asset `json:"buying,omitempty"`
-	Amount  int64 `json:"amount,omitempty"`
-	Price   Price `json:"price,omitempty"`
-	OfferId int64 `json:"offer_id,omitempty"`
+	Selling   Asset `json:"selling,omitempty"`
+	Buying    Asset `json:"buying,omitempty"`
+	BuyAmount int64 `json:"buy_amount,omitempty"`
+	Price     Price `json:"price,omitempty"`
+	OfferId   int64 `json:"offer_id,omitempty"`
 }
 
 type CreatePassiveSellOfferOp struct {
@@ -153,8 +153,8 @@ type Signer struct {
 
 type SignerKey struct {
 	Ed25519              *string                        `json:"ed25519,omitempty"`
-	PreAuthTx            *[]byte                        `json:"pre_auth_tx,omitempty"`
-	HashX                *[]byte                        `json:"hash_x,omitempty"`
+	PreAuthTx            *string                        `json:"pre_auth_tx,omitempty"`
+	HashX                *string                        `json:"hash_x,omitempty"`
 	Ed25519SignedPayload *SignerKeyEd25519SignedPayload `json:"ed25519_signed_payload,omitempty"`
 }
 

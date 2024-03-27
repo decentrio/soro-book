@@ -181,6 +181,20 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 
 		return result, nil
 	case xdr.OperationTypeChangeTrust:
+		xdrChangeTrust := bd.ChangeTrustOp
+
+		line, err := ConvertChangeTrustAsset(xdrChangeTrust.Line)
+		if err != nil {
+			return result, err
+		}
+
+		changeTrust := &ChangeTrustOp{
+			Line:  line,
+			Limit: int64(xdrChangeTrust.Limit),
+		}
+		result.ChangeTrustOp = changeTrust
+
+		return result, nil
 	case xdr.OperationTypeAllowTrust:
 	case xdr.OperationTypeAccountMerge:
 	case xdr.OperationTypeInflation:

@@ -343,6 +343,19 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 
 		return result, nil
 	case xdr.OperationTypeClaimClaimableBalance:
+		xdrClaimClaimableBalanceOp := bd.ClaimClaimableBalanceOp
+
+		balanceId, err := ConvertClaimableBalanceId(xdrClaimClaimableBalanceOp.BalanceId)
+		if err != nil {
+			return result, nil
+		}
+
+		claimClaimableBalanceOp := &ClaimClaimableBalanceOp{
+			BalanceId: balanceId,
+		}
+		result.ClaimClaimableBalanceOp = claimClaimableBalanceOp
+
+		return result, nil
 	case xdr.OperationTypeBeginSponsoringFutureReserves:
 	case xdr.OperationTypeEndSponsoringFutureReserves:
 	case xdr.OperationTypeRevokeSponsorship:

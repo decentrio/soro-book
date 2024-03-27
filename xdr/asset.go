@@ -193,6 +193,20 @@ func ConvertClaimant(c xdr.Claimant) (Claimant, error) {
 }
 
 // TODO: testing
+func ConvertClaimableBalanceId(id xdr.ClaimableBalanceId) (ClaimableBalanceId, error) {
+	var result ClaimableBalanceId
+
+	switch id.Type {
+	case xdr.ClaimableBalanceIdTypeClaimableBalanceIdTypeV0:
+		v0 := (*id.V0).HexString()
+		result.V0 = &v0
+		return result, nil
+	}
+
+	return result, errors.Errorf("invalid ClaimableBalanceId type %v", id.Type)
+}
+
+// TODO: testing
 func ConvertPrice(p xdr.Price) Price {
 	return Price{
 		N: int32(p.N),

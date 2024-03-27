@@ -1,6 +1,7 @@
 package xdr
 
 import (
+	"github.com/pkg/errors"
 	"github.com/stellar/go/xdr"
 )
 
@@ -196,6 +197,30 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 
 		return result, nil
 	case xdr.OperationTypeAllowTrust:
+		xdrAllowTrust := bd.AllowTrustOp
+
+		trustor := PublicKey{
+			Ed25519: ConvertEd25519(xdrAllowTrust.Trustor.Ed25519),
+		}
+
+		var assetCode []byte
+		switch xdrAllowTrust.Asset.Type {
+		case xdr.AssetTypeAssetTypeCreditAlphanum4:
+			assetCode = xdrAllowTrust.Asset.AssetCode4[:]
+		case xdr.AssetTypeAssetTypeCreditAlphanum12:
+			assetCode = xdrAllowTrust.Asset.AssetCode12[:]
+		default:
+			return result, errors.Errorf("OperationTypeAllowTrust invalid asset code %v", xdrAllowTrust.Asset.Type)
+		}
+
+		allowTrust := &AllowTrustOp{
+			Trustor:   trustor,
+			AssetCode: assetCode,
+			Authorize: uint32(xdrAllowTrust.Authorize),
+		}
+		result.AllowTrustOp = allowTrust
+
+		return result, nil
 	case xdr.OperationTypeAccountMerge:
 	case xdr.OperationTypeInflation:
 	case xdr.OperationTypeManageData:

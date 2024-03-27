@@ -185,7 +185,7 @@ type LiquidityPoolConstantProductParameters struct {
 
 type AllowTrustOp struct {
 	Trustor   PublicKey `json:"trustor,omitempty"`
-	Asset     []byte    `json:"asset,omitempty"`
+	AssetCode []byte    `json:"asset_code,omitempty"`
 	Authorize uint32    `json:"authorize,omitempty"`
 }
 

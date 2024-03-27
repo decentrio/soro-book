@@ -4,6 +4,7 @@ import (
 	"github.com/stellar/go/xdr"
 )
 
+// TODO: testing
 func ConvertOperation(op xdr.Operation) (Operation, error) {
 	var result Operation
 	sourceAccount, err := ConvertMuxedAccount(*op.SourceAccount)
@@ -21,6 +22,7 @@ func ConvertOperation(op xdr.Operation) (Operation, error) {
 	return result, nil
 }
 
+// TODO: testing
 func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 	var result OperationBody
 
@@ -45,8 +47,7 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 			return result, err
 		}
 
-		xdrAsset := xdrPaymentOp.Asset
-		asset, err := ConvertAsset(xdrAsset)
+		asset, err := ConvertAsset(xdrPaymentOp.Asset)
 		if err != nil {
 			return result, err
 		}
@@ -60,6 +61,7 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 
 		return result, nil
 	case xdr.OperationTypePathPaymentStrictReceive:
+
 	case xdr.OperationTypeManageSellOffer:
 	case xdr.OperationTypeCreatePassiveSellOffer:
 	case xdr.OperationTypeSetOptions:

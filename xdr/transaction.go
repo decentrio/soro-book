@@ -9,6 +9,7 @@ import (
 // 	return models.TransactionJSON{}
 // }
 
+// TODO: testing
 func ConvertTransactionV0(tx xdr.TransactionV0) (TransactionV0, error) {
 	var txV0 TransactionV0
 
@@ -48,6 +49,7 @@ func ConvertTransactionV0(tx xdr.TransactionV0) (TransactionV0, error) {
 	return txV0, nil
 }
 
+// TODO: testing
 func ConvertTimeBounds(tb *xdr.TimeBounds) (*TimeBounds, error) {
 	return &TimeBounds{
 		MinTime: uint64(tb.MinTime),
@@ -55,6 +57,7 @@ func ConvertTimeBounds(tb *xdr.TimeBounds) (*TimeBounds, error) {
 	}, nil
 }
 
+// TODO: testing
 func ConvertMemo(memo xdr.Memo) (Memo, error) {
 	var result Memo
 
@@ -101,6 +104,7 @@ func ConvertMemo(memo xdr.Memo) (Memo, error) {
 	}
 }
 
+// TODO: testing
 func ConvertTxV0Ext(ext xdr.TransactionV0Ext) (TransactionV0Ext, error) {
 	return TransactionV0Ext{}, nil
 }

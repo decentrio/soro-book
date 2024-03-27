@@ -5,6 +5,7 @@ import (
 	"github.com/stellar/go/xdr"
 )
 
+// TODO: testing
 func ConvertAsset(as xdr.Asset) (Asset, error) {
 	var result Asset
 	switch as.Type {

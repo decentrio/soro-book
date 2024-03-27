@@ -5,6 +5,7 @@ import (
 	"github.com/stellar/go/xdr"
 )
 
+// TODO: testing
 func ConvertMuxedAccount(ma xdr.MuxedAccount) (MuxedAccount, error) {
 	var result MuxedAccount
 	switch ma.Type {
@@ -23,11 +24,13 @@ func ConvertMuxedAccount(ma xdr.MuxedAccount) (MuxedAccount, error) {
 	return MuxedAccount{}, errors.Errorf("error invalid muxed account type %v", ma.Type)
 }
 
+// TODO: testing
 func ConvertEd25519(inp *xdr.Uint256) string {
 	result := inp.String()
 	return result
 }
 
+// TODO: testing
 func ConvertMuxedAccountMed25519(inp *xdr.MuxedAccountMed25519) MuxedAccountMed25519 {
 	key := ConvertEd25519(&inp.Ed25519)
 	return MuxedAccountMed25519{

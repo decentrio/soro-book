@@ -5,6 +5,7 @@ import (
 	"github.com/stellar/go/xdr"
 )
 
+// TODO: testing
 func ConvertEnvelopeXdrToJson(envelope xdr.TransactionEnvelope) (TransactionEnvelope, error) {
 	// var txEnvelope TransactionEnvelope
 	switch envelope.Type {
@@ -16,6 +17,7 @@ func ConvertEnvelopeXdrToJson(envelope xdr.TransactionEnvelope) (TransactionEnve
 	return TransactionEnvelope{}, errors.Errorf("error invalid type envelope: %v", envelope.Type)
 }
 
+// TODO: testing
 func ConvertEnvelopeV0XdrToJson(v0 *xdr.TransactionV0Envelope) (TransactionV0Envelope, error) {
 	return TransactionV0Envelope{}, nil
 }

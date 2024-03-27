@@ -318,7 +318,7 @@ type LedgerKeyContractData struct {
 
 type ScAddress struct {
 	AccountId  *PublicKey `json:"account_id,omitempty"`
-	ContractId *Hash      `json:"contract_id,omitempty"`
+	ContractId *string    `json:"contract_id,omitempty"`
 }
 
 type ScVal struct {
@@ -337,15 +337,15 @@ type ScVal struct {
 	Bytes     *ScBytes            `json:"bytes,omitempty"`
 	Str       *string             `json:"str,omitempty"`
 	Sym       *ScSymbol           `json:"sym,omitempty"`
-	Vec       **ScVal             `json:"vec,omitempty"`
-	Map       **ScMap             `json:"map,omitempty"`
+	Vec       *[]ScVal            `json:"vec,omitempty"`
+	Map       *ScMap              `json:"map,omitempty"`
 	Address   *ScAddress          `json:"address,omitempty"`
 	NonceKey  *ScNonceKey         `json:"nonce_key,omitempty"`
 	Instance  *ScContractInstance `json:"instance,omitempty"`
 }
 
 type ContractExecutable struct {
-	WasmHash *Hash `json:"wasm_hash,omitempty"`
+	WasmHash *string `json:"wasm_hash,omitempty"`
 }
 
 type ScContractInstance struct {
@@ -392,11 +392,11 @@ type ScBytes []byte
 
 type ScError struct {
 	ContractCode *uint32 `json:"contract_code,omitempty"`
-	Code         *uint32 `json:"code,omitempty"`
+	Code         *int32  `json:"code,omitempty"`
 }
 
 type LedgerKeyContractCode struct {
-	Hash Hash `json:"hash,omitempty"`
+	Hash string `json:"hash,omitempty"`
 }
 
 type LedgerKeyConfigSetting struct {
@@ -404,7 +404,7 @@ type LedgerKeyConfigSetting struct {
 }
 
 type LedgerKeyTtl struct {
-	KeyHash Hash `json:"key_hash,omitempty"`
+	KeyHash string `json:"key_hash,omitempty"`
 }
 
 type ClawbackOp struct {

@@ -137,28 +137,138 @@ func ConvertLedgerKeyLiquidityPool(k xdr.LedgerKeyLiquidityPool) (LedgerKeyLiqui
 
 func ConvertLedgerKeyContractData(k xdr.LedgerKeyContractData) (LedgerKeyContractData, error) {
 	var result LedgerKeyContractData
+
+	contract, err := ConvertScAddress(k.Contract)
+	if err != nil {
+		return result, err
+	}
+	result.Contract = contract
+
+	key, err := ConvertScVal(k.Key)
+	if err != nil {
+		return result, err
+	}
+	result.Key = key
+
+	result.Durability = int32(k.Durability)
+
+	return result, nil
 }
 
 func ConvertLedgerKeyContractCode(k xdr.LedgerKeyContractCode) (LedgerKeyContractCode, error) {
 	var result LedgerKeyContractCode
+	result.Hash = k.Hash.HexString()
+
+	return result, nil
 }
 
 func ConvertLedgerKeyConfigSetting(k xdr.LedgerKeyConfigSetting) (LedgerKeyConfigSetting, error) {
 	var result LedgerKeyConfigSetting
+	result.ConfigSettingId = int32(k.ConfigSettingId)
+
+	return result, nil
 }
 
 func ConvertLedgerKeyTtl(k xdr.LedgerKeyTtl) (LedgerKeyTtl, error) {
 	var result LedgerKeyTtl
+	result.KeyHash = k.KeyHash.HexString()
+
+	return result, nil
 }
 
 // TODO: testing
 func ConvertLegerKey(k xdr.LedgerKey) (LedgerKey, error) {
 	var result LedgerKey
+	switch k.Type {
+	case xdr.LedgerEntryTypeAccount:
+		account := ConvertLedgerKeyAccount(*k.Account)
+		result.Account = &account
+		return result, nil
+	case xdr.LedgerEntryTypeTrustline:
+		trustLine, err := ConvertLedgerKeyTrustLine(*k.TrustLine)
+		if err != nil {
+			return result, err
+		}
+		result.TrustLine = &trustLine
+		return result, nil
+	case xdr.LedgerEntryTypeOffer:
+		offer, err := ConvertLedgerKeyOffer(*k.Offer)
+		if err != nil {
+			return result, err
+		}
+		result.Offer = &offer
+		return result, nil
+	case xdr.LedgerEntryTypeData:
+		data, err := ConvertLedgerKeyData(*k.Data)
+		if err != nil {
+			return result, err
+		}
+		result.Data = &data
+		return result, nil
+	case xdr.LedgerEntryTypeClaimableBalance:
+		claimableBalance, err := ConvertLedgerKeyClaimableBalance(*k.ClaimableBalance)
+		if err != nil {
+			return result, err
+		}
+		result.ClaimableBalance = &claimableBalance
+		return result, nil
+	case xdr.LedgerEntryTypeLiquidityPool:
+		liquidityPool, err := ConvertLedgerKeyLiquidityPool(*k.LiquidityPool)
+		if err != nil {
+			return result, err
+		}
+		result.LiquidityPool = &liquidityPool
+		return result, nil
+	case xdr.LedgerEntryTypeContractData:
+		contractData, err := ConvertLedgerKeyContractData(*k.ContractData)
+		if err != nil {
+			return result, err
+		}
+		result.ContractData = &contractData
+		return result, nil
+	case xdr.LedgerEntryTypeContractCode:
+		contractCode, err := ConvertLedgerKeyContractCode(*k.ContractCode)
+		if err != nil {
+			return result, err
+		}
+		result.ContractCode = &contractCode
+		return result, nil
+	case xdr.LedgerEntryTypeConfigSetting:
+		cfgSetting, err := ConvertLedgerKeyConfigSetting(*k.ConfigSetting)
+		if err != nil {
+			return result, err
+		}
+		result.ConfigSetting = &cfgSetting
+		return result, nil
+	case xdr.LedgerEntryTypeTtl:
+		ttl, err := ConvertLedgerKeyTtl(*k.Ttl)
+		if err != nil {
+			return result, err
+		}
+		result.Ttl = &ttl
+		return result, nil
+	}
+
+	return result, errors.Errorf("error invalid LedgerKey type %v", k.Type)
 }
 
 // TODO :testing
 func ConvertRevokeSponsorshipOpSigner(s xdr.RevokeSponsorshipOpSigner) (RevokeSponsorshipOpSigner, error) {
 	var result RevokeSponsorshipOpSigner
+
+	accountId := PublicKey{
+		Ed25519: s.AccountId.Ed25519.String(),
+	}
+
+	signerKey, err := ConvertSignerKey(s.SignerKey)
+	if err != nil {
+		return result, err
+	}
+
+	result.AccountId = accountId
+	result.SignerKey = signerKey
+
+	return result, nil
 }
 
 // TODO: testing

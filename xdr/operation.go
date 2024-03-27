@@ -222,12 +222,126 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 
 		return result, nil
 	case xdr.OperationTypeAccountMerge:
+		xdrDestination := bd.Destination
+		destination, err := ConvertMuxedAccount(*xdrDestination)
+		if err != nil {
+			return result, err
+		}
+		result.Destination = &destination
+
+		return result, nil
 	case xdr.OperationTypeInflation:
+		// void
+		return result, nil
 	case xdr.OperationTypeManageData:
+		xdrManageDataOp := bd.ManageDataOp
+
+		mangeData := &ManageDataOp{
+			DataName:  string(xdrManageDataOp.DataName),
+			DataValue: *xdrManageDataOp.DataValue,
+		}
+		result.ManageDataOp = mangeData
+
+		return result, nil
 	case xdr.OperationTypeBumpSequence:
+		xdrBumpSequenceOp := bd.BumpSequenceOp
+
+		bumpSequenceOp := &BumpSequenceOp{
+			BumpTo: int64(xdrBumpSequenceOp.BumpTo),
+		}
+		result.BumpSequenceOp = bumpSequenceOp
+
+		return result, nil
 	case xdr.OperationTypeManageBuyOffer:
+		xdrManageBuyOfferOp := bd.ManageBuyOfferOp
+
+		selling, err := ConvertAsset(xdrManageBuyOfferOp.Selling)
+		if err != nil {
+			return result, err
+		}
+
+		buying, err := ConvertAsset(xdrManageBuyOfferOp.Buying)
+		if err != nil {
+			return result, err
+		}
+
+		price := ConvertPrice(xdrManageBuyOfferOp.Price)
+
+		manageBuyOfferOp := &ManageBuyOfferOp{
+			Selling:   selling,
+			Buying:    buying,
+			BuyAmount: int64(xdrManageBuyOfferOp.BuyAmount),
+			Price:     price,
+			OfferId:   int64(xdrManageBuyOfferOp.OfferId),
+		}
+		result.ManageBuyOfferOp = manageBuyOfferOp
+
+		return result, nil
 	case xdr.OperationTypePathPaymentStrictSend:
+		xdrPathPaymentStrictSendOp := bd.PathPaymentStrictSendOp
+
+		sendAsset, err := ConvertAsset(xdrPathPaymentStrictSendOp.SendAsset)
+		if err != nil {
+			return result, err
+		}
+
+		destAsset, err := ConvertAsset(xdrPathPaymentStrictSendOp.DestAsset)
+		if err != nil {
+			return result, err
+		}
+
+		var paths []Asset
+		for _, xdrPath := range xdrPathPaymentStrictSendOp.Path {
+			path, err := ConvertAsset(xdrPath)
+			if err != nil {
+				return result, err
+			}
+
+			paths = append(paths, path)
+		}
+
+		destination, err := ConvertMuxedAccount(xdrPathPaymentStrictSendOp.Destination)
+		if err != nil {
+			return result, err
+		}
+
+		pathPaymentStrictSendOp := &PathPaymentStrictSendOp{
+			SendAsset:   sendAsset,
+			SendAmount:  int64(xdrPathPaymentStrictSendOp.SendAmount),
+			Destination: destination,
+			DestAsset:   destAsset,
+			DestMin:     int64(xdrPathPaymentStrictSendOp.DestMin),
+			Path:        paths,
+		}
+		result.PathPaymentStrictSendOp = pathPaymentStrictSendOp
+
+		return result, nil
 	case xdr.OperationTypeCreateClaimableBalance:
+		xdrCreateClaimableBalanceOp := bd.CreateClaimableBalanceOp
+
+		asset, err := ConvertAsset(xdrCreateClaimableBalanceOp.Asset)
+		if err != nil {
+			return result, nil
+		}
+
+		var claimaints []Claimant
+		for _, xdrClaimant := range xdrCreateClaimableBalanceOp.Claimants {
+			claimant, err := ConvertClaimant(xdrClaimant)
+			if err != nil {
+				return result, nil
+			}
+
+			claimaints = append(claimaints, claimant)
+		}
+
+		createClaimableBalanceOp := &CreateClaimableBalanceOp{
+			Asset:     asset,
+			Amount:    int64(xdrCreateClaimableBalanceOp.Amount),
+			Claimants: claimaints,
+		}
+		result.CreateClaimableBalanceOp = createClaimableBalanceOp
+
+		return result, nil
 	case xdr.OperationTypeClaimClaimableBalance:
 	case xdr.OperationTypeBeginSponsoringFutureReserves:
 	case xdr.OperationTypeEndSponsoringFutureReserves:

@@ -1,5 +1,9 @@
 package xdr
 
+import (
+	"time"
+)
+
 type Hash []byte
 type PoolId Hash
 type ScSymbol string
@@ -231,11 +235,12 @@ type ClaimantV0 struct {
 }
 
 type ClaimPredicate struct {
-	AndPredicates *[]ClaimPredicate `json:"and_predicates,omitempty"`
-	OrPredicates  *[]ClaimPredicate `json:"or_predicates,omitempty"`
-	NotPredicate  **ClaimPredicate  `json:"not_predicates,omitempty"`
-	AbsBefore     *int64            `json:"abs_before,omitempty"`
-	RelBefore     *int64            `json:"rel_before,omitempty"`
+	AndPredicates  *[]ClaimPredicate `json:"and_predicates,omitempty"`
+	OrPredicates   *[]ClaimPredicate `json:"or_predicates,omitempty"`
+	NotPredicate   *ClaimPredicate   `json:"not_predicates,omitempty"`
+	AbsBefore      *time.Time        `json:"abs_before,omitempty"`
+	AbsBeforeEpoch *int64            `json:"abs_before_epoch,omitempty"`
+	RelBefore      *int64            `json:"rel_before,omitempty"`
 }
 
 type ClaimClaimableBalanceOp struct {

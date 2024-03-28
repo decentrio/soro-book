@@ -176,6 +176,35 @@ func ConvertLedgerKeyTtl(k xdr.LedgerKeyTtl) (LedgerKeyTtl, error) {
 	return result, nil
 }
 
+func ConvertLedgerFootprint(f xdr.LedgerFootprint) (LedgerFootprint, error) {
+	var result LedgerFootprint
+
+	var readOnlys []LedgerKey
+	for _, ledgerKey := range f.ReadOnly {
+		readOnly, err := ConvertLedgerKey(ledgerKey)
+		if err != nil {
+			return result, err
+		}
+
+		readOnlys = append(readOnlys, readOnly)
+	}
+
+	var readWrites []LedgerKey
+	for _, ledgerKey := range f.ReadWrite {
+		readWrite, err := ConvertLedgerKey(ledgerKey)
+		if err != nil {
+			return result, err
+		}
+
+		readWrites = append(readWrites, readWrite)
+	}
+
+	result.ReadOnly = readOnlys
+	result.ReadWrite = readWrites
+
+	return result, nil
+}
+
 // TODO: testing
 func ConvertLedgerKey(k xdr.LedgerKey) (LedgerKey, error) {
 	var result LedgerKey
@@ -250,6 +279,13 @@ func ConvertLedgerKey(k xdr.LedgerKey) (LedgerKey, error) {
 	}
 
 	return result, errors.Errorf("error invalid LedgerKey type %v", k.Type)
+}
+
+func ConvertLedgerBounds(b xdr.LedgerBounds) LedgerBounds {
+	return LedgerBounds{
+		MinLedger: uint32(b.MinLedger),
+		MaxLedger: uint32(b.MaxLedger),
+	}
 }
 
 // TODO :testing

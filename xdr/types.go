@@ -530,6 +530,7 @@ type Transaction struct {
 }
 
 type TransactionExt struct {
+	V           int32                   `json:"V,omitempty"`
 	SorobanData *SorobanTransactionData `json:"soroban_data,omitempty"`
 }
 

@@ -109,6 +109,37 @@ func ConvertSorobanAuthorizedFunction(f xdr.SorobanAuthorizedFunction) (SorobanA
 	return result, errors.Errorf("Invalid SorobanAuthorizedFunction type %v", f.Type)
 }
 
+func ConvertSorobanTransactionData(d xdr.SorobanTransactionData) (SorobanTransactionData, error) {
+	var result SorobanTransactionData
+
+	resources, err := ConvertSorobanResources(d.Resources)
+	if err != nil {
+		return result, err
+	}
+
+	result.Ext = ConvertExtensionPoint(d.Ext)
+	result.Resources = resources
+	result.ResourceFee = int64(d.ResourceFee)
+
+	return result, nil
+}
+
+func ConvertSorobanResources(r xdr.SorobanResources) (SorobanResources, error) {
+	var result SorobanResources
+
+	footPrint, err := ConvertLedgerFootprint(r.Footprint)
+	if err != nil {
+		return result, err
+	}
+
+	result.Footprint = footPrint
+	result.Instructions = uint32(r.Instructions)
+	result.ReadBytes = result.ReadBytes
+	result.WriteBytes = result.WriteBytes
+
+	return result, nil
+}
+
 func ConvertHostFunction(f xdr.HostFunction) (HostFunction, error) {
 	var result HostFunction
 	switch f.Type {

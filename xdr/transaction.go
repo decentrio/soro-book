@@ -9,6 +9,50 @@ import (
 // 	return models.TransactionJSON{}
 // }
 
+func ConvertTransaction(tx xdr.Transaction) (Transaction, error) {
+	var result Transaction
+
+	sourceAccount, err := ConvertMuxedAccount(tx.SourceAccount)
+	if err != nil {
+		return result, err
+	}
+
+	cond, err := ConvertPreconditions(tx.Cond)
+	if err != nil {
+		return result, err
+	}
+
+	memo, err := ConvertMemo(tx.Memo)
+	if err != nil {
+		return result, err
+	}
+
+	var ops []Operation
+	for _, xdrOp := range tx.Operations {
+		op, err := ConvertOperation(xdrOp)
+		if err != nil {
+			return result, err
+		}
+		ops = append(ops, op)
+	}
+
+	ext, err := ConvertTxExt(tx.Ext)
+	if err != nil {
+		return result, err
+	}
+
+	result.SourceAccount = sourceAccount
+	result.Fee = uint32(tx.Fee)
+	result.SeqNum = int64(tx.SeqNum)
+	result.Cond = cond
+	result.Memo = memo
+	result.Operations = ops
+	result.Ext = ext
+
+	return result, nil
+
+}
+
 // TODO: testing
 func ConvertTransactionV0(tx xdr.TransactionV0) (TransactionV0, error) {
 	var txV0 TransactionV0
@@ -105,8 +149,21 @@ func ConvertMemo(memo xdr.Memo) (Memo, error) {
 }
 
 // TODO: testing
-func ConvertTxV0Ext(ext xdr.TransactionV0Ext) (TransactionV0Ext, error) {
+func ConvertTxV0Ext(e xdr.TransactionV0Ext) (TransactionV0Ext, error) {
 	return TransactionV0Ext{
-		V: ext.V,
+		V: e.V,
 	}, nil
+}
+
+func ConvertTxExt(e xdr.TransactionExt) (TransactionExt, error) {
+	var result TransactionExt
+	data, err := ConvertSorobanTransactionData(*e.SorobanData)
+	if err != nil {
+		return result, err
+	}
+
+	result.V = e.V
+	result.SorobanData = &data
+
+	return result, nil
 }

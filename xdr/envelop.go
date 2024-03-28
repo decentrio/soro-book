@@ -6,16 +6,22 @@ import (
 )
 
 // TODO: testing
-func ConvertTransactionEnvelope(envelope xdr.TransactionEnvelope) (TransactionEnvelope, error) {
-	// var txEnvelope TransactionEnvelope
-	switch envelope.Type {
+func ConvertTransactionEnvelope(e xdr.TransactionEnvelope) (TransactionEnvelope, error) {
+	var result TransactionEnvelope
+	switch e.Type {
 	case xdr.EnvelopeTypeEnvelopeTypeTxV0:
+		v0, err := ConvertTransactionV0Envelope(e.V0)
+		if err != nil {
+			return result, err
+		}
+		result.V0 = &v0
 
+		return result, nil
 	case xdr.EnvelopeTypeEnvelopeTypeTx:
 	case xdr.EnvelopeTypeEnvelopeTypeTxFeeBump:
 	}
 
-	return TransactionEnvelope{}, errors.Errorf("error invalid type envelope: %v", envelope.Type)
+	return TransactionEnvelope{}, errors.Errorf("error invalid type envelope: %v", e.Type)
 }
 
 // TODO: testing
@@ -36,4 +42,9 @@ func ConvertTransactionV0Envelope(v0 *xdr.TransactionV0Envelope) (TransactionV0E
 		Tx:         tx,
 		Signatures: sigs,
 	}, nil
+}
+
+// TODO: testing
+func ConvertTransactionV1Envelope(v0 *xdr.TransactionV1Envelope) (TransactionV1Envelope, error) {
+	return TransactionV1Envelope{}, nil
 }

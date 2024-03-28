@@ -106,5 +106,7 @@ func ConvertMemo(memo xdr.Memo) (Memo, error) {
 
 // TODO: testing
 func ConvertTxV0Ext(ext xdr.TransactionV0Ext) (TransactionV0Ext, error) {
-	return TransactionV0Ext{}, nil
+	return TransactionV0Ext{
+		V: ext.V,
+	}, nil
 }

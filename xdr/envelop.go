@@ -35,7 +35,7 @@ func ConvertTransactionEnvelope(e xdr.TransactionEnvelope) (TransactionEnvelope,
 		return result, nil
 	}
 
-	return TransactionEnvelope{}, errors.Errorf("error invalid type envelope: %v", e.Type)
+	return result, errors.Errorf("error invalid type envelope: %v", e.Type)
 }
 
 // TODO: testing

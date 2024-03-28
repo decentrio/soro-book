@@ -9,6 +9,29 @@ import (
 // 	return models.TransactionJSON{}
 // }
 
+func ConvertFeeBumpTransaction(tx xdr.FeeBumpTransaction) (FeeBumpTransaction, error) {
+	var result FeeBumpTransaction
+
+	feeSource, err := ConvertMuxedAccount(tx.FeeSource)
+	if err != nil {
+		return result, err
+	}
+
+	innerTx, err := ConvertFeeBumpTransactionInnerTx(tx.InnerTx)
+	if err != nil {
+		return result, err
+	}
+
+	ext := ConvertFeeBumpTransactionExt(tx.Ext)
+
+	result.FeeSource = feeSource
+	result.Fee = int64(tx.Fee)
+	result.InnerTx = innerTx
+	result.Ext = ext
+
+	return result, nil
+}
+
 func ConvertTransaction(tx xdr.Transaction) (Transaction, error) {
 	var result Transaction
 
@@ -166,4 +189,23 @@ func ConvertTxExt(e xdr.TransactionExt) (TransactionExt, error) {
 	result.SorobanData = &data
 
 	return result, nil
+}
+
+func ConvertFeeBumpTransactionInnerTx(f xdr.FeeBumpTransactionInnerTx) (FeeBumpTransactionInnerTx, error) {
+	var result FeeBumpTransactionInnerTx
+	switch f.Type {
+	case xdr.EnvelopeTypeEnvelopeTypeTx:
+		v1, err := ConvertTransactionV1Envelope(f.V1)
+		if err != nil {
+			return result, err
+		}
+		result.V1 = &v1
+
+		return result, nil
+	}
+	return result, errors.Errorf("error invalid FeeBumpTransactionInnerTx %v", f.Type)
+}
+
+func ConvertFeeBumpTransactionExt(f xdr.FeeBumpTransactionExt) FeeBumpTransactionExt {
+	return FeeBumpTransactionExt{V: f.V}
 }

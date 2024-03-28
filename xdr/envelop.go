@@ -18,6 +18,13 @@ func ConvertTransactionEnvelope(e xdr.TransactionEnvelope) (TransactionEnvelope,
 
 		return result, nil
 	case xdr.EnvelopeTypeEnvelopeTypeTx:
+		v1, err := ConvertTransactionV1Envelope(e.V1)
+		if err != nil {
+			return result, err
+		}
+		result.V1 = &v1
+
+		return result, nil
 	case xdr.EnvelopeTypeEnvelopeTypeTxFeeBump:
 	}
 
@@ -62,4 +69,8 @@ func ConvertTransactionV1Envelope(v1 *xdr.TransactionV1Envelope) (TransactionV1E
 	result.Signatures = sigs
 
 	return result, nil
+}
+
+func ConvertFeeBumpTransactionEnvelope(tx xdr.FeeBumpTransactionEnvelope) (FeeBumpTransactionEnvelope, error) {
+
 }

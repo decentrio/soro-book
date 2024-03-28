@@ -237,20 +237,6 @@ func ConvertScContractInstance(i xdr.ScContractInstance) (ScContractInstance, er
 	return result, nil
 }
 
-func ConvertContractExecutable(e xdr.ContractExecutable) (ContractExecutable, error) {
-	var result ContractExecutable
-	switch e.Type {
-	case xdr.ContractExecutableTypeContractExecutableWasm:
-		wasmHash := (*e.WasmHash).HexString()
-		result.WasmHash = &wasmHash
-		return result, nil
-	case xdr.ContractExecutableTypeContractExecutableStellarAsset:
-		return result, nil
-	}
-
-	return result, errors.Errorf("Invalid contract executable type %v", e.Type)
-}
-
 func ConvertScNonceKey(k xdr.ScNonceKey) ScNonceKey {
 	return ScNonceKey{
 		Nonce: int64(k.Nonce),

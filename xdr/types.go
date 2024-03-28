@@ -487,7 +487,7 @@ type ContractIdPreimage struct {
 
 type ContractIdPreimageFromAddress struct {
 	Address ScAddress `json:"address,omitempty"`
-	Salt    []byte    `json:"salt,omitempty"`
+	Salt    string    `json:"salt,omitempty"`
 }
 
 type ExtendFootprintTtlOp struct {

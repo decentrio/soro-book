@@ -363,10 +363,10 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 			Ed25519: ConvertEd25519(xdrBeginSponsoringFutureReservesOp.SponsoredId.Ed25519),
 		}
 
-		xdrbeginSponsoringFutureReservesOp := BeginSponsoringFutureReservesOp{
+		beginSponsoringFutureReservesOp := &BeginSponsoringFutureReservesOp{
 			SponsoredId: sponsoredId,
 		}
-		result.BeginSponsoringFutureReservesOp = &xdrbeginSponsoringFutureReservesOp
+		result.BeginSponsoringFutureReservesOp = beginSponsoringFutureReservesOp
 
 		return result, nil
 	case xdr.OperationTypeEndSponsoringFutureReserves:
@@ -375,13 +375,117 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 	case xdr.OperationTypeRevokeSponsorship:
 		xdrRevokeSponsorshipOp := bd.RevokeSponsorshipOp
 
-		RevokeSponsorshipOp := RevokeSponsorshipOp{}
+		ledgerKey, err := ConvertLedgerKey(*xdrRevokeSponsorshipOp.LedgerKey)
+		if err != nil {
+			return result, nil
+		}
+
+		signer, err := ConvertRevokeSponsorshipOpSigner(*xdrRevokeSponsorshipOp.Signer)
+		if err != nil {
+			return result, nil
+		}
+
+		revokeSponsorshipOp := &RevokeSponsorshipOp{
+			LedgerKey: &ledgerKey,
+			Signer:    &signer,
+		}
+		result.RevokeSponsorshipOp = revokeSponsorshipOp
+
+		return result, nil
 	case xdr.OperationTypeClawback:
+		xdrClawbackOp := bd.ClawbackOp
+
+		asset, err := ConvertAsset(xdrClawbackOp.Asset)
+		if err != nil {
+			return result, nil
+		}
+
+		from, err := ConvertMuxedAccount(xdrClawbackOp.From)
+		if err != nil {
+			return result, nil
+		}
+
+		clawbackOp := &ClawbackOp{
+			Asset:  asset,
+			From:   from,
+			Amount: int64(xdrClawbackOp.Amount),
+		}
+		result.ClawbackOp = clawbackOp
+
+		return result, nil
 	case xdr.OperationTypeClawbackClaimableBalance:
+		xdrClawbackClaimableBalanceOp := bd.ClawbackClaimableBalanceOp
+
+		balanceId, err := ConvertClaimableBalanceId(xdrClawbackClaimableBalanceOp.BalanceId)
+		if err != nil {
+			return result, nil
+		}
+
+		clawbackClaimableBalanceOp := &ClawbackClaimableBalanceOp{
+			BalanceId: balanceId,
+		}
+		result.ClawbackClaimableBalanceOp = clawbackClaimableBalanceOp
+
+		return result, nil
 	case xdr.OperationTypeSetTrustLineFlags:
+		xdrSetTrustLineFlagsOp := bd.SetTrustLineFlagsOp
+
+		trustor := PublicKey{
+			Ed25519: ConvertEd25519(xdrSetTrustLineFlagsOp.Trustor.Ed25519),
+		}
+
+		asset, err := ConvertAsset(xdrSetTrustLineFlagsOp.Asset)
+		if err != nil {
+			return result, nil
+		}
+
+		setTrustLineFlagsOp := &SetTrustLineFlagsOp{
+			Trustor:    trustor,
+			Asset:      asset,
+			ClearFlags: uint32(xdrSetTrustLineFlagsOp.ClearFlags),
+			SetFlags:   uint32(xdrSetTrustLineFlagsOp.SetFlags),
+		}
+		result.SetTrustLineFlagsOp = setTrustLineFlagsOp
+
+		return result, nil
 	case xdr.OperationTypeLiquidityPoolDeposit:
+		xdrLiquidityPoolDepositOp := bd.LiquidityPoolDepositOp
+
+		xdrHashLpId := xdr.Hash(xdrLiquidityPoolDepositOp.LiquidityPoolId)
+		LpId := PoolId(xdrHashLpId[:])
+
+		minPrice := ConvertPrice(xdrLiquidityPoolDepositOp.MinPrice)
+		maxPrice := ConvertPrice(xdrLiquidityPoolDepositOp.MaxPrice)
+
+		liquidityPoolDepositOp := &LiquidityPoolDepositOp{
+			LiquidityPoolId: LpId,
+			MaxAmountA:      int64(xdrLiquidityPoolDepositOp.MaxAmountA),
+			MaxAmountB:      int64(xdrLiquidityPoolDepositOp.MaxAmountB),
+			MinPrice:        minPrice,
+			MaxPrice:        maxPrice,
+		}
+		result.LiquidityPoolDepositOp = liquidityPoolDepositOp
+
+		return result, nil
 	case xdr.OperationTypeLiquidityPoolWithdraw:
+		xdrLiquidityPoolWithdrawOp := bd.LiquidityPoolWithdrawOp
+
+		xdrHashLpId := xdr.Hash(xdrLiquidityPoolWithdrawOp.LiquidityPoolId)
+		LpId := PoolId(xdrHashLpId[:])
+
+		liquidityPoolWithdrawOp := &LiquidityPoolWithdrawOp{
+			LiquidityPoolId: LpId,
+			Amount:          int64(xdrLiquidityPoolWithdrawOp.Amount),
+			MinAmountA:      int64(xdrLiquidityPoolWithdrawOp.MinAmountA),
+			MinAmountB:      int64(xdrLiquidityPoolWithdrawOp.MinAmountB),
+		}
+		result.LiquidityPoolWithdrawOp = liquidityPoolWithdrawOp
+
+		return result, nil
 	case xdr.OperationTypeInvokeHostFunction:
+		xdrInvokeHostFunctionOp := bd.InvokeHostFunctionOp
+
+		invokeHostFunctionOp := &InvokeHostFunctionOp{}
 	case xdr.OperationTypeExtendFootprintTtl:
 	case xdr.OperationTypeRestoreFootprint:
 	}

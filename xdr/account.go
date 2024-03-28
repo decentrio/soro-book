@@ -177,7 +177,7 @@ func ConvertLedgerKeyTtl(k xdr.LedgerKeyTtl) (LedgerKeyTtl, error) {
 }
 
 // TODO: testing
-func ConvertLegerKey(k xdr.LedgerKey) (LedgerKey, error) {
+func ConvertLedgerKey(k xdr.LedgerKey) (LedgerKey, error) {
 	var result LedgerKey
 	switch k.Type {
 	case xdr.LedgerEntryTypeAccount:

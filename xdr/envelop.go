@@ -6,10 +6,11 @@ import (
 )
 
 // TODO: testing
-func ConvertEnvelopeXdrToJson(envelope xdr.TransactionEnvelope) (TransactionEnvelope, error) {
+func ConvertTransactionEnvelope(envelope xdr.TransactionEnvelope) (TransactionEnvelope, error) {
 	// var txEnvelope TransactionEnvelope
 	switch envelope.Type {
 	case xdr.EnvelopeTypeEnvelopeTypeTxV0:
+
 	case xdr.EnvelopeTypeEnvelopeTypeTx:
 	case xdr.EnvelopeTypeEnvelopeTypeTxFeeBump:
 	}
@@ -18,6 +19,21 @@ func ConvertEnvelopeXdrToJson(envelope xdr.TransactionEnvelope) (TransactionEnve
 }
 
 // TODO: testing
-func ConvertEnvelopeV0XdrToJson(v0 *xdr.TransactionV0Envelope) (TransactionV0Envelope, error) {
-	return TransactionV0Envelope{}, nil
+func ConvertTransactionV0Envelope(v0 *xdr.TransactionV0Envelope) (TransactionV0Envelope, error) {
+	var result TransactionV0Envelope
+	tx, err := ConvertTransactionV0(v0.Tx)
+	if err != nil {
+		return result, err
+	}
+
+	var sigs []DecoratedSignature
+	for _, xdrSig := range v0.Signatures {
+		sig := ConvertDecoratedSignature(xdrSig)
+		sigs = append(sigs, sig)
+	}
+
+	return TransactionV0Envelope{
+		Tx:         tx,
+		Signatures: sigs,
+	}, nil
 }

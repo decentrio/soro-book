@@ -271,6 +271,13 @@ func ConvertRevokeSponsorshipOpSigner(s xdr.RevokeSponsorshipOpSigner) (RevokeSp
 	return result, nil
 }
 
+func ConvertDecoratedSignature(s xdr.DecoratedSignature) DecoratedSignature {
+	return DecoratedSignature{
+		Hint:      s.Hint[:],
+		Signature: s.Signature,
+	}
+}
+
 // TODO: testing
 func ConvertSignerKeyEd25519SignedPayload(inp *xdr.SignerKeyEd25519SignedPayload) SignerKeyEd25519SignedPayload {
 	result := SignerKeyEd25519SignedPayload{

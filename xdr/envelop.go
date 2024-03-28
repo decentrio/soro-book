@@ -38,13 +38,28 @@ func ConvertTransactionV0Envelope(v0 *xdr.TransactionV0Envelope) (TransactionV0E
 		sigs = append(sigs, sig)
 	}
 
-	return TransactionV0Envelope{
-		Tx:         tx,
-		Signatures: sigs,
-	}, nil
+	result.Tx = tx
+	result.Signatures = sigs
+
+	return result, nil
 }
 
 // TODO: testing
-func ConvertTransactionV1Envelope(v0 *xdr.TransactionV1Envelope) (TransactionV1Envelope, error) {
-	return TransactionV1Envelope{}, nil
+func ConvertTransactionV1Envelope(v1 *xdr.TransactionV1Envelope) (TransactionV1Envelope, error) {
+	var result TransactionV1Envelope
+	tx, err := ConvertTransaction(v1.Tx)
+	if err != nil {
+		return result, err
+	}
+
+	var sigs []DecoratedSignature
+	for _, xdrSig := range v1.Signatures {
+		sig := ConvertDecoratedSignature(xdrSig)
+		sigs = append(sigs, sig)
+	}
+
+	result.Tx = tx
+	result.Signatures = sigs
+
+	return result, nil
 }

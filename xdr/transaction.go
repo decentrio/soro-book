@@ -9,6 +9,8 @@ import (
 // 	return models.TransactionJSON{}
 // }
 
+func ConvertTransactionResultPair()
+
 func ConvertFeeBumpTransaction(tx xdr.FeeBumpTransaction) (FeeBumpTransaction, error) {
 	var result FeeBumpTransaction
 

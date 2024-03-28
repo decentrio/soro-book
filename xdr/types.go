@@ -590,3 +590,271 @@ type FeeBumpTransactionInnerTx struct {
 type FeeBumpTransactionExt struct {
 	V int32 `json:"v,omitempty"`
 }
+
+type TransactionResultPair struct {
+	TransactionHash string            `json:"transaction_hash,omitempty"`
+	Result          TransactionResult `json:"result,omitempty"`
+}
+
+type TransactionResult struct {
+	FeeCharged int64                   `json:"fee_charged,omitempty"`
+	Result     TransactionResultResult `json:"result,omitempty"`
+	Ext        TransactionResultExt    `json:"ext,omitempty"`
+}
+
+type TransactionResultResult struct {
+	Code            int32                       `json:"code,omitempty"`
+	InnerResultPair *InnerTransactionResultPair `json:"inner_result_pair,omitempty"`
+	Results         *[]OperationResult          `json:"results,omitempty"`
+}
+
+type InnerTransactionResultPair struct {
+	TransactionHash string                 `json:"transaction_hash,omitempty"`
+	Result          InnerTransactionResult `json:"result,omitempty"`
+}
+
+type InnerTransactionResult struct {
+	FeeCharged int64                        `json:"fee_charged,omitempty"`
+	Result     InnerTransactionResultResult `json:"result,omitempty"`
+	Ext        InnerTransactionResultExt    `json:"ext,omitempty"`
+}
+
+type InnerTransactionResultResult struct {
+	Code    int32              `json:"code,omitempty"`
+	Results *[]OperationResult `json:"results,omitempty"`
+}
+
+type InnerTransactionResultExt struct {
+	V int32 `json:"v,omitempty"`
+}
+
+type OperationResult struct {
+	Code int32              `json:"code,omitempty"`
+	Tr   *OperationResultTr `json:"tr,omitempty"`
+}
+
+type OperationResultTr struct {
+	CreateAccountResult                 *CreateAccountResult                 `json:"create_account_result,omitempty"`
+	PaymentResult                       *PaymentResult                       `json:"payment_result,omitempty"`
+	PathPaymentStrictReceiveResult      *PathPaymentStrictReceiveResult      `json:"path_payment_strict_receive_result,omitempty"`
+	ManageSellOfferResult               *ManageSellOfferResult               `json:"manage_sell_offer_result,omitempty"`
+	CreatePassiveSellOfferResult        *ManageSellOfferResult               `json:"create_passive_sell_offer_result,omitempty"`
+	SetOptionsResult                    *SetOptionsResult                    `json:"set_options_result,omitempty"`
+	ChangeTrustResult                   *ChangeTrustResult                   `json:"change_trust_result,omitempty"`
+	AllowTrustResult                    *AllowTrustResult                    `json:"allow_trust_result,omitempty"`
+	AccountMergeResult                  *AccountMergeResult                  `json:"account_merge_result,omitempty"`
+	InflationResult                     *InflationResult                     `json:"inflation_result,omitempty"`
+	ManageDataResult                    *ManageDataResult                    `json:"manage_data_result,omitempty"`
+	BumpSeqResult                       *BumpSequenceResult                  `json:"bump_seq_result,omitempty"`
+	ManageBuyOfferResult                *ManageBuyOfferResult                `json:"manage_buy_offer_result,omitempty"`
+	PathPaymentStrictSendResult         *PathPaymentStrictSendResult         `json:"path_payment_strict_send_result,omitempty"`
+	CreateClaimableBalanceResult        *CreateClaimableBalanceResult        `json:"create_claimable_balance_result,omitempty"`
+	ClaimClaimableBalanceResult         *ClaimClaimableBalanceResult         `json:"claim_claimable_balance_result,omitempty"`
+	BeginSponsoringFutureReservesResult *BeginSponsoringFutureReservesResult `json:"begin_sponsoring_future_reserves_result,omitempty"`
+	EndSponsoringFutureReservesResult   *EndSponsoringFutureReservesResult   `json:"end_sponsoring_future_reserves_result,omitempty"`
+	RevokeSponsorshipResult             *RevokeSponsorshipResult             `json:"revoke_sponsorship_result,omitempty"`
+	ClawbackResult                      *ClawbackResult                      `json:"clawback_result,omitempty"`
+	ClawbackClaimableBalanceResult      *ClawbackClaimableBalanceResult      `json:"clawback_claimable_balance_result,omitempty"`
+	SetTrustLineFlagsResult             *SetTrustLineFlagsResult             `json:"set_trust_line_flags_result,omitempty"`
+	LiquidityPoolDepositResult          *LiquidityPoolDepositResult          `json:"liquidity_pool_deposit_result,omitempty"`
+	LiquidityPoolWithdrawResult         *LiquidityPoolWithdrawResult         `json:"liquidity_pool_withdraw_result,omitempty"`
+	InvokeHostFunctionResult            *InvokeHostFunctionResult            `json:"invoke_host_function_result,omitempty"`
+	ExtendFootprintTtlResult            *ExtendFootprintTtlResult            `json:"extend_footprint_ttl_result,omitempty"`
+	RestoreFootprintResult              *RestoreFootprintResult              `json:"restore_footprint_result,omitempty"`
+}
+
+type RestoreFootprintResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type ExtendFootprintTtlResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type InvokeHostFunctionResult struct {
+	Code    int32   `json:"code,omitempty"`
+	Success *string `json:"success,omitempty"`
+}
+
+type LiquidityPoolWithdrawResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type LiquidityPoolDepositResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type SetTrustLineFlagsResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type ClawbackClaimableBalanceResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type ClawbackResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type RevokeSponsorshipResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type EndSponsoringFutureReservesResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type BeginSponsoringFutureReservesResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type ClaimClaimableBalanceResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type CreateClaimableBalanceResult struct {
+	Code      int32               `json:"code,omitempty"`
+	BalanceId *ClaimableBalanceId `json:"balance_id,omitempty"`
+}
+
+type PathPaymentStrictSendResult struct {
+	Code     int32                               `json:"code,omitempty"`
+	Success  *PathPaymentStrictSendResultSuccess `json:"success,omitempty"`
+	NoIssuer *Asset                              `json:"no_issuer,omitempty"`
+}
+
+type PathPaymentStrictSendResultSuccess struct {
+	Offers []ClaimAtom         `json:"offers,omitempty"`
+	Last   SimplePaymentResult `json:"last,omitempty"`
+}
+
+type ManageBuyOfferResult struct {
+	Code    int32                     `json:"code,omitempty"`
+	Success *ManageOfferSuccessResult `json:"success,omitempty"`
+}
+
+type BumpSequenceResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type ManageDataResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type InflationPayout struct {
+	Destination PublicKey `json:"destination,omitempty"`
+	Amount      int64     `json:"amount,omitempty"`
+}
+
+type InflationResult struct {
+	Code    int32              `json:"code,omitempty"`
+	Payouts *[]InflationPayout `json:"payouts,omitempty"`
+}
+
+type AccountMergeResult struct {
+	Code                 int32  `json:"code,omitempty"`
+	SourceAccountBalance *int64 `json:"source_account_balance,omitempty"`
+}
+
+type AllowTrustResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type ChangeTrustResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type SetOptionsResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type ManageSellOfferResult struct {
+	Code    int32                     `json:"code,omitempty"`
+	Success *ManageOfferSuccessResult `json:"success,omitempty"`
+}
+
+type ManageOfferSuccessResult struct {
+	OffersClaimed []ClaimAtom                   `json:"offers_claimed,omitempty"`
+	Offer         ManageOfferSuccessResultOffer `json:"offer,omitempty"`
+}
+
+type OfferEntry struct {
+	SellerId PublicKey     `json:"seller_id,omitempty"`
+	OfferId  int64         `json:"offer_id,omitempty"`
+	Selling  Asset         `json:"selling,omitempty"`
+	Buying   Asset         `json:"buying,omitempty"`
+	Amount   int64         `json:"amount,omitempty"`
+	Price    Price         `json:"price,omitempty"`
+	Flags    uint32        `json:"flags,omitempty"`
+	Ext      OfferEntryExt `json:"ext,omitempty"`
+}
+
+type OfferEntryExt struct {
+	V int32 `json:"v,omitempty"`
+}
+
+type ManageOfferSuccessResultOffer struct {
+	Effect int32       `json:"effect,omitempty"`
+	Offer  *OfferEntry `json:"offer,omitempty"`
+}
+
+type CreateAccountResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type PaymentResult struct {
+	Code int32 `json:"code,omitempty"`
+}
+
+type PathPaymentStrictReceiveResult struct {
+	Code     int32                                  `json:"code,omitempty"`
+	Success  *PathPaymentStrictReceiveResultSuccess `json:"success,omitempty"`
+	NoIssuer *Asset                                 `json:"no_issuer,omitempty"`
+}
+
+type PathPaymentStrictReceiveResultSuccess struct {
+	Offers []ClaimAtom         `json:"offers,omitempty"`
+	Last   SimplePaymentResult `json:"last,omitempty"`
+}
+
+type ClaimAtom struct {
+	V0            *ClaimOfferAtomV0   `json:"v0,omitempty"`
+	OrderBook     *ClaimOfferAtom     `json:"order_book,omitempty"`
+	LiquidityPool *ClaimLiquidityAtom `json:"liquidity_pool,omitempty"`
+}
+
+type ClaimOfferAtomV0 struct {
+	SellerEd25519 string `json:"seller_ed25519,omitempty"`
+	OfferId       int64  `json:"offer_id,omitempty"`
+	AssetSold     Asset  `json:"asset_sold,omitempty"`
+	AmountSold    int64  `json:"amount_sold,omitempty"`
+	AssetBought   Asset  `json:"asset_bought,omitempty"`
+	AmountBought  int64  `json:"amount_bought,omitempty"`
+}
+
+type ClaimOfferAtom struct {
+	SellerId     string `json:"seller_id,omitempty"`
+	OfferId      int64  `json:"offer_id,omitempty"`
+	AssetSold    Asset  `json:"asset_sold,omitempty"`
+	AmountSold   int64  `json:"amount_sold,omitempty"`
+	AssetBought  Asset  `json:"asset_bought,omitempty"`
+	AmountBought int64  `json:"amount_bought,omitempty"`
+}
+
+type ClaimLiquidityAtom struct {
+	LiquidityPoolId PoolId `json:"liquidity_pool_id,omitempty"`
+	AssetSold       Asset  `json:"asset_sold,omitempty"`
+	AmountSold      int64  `json:"amount_sold,omitempty"`
+	AssetBought     Asset  `json:"asset_bought,omitempty"`
+	AmountBought    int64  `json:"amount_bought,omitempty"`
+}
+
+type SimplePaymentResult struct {
+	Destination PublicKey `json:"destination,omitempty"`
+	Asset       Asset     `json:"asset,omitempty"`
+	Amount      int64     `json:"amount,omitempty"`
+}
+
+type TransactionResultExt struct {
+	V int32 `json:"v,omitempty"`
+}

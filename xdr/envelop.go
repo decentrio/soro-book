@@ -26,6 +26,13 @@ func ConvertTransactionEnvelope(e xdr.TransactionEnvelope) (TransactionEnvelope,
 
 		return result, nil
 	case xdr.EnvelopeTypeEnvelopeTypeTxFeeBump:
+		f, err := ConvertFeeBumpTransactionEnvelope(e.FeeBump)
+		if err != nil {
+			return result, err
+		}
+		result.FeeBump = &f
+
+		return result, nil
 	}
 
 	return TransactionEnvelope{}, errors.Errorf("error invalid type envelope: %v", e.Type)
@@ -71,7 +78,7 @@ func ConvertTransactionV1Envelope(v1 *xdr.TransactionV1Envelope) (TransactionV1E
 	return result, nil
 }
 
-func ConvertFeeBumpTransactionEnvelope(f xdr.FeeBumpTransactionEnvelope) (FeeBumpTransactionEnvelope, error) {
+func ConvertFeeBumpTransactionEnvelope(f *xdr.FeeBumpTransactionEnvelope) (FeeBumpTransactionEnvelope, error) {
 	var result FeeBumpTransactionEnvelope
 	tx, err := ConvertFeeBumpTransaction(f.Tx)
 	if err != nil {

@@ -242,3 +242,7 @@ func ConvertScNonceKey(k xdr.ScNonceKey) ScNonceKey {
 		Nonce: int64(k.Nonce),
 	}
 }
+
+func ConvertExtensionPoint(p xdr.ExtensionPoint) ExtensionPoint {
+	return ExtensionPoint{V: p.V}
+}

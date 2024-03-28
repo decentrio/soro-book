@@ -485,9 +485,47 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 	case xdr.OperationTypeInvokeHostFunction:
 		xdrInvokeHostFunctionOp := bd.InvokeHostFunctionOp
 
-		invokeHostFunctionOp := &InvokeHostFunctionOp{}
+		hostFunc, err := ConvertHostFunction(xdrInvokeHostFunctionOp.HostFunction)
+		if err != nil {
+			return result, err
+		}
+
+		var auths []SorobanAuthorizationEntry
+		for _, xdrEntry := range xdrInvokeHostFunctionOp.Auth {
+			auth, err := ConvertSorobanAuthorizationEntry(xdrEntry)
+			if err != nil {
+				return result, err
+			}
+
+			auths = append(auths, auth)
+		}
+
+		invokeHostFunctionOp := &InvokeHostFunctionOp{
+			HostFunction: hostFunc,
+			Auth:         auths,
+		}
+		result.InvokeHostFunctionOp = invokeHostFunctionOp
+
+		return result, nil
 	case xdr.OperationTypeExtendFootprintTtl:
+		xdrExtendFootprintTtlOp := bd.ExtendFootprintTtlOp
+
+		extendFootprintTtlOp := &ExtendFootprintTtlOp{
+			Ext:      ConvertExtensionPoint(xdrExtendFootprintTtlOp.Ext),
+			ExtendTo: uint32(xdrExtendFootprintTtlOp.ExtendTo),
+		}
+		result.ExtendFootprintTtlOp = extendFootprintTtlOp
+
+		return result, nil
 	case xdr.OperationTypeRestoreFootprint:
+		xdrRestoreFootprintOp := bd.RestoreFootprintOp
+
+		restoreFootprintOp := &RestoreFootprintOp{
+			Ext: ConvertExtensionPoint(xdrRestoreFootprintOp.Ext),
+		}
+		result.RestoreFootprintOp = restoreFootprintOp
+
+		return result, nil
 	}
-	return OperationBody{}, nil
+	return result, errors.Errorf("error invalid operationBody key type %v", bd.Type)
 }

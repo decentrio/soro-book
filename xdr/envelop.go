@@ -71,6 +71,21 @@ func ConvertTransactionV1Envelope(v1 *xdr.TransactionV1Envelope) (TransactionV1E
 	return result, nil
 }
 
-func ConvertFeeBumpTransactionEnvelope(tx xdr.FeeBumpTransactionEnvelope) (FeeBumpTransactionEnvelope, error) {
+func ConvertFeeBumpTransactionEnvelope(f xdr.FeeBumpTransactionEnvelope) (FeeBumpTransactionEnvelope, error) {
+	var result FeeBumpTransactionEnvelope
+	tx, err := ConvertFeeBumpTransaction(f.Tx)
+	if err != nil {
+		return result, err
+	}
 
+	var sigs []DecoratedSignature
+	for _, xdrSig := range f.Signatures {
+		sig := ConvertDecoratedSignature(xdrSig)
+		sigs = append(sigs, sig)
+	}
+
+	result.Tx = tx
+	result.Signatures = sigs
+
+	return result, nil
 }

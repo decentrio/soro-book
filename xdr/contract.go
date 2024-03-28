@@ -5,6 +5,110 @@ import (
 	"github.com/stellar/go/xdr"
 )
 
+func ConvertSorobanAuthorizationEntry(e xdr.SorobanAuthorizationEntry) (SorobanAuthorizationEntry, error) {
+	var result SorobanAuthorizationEntry
+
+	credentials, err := ConvertSorobanCredentials(e.Credentials)
+	if err != nil {
+		return result, err
+	}
+
+	rootInvocation, err := ConvertSorobanAuthorizedInvocation(e.RootInvocation)
+	if err != nil {
+		return result, err
+	}
+
+	result.Credentials = credentials
+	result.RootInvocation = rootInvocation
+
+	return result, nil
+}
+
+func ConvertSorobanCredentials(c xdr.SorobanCredentials) (SorobanCredentials, error) {
+	var result SorobanCredentials
+	switch c.Type {
+	case xdr.SorobanCredentialsTypeSorobanCredentialsSourceAccount:
+		// void
+		return result, nil
+	case xdr.SorobanCredentialsTypeSorobanCredentialsAddress:
+		address, err := ConvertSorobanAddressCredentials(*c.Address)
+		if err != nil {
+			return result, err
+		}
+
+		result.Address = &address
+	}
+
+	return result, errors.Errorf("Invalid ConvertSorobanCredentials type %v", c.Type)
+}
+
+func ConvertSorobanAddressCredentials(c xdr.SorobanAddressCredentials) (SorobanAddressCredentials, error) {
+	var result SorobanAddressCredentials
+
+	address, err := ConvertScAddress(c.Address)
+	if err != nil {
+		return result, err
+	}
+
+	signature, err := ConvertScVal(c.Signature)
+	if err != nil {
+		return result, err
+	}
+
+	result.Address = address
+	result.Nonce = int64(c.Nonce)
+	result.SignatureExpirationLedger = uint32(c.SignatureExpirationLedger)
+	result.Signature = signature
+
+	return result, nil
+}
+
+func ConvertSorobanAuthorizedInvocation(i xdr.SorobanAuthorizedInvocation) (SorobanAuthorizedInvocation, error) {
+	var result SorobanAuthorizedInvocation
+	function, err := ConvertSorobanAuthorizedFunction(i.Function)
+	if err != nil {
+		return result, err
+	}
+	result.Function = function
+
+	var subs []SorobanAuthorizedInvocation
+	for _, xdrSub := range i.SubInvocations {
+		sub, err := ConvertSorobanAuthorizedInvocation(xdrSub)
+		if err != nil {
+			return result, err
+		}
+
+		subs = append(subs, sub)
+	}
+	result.SubInvocations = subs
+
+	return result, nil
+}
+
+func ConvertSorobanAuthorizedFunction(f xdr.SorobanAuthorizedFunction) (SorobanAuthorizedFunction, error) {
+	var result SorobanAuthorizedFunction
+	switch f.Type {
+	case xdr.SorobanAuthorizedFunctionTypeSorobanAuthorizedFunctionTypeContractFn:
+		contractFn, err := ConvertInvokeContractArgs(*f.ContractFn)
+		if err != nil {
+			return result, err
+		}
+		result.ContractFn = &contractFn
+
+		return result, nil
+	case xdr.SorobanAuthorizedFunctionTypeSorobanAuthorizedFunctionTypeCreateContractHostFn:
+		createContract, err := ConvertCreateContractArgs(*f.CreateContractHostFn)
+		if err != nil {
+			return result, err
+		}
+		result.CreateContractHostFn = &createContract
+
+		return result, nil
+	}
+
+	return result, errors.Errorf("Invalid SorobanAuthorizedFunction type %v", f.Type)
+}
+
 func ConvertHostFunction(f xdr.HostFunction) (HostFunction, error) {
 	var result HostFunction
 	switch f.Type {
@@ -31,7 +135,7 @@ func ConvertHostFunction(f xdr.HostFunction) (HostFunction, error) {
 		return result, nil
 	}
 
-	return result, errors.Errorf("Invalid contract id preimage type %v", f.Type)
+	return result, errors.Errorf("Invalid host function type %v", f.Type)
 }
 
 func ConvertInvokeContractArgs(a xdr.InvokeContractArgs) (InvokeContractArgs, error) {

@@ -450,7 +450,14 @@ type SorobanAuthorizationEntry struct {
 }
 
 type SorobanCredentials struct {
-	Address *int32 `json:"address,omitempty"`
+	Address *SorobanAddressCredentials `json:"address,omitempty"`
+}
+
+type SorobanAddressCredentials struct {
+	Address                   ScAddress `json:"address,omitempty"`
+	Nonce                     int64     `json:"nonce,omitempty"`
+	SignatureExpirationLedger uint32    `json:"signature_expiration_ledger,omitempty"`
+	Signature                 ScVal     `json:"signature,omitempty"`
 }
 
 type SorobanAuthorizedInvocation struct {

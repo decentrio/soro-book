@@ -302,3 +302,80 @@ func ConvertContractDataEntry(e xdr.ContractDataEntry) (ContractDataEntry, error
 
 	return result, nil
 }
+
+func ConvertConfigSettingContractComputeV0(c xdr.ConfigSettingContractComputeV0) ConfigSettingContractComputeV0 {
+	return ConfigSettingContractComputeV0{
+		LedgerMaxInstructions:           int64(c.LedgerMaxInstructions),
+		TxMaxInstructions:               int64(c.TxMaxInstructions),
+		FeeRatePerInstructionsIncrement: int64(c.FeeRatePerInstructionsIncrement),
+		TxMemoryLimit:                   uint32(c.TxMemoryLimit),
+	}
+}
+
+func ConvertConfigSettingContractLedgerCostV0(c xdr.ConfigSettingContractLedgerCostV0) ConfigSettingContractLedgerCostV0 {
+	return ConfigSettingContractLedgerCostV0{
+		LedgerMaxReadLedgerEntries:     uint32(c.LedgerMaxReadLedgerEntries),
+		LedgerMaxReadBytes:             uint32(c.LedgerMaxReadBytes),
+		LedgerMaxWriteLedgerEntries:    uint32(c.LedgerMaxWriteLedgerEntries),
+		LedgerMaxWriteBytes:            uint32(c.LedgerMaxWriteBytes),
+		TxMaxReadLedgerEntries:         uint32(c.TxMaxReadLedgerEntries),
+		TxMaxReadBytes:                 uint32(c.TxMaxReadBytes),
+		TxMaxWriteLedgerEntries:        uint32(c.TxMaxWriteLedgerEntries),
+		TxMaxWriteBytes:                uint32(c.TxMaxWriteBytes),
+		FeeReadLedgerEntry:             int64(c.FeeReadLedgerEntry),
+		FeeWriteLedgerEntry:            int64(c.FeeWriteLedgerEntry),
+		FeeRead1Kb:                     int64(c.FeeRead1Kb),
+		BucketListTargetSizeBytes:      int64(c.BucketListTargetSizeBytes),
+		WriteFee1KbBucketListLow:       int64(c.WriteFee1KbBucketListLow),
+		WriteFee1KbBucketListHigh:      int64(c.WriteFee1KbBucketListHigh),
+		BucketListWriteFeeGrowthFactor: uint32(c.BucketListWriteFeeGrowthFactor),
+	}
+}
+
+func ConvertConfigSettingContractHistoricalDataV0(c xdr.ConfigSettingContractHistoricalDataV0) ConfigSettingContractHistoricalDataV0 {
+	return ConfigSettingContractHistoricalDataV0{FeeHistorical1Kb: int64(c.FeeHistorical1Kb)}
+}
+
+func ConvertConfigSettingContractEventsV0(c xdr.ConfigSettingContractEventsV0) ConfigSettingContractEventsV0 {
+	return ConfigSettingContractEventsV0{
+		TxMaxContractEventsSizeBytes: uint32(c.TxMaxContractEventsSizeBytes),
+		FeeContractEvents1Kb:         int64(c.FeeContractEvents1Kb),
+	}
+}
+
+func ConvertConfigSettingContractBandwidthV0(c xdr.ConfigSettingContractBandwidthV0) ConfigSettingContractBandwidthV0 {
+	return ConfigSettingContractBandwidthV0{
+		LedgerMaxTxsSizeBytes: uint32(c.LedgerMaxTxsSizeBytes),
+		TxMaxSizeBytes:        uint32(c.TxMaxSizeBytes),
+		FeeTxSize1Kb:          int64(c.FeeTxSize1Kb),
+	}
+}
+
+func ConvertContractCostParams(c xdr.ContractCostParams) ContractCostParams {
+	var result ContractCostParams
+	for _, xdrEntry := range c {
+		entry := ConvertContractCostParamEntry(xdrEntry)
+		result = append(result, entry)
+	}
+	return result
+}
+
+func ConvertContractCostParamEntry(c xdr.ContractCostParamEntry) ContractCostParamEntry {
+	return ContractCostParamEntry{
+		Ext:        ConvertExtensionPoint(c.Ext),
+		ConstTerm:  int64(c.ConstTerm),
+		LinearTerm: int64(c.LinearTerm),
+	}
+}
+
+func ConvertConfigSettingContractExecutionLanesV0(c xdr.ConfigSettingContractExecutionLanesV0) ConfigSettingContractExecutionLanesV0 {
+	return ConfigSettingContractExecutionLanesV0{LedgerMaxTxCount: uint32(c.LedgerMaxTxCount)}
+}
+
+func ConvertEvictionIterator(i xdr.EvictionIterator) EvictionIterator {
+	return EvictionIterator{
+		BucketListLevel:  uint32(i.BucketListLevel),
+		IsCurrBucket:     i.IsCurrBucket,
+		BucketFileOffset: uint64(i.BucketFileOffset),
+	}
+}

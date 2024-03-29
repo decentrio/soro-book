@@ -346,5 +346,71 @@ func ConvertTtlEntry(e xdr.TtlEntry) TtlEntry {
 }
 
 func ConvertConfigSettingEntry(e xdr.ConfigSettingEntry) (ConfigSettingEntry, error) {
+	var result ConfigSettingEntry
 
+	result.ConfigSettingId = int32(e.ConfigSettingId)
+
+	switch e.ConfigSettingId {
+	case xdr.ConfigSettingIdConfigSettingContractMaxSizeBytes:
+		value := uint32(*e.ContractMaxSizeBytes)
+		result.ContractMaxSizeBytes = &value
+		return result, nil
+	case xdr.ConfigSettingIdConfigSettingContractComputeV0:
+		value := ConvertConfigSettingContractComputeV0(*e.ContractCompute)
+		result.ContractCompute = &value
+		return result, nil
+	case xdr.ConfigSettingIdConfigSettingContractLedgerCostV0:
+		value := ConvertConfigSettingContractLedgerCostV0(*e.ContractLedgerCost)
+		result.ContractLedgerCost = &value
+		return result, nil
+	case xdr.ConfigSettingIdConfigSettingContractHistoricalDataV0:
+		value := ConvertConfigSettingContractHistoricalDataV0(*e.ContractHistoricalData)
+		result.ContractHistoricalData = &value
+		return result, nil
+	case xdr.ConfigSettingIdConfigSettingContractEventsV0:
+		value := ConvertConfigSettingContractEventsV0(*e.ContractEvents)
+		result.ContractEvents = &value
+		return result, nil
+	case xdr.ConfigSettingIdConfigSettingContractBandwidthV0:
+		value := ConvertConfigSettingContractBandwidthV0(*e.ContractBandwidth)
+		result.ContractBandwidth = &value
+		return result, nil
+	case xdr.ConfigSettingIdConfigSettingContractCostParamsCpuInstructions:
+		value := ConvertContractCostParams(*e.ContractCostParamsCpuInsns)
+		result.ContractCostParamsCpuInsns = &value
+		return result, nil
+	case xdr.ConfigSettingIdConfigSettingContractCostParamsMemoryBytes:
+		value := ConvertContractCostParams(*e.ContractCostParamsMemBytes)
+		result.ContractCostParamsMemBytes = &value
+		return result, nil
+	case xdr.ConfigSettingIdConfigSettingContractDataKeySizeBytes:
+		value := uint32(*e.ContractDataKeySizeBytes)
+		result.ContractDataKeySizeBytes = &value
+		return result, nil
+	case xdr.ConfigSettingIdConfigSettingContractDataEntrySizeBytes:
+		value := uint32(*e.ContractDataEntrySizeBytes)
+		result.ContractDataEntrySizeBytes = &value
+		return result, nil
+	case xdr.ConfigSettingIdConfigSettingStateArchival:
+		value := ConvertStateArchivalSettings(*e.StateArchivalSettings)
+		result.StateArchivalSettings = &value
+		return result, nil
+	case xdr.ConfigSettingIdConfigSettingContractExecutionLanes:
+		value := ConvertConfigSettingContractExecutionLanesV0(*e.ContractExecutionLanes)
+		result.ContractExecutionLanes = &value
+		return result, nil
+	case xdr.ConfigSettingIdConfigSettingBucketlistSizeWindow:
+		var value []uint64
+		for _, s := range *e.BucketListSizeWindow {
+			value = append(value, uint64(s))
+		}
+
+		result.BucketListSizeWindow = &value
+		return result, nil
+	case xdr.ConfigSettingIdConfigSettingEvictionIterator:
+		value := ConvertEvictionIterator(*e.EvictionIterator)
+		result.EvictionIterator = &value
+		return result, nil
+	}
+	return result, errors.Errorf("invalid ConfigSettingEntry code id %v", e.ConfigSettingId)
 }

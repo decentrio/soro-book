@@ -880,3 +880,18 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 	}
 	return result, errors.Errorf("error invalid operationBody key type %v", bd.Type)
 }
+
+func ConvertStateArchivalSettings(s xdr.StateArchivalSettings) StateArchivalSettings {
+	return StateArchivalSettings{
+		MaxEntryTtl:                    uint32(s.MaxEntryTtl),
+		MinTemporaryTtl:                uint32(s.MinTemporaryTtl),
+		MinPersistentTtl:               uint32(s.MinPersistentTtl),
+		PersistentRentRateDenominator:  int64(s.PersistentRentRateDenominator),
+		TempRentRateDenominator:        int64(s.TempRentRateDenominator),
+		MaxEntriesToArchive:            uint32(s.MaxEntriesToArchive),
+		BucketListSizeWindowSampleSize: uint32(s.BucketListSizeWindowSampleSize),
+		BucketListWindowSamplePeriod:   uint32(s.BucketListWindowSamplePeriod),
+		EvictionScanSize:               uint32(s.EvictionScanSize),
+		StartingEvictionScanLevel:      uint32(s.StartingEvictionScanLevel),
+	}
+}

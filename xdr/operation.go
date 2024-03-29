@@ -5,6 +5,347 @@ import (
 	"github.com/stellar/go/xdr"
 )
 
+func ConvertOperationResult(op xdr.OperationResult) (OperationResult, error) {
+	var result OperationResult
+	result.Code = int32(op.Code)
+
+}
+
+func ConvertOperationResultTr(r xdr.OperationResultTr) (OperationResultTr, error) {
+	var result OperationResultTr
+
+	switch r.Type {
+	case xdr.OperationTypeCreateAccount:
+		xdrCreateAccountResult := r.CreateAccountResult
+
+		createAccountResult := CreateAccountResult{
+			Code: int32(xdrCreateAccountResult.Code),
+		}
+		result.CreateAccountResult = &createAccountResult
+
+		return result, nil
+	case xdr.OperationTypePayment:
+		xdrPaymentResult := r.PaymentResult
+
+		paymentResult := PaymentResult{
+			Code: int32(xdrPaymentResult.Code),
+		}
+		result.PaymentResult = &paymentResult
+
+		return result, nil
+	case xdr.OperationTypePathPaymentStrictReceive:
+		xdrPathPaymentStrictReceiveResult := r.PathPaymentStrictReceiveResult
+
+		pathPaymentStrictReceiveResult := PathPaymentStrictReceiveResult{
+			Code: int32(xdrPathPaymentStrictReceiveResult.Code),
+		}
+
+		if xdrPathPaymentStrictReceiveResult.Code == xdr.PathPaymentStrictReceiveResultCodePathPaymentStrictReceiveSuccess {
+			success, err := ConvertPathPaymentStrictReceiveResultSuccess(*xdrPathPaymentStrictReceiveResult.Success)
+			if err != nil {
+				return result, err
+			}
+			pathPaymentStrictReceiveResult.Success = &success
+		} else if xdrPathPaymentStrictReceiveResult.Code == xdr.PathPaymentStrictReceiveResultCodePathPaymentStrictReceiveNoIssuer {
+
+			noIssuer, err := ConvertAsset(*xdrPathPaymentStrictReceiveResult.NoIssuer)
+			if err != nil {
+				return result, err
+			}
+			pathPaymentStrictReceiveResult.NoIssuer = &noIssuer
+		}
+
+		result.PathPaymentStrictReceiveResult = &pathPaymentStrictReceiveResult
+
+		return result, nil
+	case xdr.OperationTypeManageSellOffer:
+		xdrManageSellOfferResult := r.ManageSellOfferResult
+
+		manageSellOfferResult := ManageSellOfferResult{
+			Code: int32(xdrManageSellOfferResult.Code),
+		}
+
+		if xdrManageSellOfferResult.Code == xdr.ManageSellOfferResultCodeManageSellOfferSuccess {
+			success, err := ConvertManageOfferSuccessResult(*xdrManageSellOfferResult.Success)
+			if err != nil {
+				return result, err
+			}
+
+			manageSellOfferResult.Success = &success
+		}
+		result.ManageSellOfferResult = &manageSellOfferResult
+
+		return result, nil
+	case xdr.OperationTypeCreatePassiveSellOffer:
+		xdrCreatePassiveSellOfferResult := r.CreatePassiveSellOfferResult
+
+		createPassiveSellOfferResult := ManageSellOfferResult{
+			Code: int32(xdrCreatePassiveSellOfferResult.Code),
+		}
+
+		if xdrCreatePassiveSellOfferResult.Code == xdr.ManageSellOfferResultCodeManageSellOfferSuccess {
+			success, err := ConvertManageOfferSuccessResult(*xdrCreatePassiveSellOfferResult.Success)
+			if err != nil {
+				return result, err
+			}
+
+			createPassiveSellOfferResult.Success = &success
+		}
+		result.ManageSellOfferResult = &createPassiveSellOfferResult
+	case xdr.OperationTypeSetOptions:
+		xdrSetOptionsResult := r.SetOptionsResult
+
+		setOptionsResult := SetOptionsResult{
+			Code: int32(xdrSetOptionsResult.Code),
+		}
+		result.SetOptionsResult = &setOptionsResult
+
+		return result, nil
+	case xdr.OperationTypeChangeTrust:
+		xdrChangeTrustResult := r.ChangeTrustResult
+
+		changeTrustResult := ChangeTrustResult{
+			Code: int32(xdrChangeTrustResult.Code),
+		}
+		result.ChangeTrustResult = &changeTrustResult
+
+		return result, nil
+	case xdr.OperationTypeAllowTrust:
+		xdrAllowTrustResult := r.AllowTrustResult
+
+		allowTrustResult := AllowTrustResult{
+			Code: int32(xdrAllowTrustResult.Code),
+		}
+		result.AllowTrustResult = &allowTrustResult
+
+		return result, nil
+	case xdr.OperationTypeAccountMerge:
+		xdrAccountMergeResult := r.AccountMergeResult
+
+		accountMergeResult := AccountMergeResult{
+			Code: int32(xdrAccountMergeResult.Code),
+		}
+
+		if xdrAccountMergeResult.Code == xdr.AccountMergeResultCodeAccountMergeSuccess {
+			sourceAccountBalance := int64(*xdrAccountMergeResult.SourceAccountBalance)
+			accountMergeResult.SourceAccountBalance = &sourceAccountBalance
+		}
+		result.AccountMergeResult = &accountMergeResult
+
+		return result, nil
+	case xdr.OperationTypeInflation:
+		xdrInflationResult := r.InflationResult
+
+		inflationResult := InflationResult{
+			Code: int32(xdrInflationResult.Code),
+		}
+
+		if xdrInflationResult.Code == xdr.InflationResultCodeInflationSuccess {
+			var payouts []InflationPayout
+			for _, xdrPayout := range *xdrInflationResult.Payouts {
+				payout := ConvertInflationPayout(xdrPayout)
+				payouts = append(payouts, payout)
+			}
+			inflationResult.Payouts = &payouts
+		}
+		result.InflationResult = &inflationResult
+
+		return result, nil
+	case xdr.OperationTypeManageData:
+		xdrManageDataResult := r.ManageDataResult
+
+		manageDataResult := ManageDataResult{
+			Code: int32(xdrManageDataResult.Code),
+		}
+		result.ManageDataResult = &manageDataResult
+
+		return result, nil
+	case xdr.OperationTypeBumpSequence:
+		xdrBumpSeqResult := r.BumpSeqResult
+
+		bumpSequenceResult := BumpSequenceResult{
+			Code: int32(xdrBumpSeqResult.Code),
+		}
+		result.BumpSeqResult = &bumpSequenceResult
+
+		return result, nil
+	case xdr.OperationTypeManageBuyOffer:
+		xdrManageBuyOfferResult := r.ManageBuyOfferResult
+
+		manageBuyOfferResult := ManageBuyOfferResult{
+			Code: int32(xdrManageBuyOfferResult.Code),
+		}
+
+		if xdrManageBuyOfferResult.Code == xdr.ManageBuyOfferResultCodeManageBuyOfferSuccess {
+			success, err := ConvertManageOfferSuccessResult(*xdrManageBuyOfferResult.Success)
+			if err != nil {
+				return result, err
+			}
+
+			manageBuyOfferResult.Success = &success
+		}
+		result.ManageBuyOfferResult = &manageBuyOfferResult
+
+		return result, nil
+	case xdr.OperationTypePathPaymentStrictSend:
+		xdrPathPaymentStrictSendResult := r.PathPaymentStrictSendResult
+
+		pathPaymentStrictSendResult := PathPaymentStrictSendResult{
+			Code: int32(xdrPathPaymentStrictSendResult.Code),
+		}
+
+		if xdrPathPaymentStrictSendResult.Code == xdr.PathPaymentStrictSendResultCodePathPaymentStrictSendSuccess {
+			success, err := ConvertPathPaymentStrictSendResultSuccess(*xdrPathPaymentStrictSendResult.Success)
+			if err != nil {
+				return result, err
+			}
+			pathPaymentStrictSendResult.Success = &success
+		} else if xdrPathPaymentStrictSendResult.Code == xdr.PathPaymentStrictSendResultCodePathPaymentStrictSendNoIssuer {
+
+			noIssuer, err := ConvertAsset(*xdrPathPaymentStrictSendResult.NoIssuer)
+			if err != nil {
+				return result, err
+			}
+			pathPaymentStrictSendResult.NoIssuer = &noIssuer
+		}
+		result.PathPaymentStrictSendResult = &pathPaymentStrictSendResult
+
+		return result, nil
+	case xdr.OperationTypeCreateClaimableBalance:
+		xdrCreateClaimableBalanceResult := r.CreateClaimableBalanceResult
+
+		createClaimableBalanceResult := CreateClaimableBalanceResult{
+			Code: int32(xdrCreateClaimableBalanceResult.Code),
+		}
+
+		if xdrCreateClaimableBalanceResult.Code == xdr.CreateClaimableBalanceResultCodeCreateClaimableBalanceSuccess {
+			balanceId, err := ConvertClaimableBalanceId(*xdrCreateClaimableBalanceResult.BalanceId)
+			if err != nil {
+				return result, err
+			}
+			createClaimableBalanceResult.BalanceId = &balanceId
+		}
+		result.CreateClaimableBalanceResult = &createClaimableBalanceResult
+
+		return result, nil
+	case xdr.OperationTypeClaimClaimableBalance:
+		xdrClaimClaimableBalanceResult := r.ClaimClaimableBalanceResult
+
+		claimClaimableBalanceResult := ClaimClaimableBalanceResult{
+			Code: int32(xdrClaimClaimableBalanceResult.Code),
+		}
+		result.ClaimClaimableBalanceResult = &claimClaimableBalanceResult
+
+		return result, nil
+	case xdr.OperationTypeBeginSponsoringFutureReserves:
+		xdrBeginSponsoringFutureReservesResult := r.BeginSponsoringFutureReservesResult
+
+		beginSponsoringFutureReservesResult := BeginSponsoringFutureReservesResult{
+			Code: int32(xdrBeginSponsoringFutureReservesResult.Code),
+		}
+		result.BeginSponsoringFutureReservesResult = &beginSponsoringFutureReservesResult
+
+		return result, nil
+	case xdr.OperationTypeEndSponsoringFutureReserves:
+		xdrEndSponsoringFutureReservesResult := r.EndSponsoringFutureReservesResult
+
+		endSponsoringFutureReservesResult := EndSponsoringFutureReservesResult{
+			Code: int32(xdrEndSponsoringFutureReservesResult.Code),
+		}
+		result.EndSponsoringFutureReservesResult = &endSponsoringFutureReservesResult
+
+		return result, nil
+	case xdr.OperationTypeRevokeSponsorship:
+		xdrRevokeSponsorshipResult := r.RevokeSponsorshipResult
+
+		revokeSponsorshipResult := RevokeSponsorshipResult{
+			Code: int32(xdrRevokeSponsorshipResult.Code),
+		}
+		result.RevokeSponsorshipResult = &revokeSponsorshipResult
+
+		return result, nil
+	case xdr.OperationTypeClawback:
+		xdrClawbackResult := r.ClawbackResult
+
+		clawbackResult := ClawbackResult{
+			Code: int32(xdrClawbackResult.Code),
+		}
+		result.ClawbackResult = &clawbackResult
+
+		return result, nil
+	case xdr.OperationTypeClawbackClaimableBalance:
+		xdrClawbackClaimableBalanceResult := r.ClawbackClaimableBalanceResult
+
+		clawbackClaimableBalanceResult := ClawbackClaimableBalanceResult{
+			Code: int32(xdrClawbackClaimableBalanceResult.Code),
+		}
+		result.ClawbackClaimableBalanceResult = &clawbackClaimableBalanceResult
+
+		return result, nil
+	case xdr.OperationTypeSetTrustLineFlags:
+		xdrSetTrustLineFlagsResult := r.SetTrustLineFlagsResult
+
+		setTrustLineFlagsResult := SetTrustLineFlagsResult{
+			Code: int32(xdrSetTrustLineFlagsResult.Code),
+		}
+		result.SetTrustLineFlagsResult = &setTrustLineFlagsResult
+
+		return result, nil
+	case xdr.OperationTypeLiquidityPoolDeposit:
+		xdrLiquidityPoolDepositResult := r.LiquidityPoolDepositResult
+
+		liquidityPoolDepositResult := LiquidityPoolDepositResult{
+			Code: int32(xdrLiquidityPoolDepositResult.Code),
+		}
+		result.LiquidityPoolDepositResult = &liquidityPoolDepositResult
+
+		return result, nil
+	case xdr.OperationTypeLiquidityPoolWithdraw:
+		xdrLiquidityPoolWithdrawResult := r.LiquidityPoolWithdrawResult
+
+		liquidityPoolWithdrawResult := LiquidityPoolWithdrawResult{
+			Code: int32(xdrLiquidityPoolWithdrawResult.Code),
+		}
+		result.LiquidityPoolWithdrawResult = &liquidityPoolWithdrawResult
+
+		return result, nil
+	case xdr.OperationTypeInvokeHostFunction:
+		xdrInvokeHostFunctionResult := r.InvokeHostFunctionResult
+
+		invokeHostFunctionResult := InvokeHostFunctionResult{
+			Code: int32(xdrInvokeHostFunctionResult.Code),
+		}
+
+		if xdrInvokeHostFunctionResult.Code == xdr.InvokeHostFunctionResultCodeInvokeHostFunctionSuccess {
+			success := (*xdrInvokeHostFunctionResult.Success).HexString()
+			invokeHostFunctionResult.Success = &success
+		}
+		result.InvokeHostFunctionResult = &invokeHostFunctionResult
+
+		return result, nil
+	case xdr.OperationTypeExtendFootprintTtl:
+		xdrExtendFootprintTtlResult := r.ExtendFootprintTtlResult
+
+		extendFootprintTtlResult := ExtendFootprintTtlResult{
+			Code: int32(xdrExtendFootprintTtlResult.Code),
+		}
+		result.ExtendFootprintTtlResult = &extendFootprintTtlResult
+
+		return result, nil
+	case xdr.OperationTypeRestoreFootprint:
+		xdrRestoreFootprintResult := r.RestoreFootprintResult
+
+		restoreFootprintResult := RestoreFootprintResult{
+			Code: int32(xdrRestoreFootprintResult.Code),
+		}
+		result.RestoreFootprintResult = &restoreFootprintResult
+
+		return result, nil
+	}
+
+	return result, errors.Errorf("error invalid operationBody key type %v", r.Type)
+}
+
 // TODO: testing
 func ConvertOperation(op xdr.Operation) (Operation, error) {
 	var result Operation

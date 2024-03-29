@@ -9,7 +9,37 @@ import (
 // 	return models.TransactionJSON{}
 // }
 
-func ConvertTransactionResultPair()
+func ConvertTransactionResultPair(r xdr.TransactionResultPair) (TransactionResultPair, error) {
+
+}
+
+func ConvertTransactionResult(r xdr.TransactionResult) (TransactionResult, error) {
+
+}
+
+func ConvertTransactionResultResult(r xdr.TransactionResultResult) (TransactionResultResult, error) {
+
+}
+
+func ConvertInnerTransactionResultPair(r xdr.InnerTransactionResultPair) (InnerTransactionResultPair, error) {
+
+}
+
+func ConvertInnerTransactionResult(r xdr.InnerTransactionResult) (InnerTransactionResult, error) {
+
+}
+
+func ConvertInnerTransactionResultResult(r xdr.InnerTransactionResultResult) (InnerTransactionResultResult, error) {
+
+}
+
+func ConvertInnerTransactionResultExt(e xdr.InnerTransactionResultExt) InnerTransactionResultExt {
+	return InnerTransactionResultExt{V: e.V}
+}
+
+func ConvertTransactionResultExt(e xdr.TransactionResultExt) TransactionResultExt {
+	return TransactionResultExt{V: e.V}
+}
 
 func ConvertFeeBumpTransaction(tx xdr.FeeBumpTransaction) (FeeBumpTransaction, error) {
 	var result FeeBumpTransaction

@@ -833,12 +833,12 @@ type ClaimOfferAtomV0 struct {
 }
 
 type ClaimOfferAtom struct {
-	SellerId     string `json:"seller_id,omitempty"`
-	OfferId      int64  `json:"offer_id,omitempty"`
-	AssetSold    Asset  `json:"asset_sold,omitempty"`
-	AmountSold   int64  `json:"amount_sold,omitempty"`
-	AssetBought  Asset  `json:"asset_bought,omitempty"`
-	AmountBought int64  `json:"amount_bought,omitempty"`
+	SellerId     PublicKey `json:"seller_id,omitempty"`
+	OfferId      int64     `json:"offer_id,omitempty"`
+	AssetSold    Asset     `json:"asset_sold,omitempty"`
+	AmountSold   int64     `json:"amount_sold,omitempty"`
+	AssetBought  Asset     `json:"asset_bought,omitempty"`
+	AmountBought int64     `json:"amount_bought,omitempty"`
 }
 
 type ClaimLiquidityAtom struct {

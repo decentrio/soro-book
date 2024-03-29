@@ -5,6 +5,110 @@ import (
 	"github.com/stellar/go/xdr"
 )
 
+func ConvertAccountEntry(e xdr.AccountEntry) (AccountEntry, error) {
+	var result AccountEntry
+
+	accountId := PublicKey{
+		Ed25519: e.AccountId.Ed25519.String(),
+	}
+
+	inflationDest := PublicKey{
+		Ed25519: (*e.InflationDest).Ed25519.String(),
+	}
+
+	var signers []Signer
+	for _, xdrSigner := range e.Signers {
+		signer, err := ConvertSigner(xdrSigner)
+		if err != nil {
+			return result, err
+		}
+
+		signers = append(signers, signer)
+	}
+
+	ext := ConvertAccountEntryExt(e.Ext)
+
+	result.AccountId = accountId
+	result.Balance = int64(e.Balance)
+	result.SeqNum = int64(e.SeqNum)
+	result.NumSubEntries = uint32(e.NumSubEntries)
+	result.InflationDest = &inflationDest
+	result.Flags = uint32(e.Flags)
+	result.HomeDomain = string(e.HomeDomain)
+	result.Thresholds = e.Thresholds[:]
+	result.Signers = signers
+	result.Ext = ext
+
+	return result, nil
+}
+
+func ConvertAccountEntryExt(e xdr.AccountEntryExt) AccountEntryExt {
+	v1 := ConvertAccountEntryExtensionV1(*e.V1)
+
+	return AccountEntryExt{
+		V:  e.V,
+		V1: &v1,
+	}
+}
+
+func ConvertAccountEntryExtensionV1(e xdr.AccountEntryExtensionV1) AccountEntryExtensionV1 {
+	return AccountEntryExtensionV1{
+		Liabilities: ConvertLiabilities(e.Liabilities),
+		Ext:         ConvertAccountEntryExtensionV1Ext(e.Ext),
+	}
+}
+
+func ConvertLiabilities(l xdr.Liabilities) Liabilities {
+	return Liabilities{
+		Buying:  int64(l.Buying),
+		Selling: int64(l.Selling),
+	}
+}
+
+func ConvertAccountEntryExtensionV1Ext(e xdr.AccountEntryExtensionV1Ext) AccountEntryExtensionV1Ext {
+	v2 := ConvertAccountEntryExtensionV2(*e.V2)
+
+	return AccountEntryExtensionV1Ext{
+		V:  e.V,
+		V2: &v2,
+	}
+}
+
+func ConvertAccountEntryExtensionV2(e xdr.AccountEntryExtensionV2) AccountEntryExtensionV2 {
+	var signerSponsoringIDs []PublicKey
+	for _, xdrSigner := range e.SignerSponsoringIDs {
+		signer := PublicKey{
+			Ed25519: (*xdrSigner.Ed25519).String(),
+		}
+
+		signerSponsoringIDs = append(signerSponsoringIDs, signer)
+	}
+	ext := ConvertAccountEntryExtensionV2Ext(e.Ext)
+
+	return AccountEntryExtensionV2{
+		NumSponsored:        uint32(e.NumSponsored),
+		NumSponsoring:       uint32(e.NumSponsoring),
+		SignerSponsoringIDs: signerSponsoringIDs,
+		Ext:                 ext,
+	}
+}
+
+func ConvertAccountEntryExtensionV2Ext(e xdr.AccountEntryExtensionV2Ext) AccountEntryExtensionV2Ext {
+	v3 := ConvertAccountEntryExtensionV3(*e.V3)
+	return AccountEntryExtensionV2Ext{
+		V:  e.V,
+		V3: &v3,
+	}
+}
+
+func ConvertAccountEntryExtensionV3(e xdr.AccountEntryExtensionV3) AccountEntryExtensionV3 {
+	return AccountEntryExtensionV3{
+		Ext:       ConvertExtensionPoint(e.Ext),
+		SeqLedger: uint32(e.SeqLedger),
+		SeqTime:   uint64(e.SeqTime),
+	}
+}
+
 // TODO: testing
 func ConvertSigner(s xdr.Signer) (Signer, error) {
 	var result Signer

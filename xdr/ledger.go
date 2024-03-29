@@ -5,6 +5,43 @@ import (
 	"github.com/stellar/go/xdr"
 )
 
+func ConvertLedgerEntryChanges(c xdr.LedgerEntryChange) (LedgerEntryChange, error) {
+
+}
+
+func ConvertLedgerEntry(e xdr.LedgerEntry) (LedgerEntry, error) {
+
+}
+
+func ConvertLedgerEntryData(d xdr.LedgerEntryData) (LedgerEntryData, error) {
+	var result LedgerEntryData
+	switch d.Type {
+	case xdr.LedgerEntryTypeAccount:
+		account, err := ConvertAccountEntry(*d.Account)
+		if err != nil {
+			return result, err
+		}
+		result.Account = &account
+
+		return result, nil
+	case xdr.LedgerEntryTypeTrustline:
+	case xdr.LedgerEntryTypeOffer:
+	case xdr.LedgerEntryTypeData:
+	case xdr.LedgerEntryTypeClaimableBalance:
+	case xdr.LedgerEntryTypeLiquidityPool:
+	case xdr.LedgerEntryTypeContractData:
+	case xdr.LedgerEntryTypeContractCode:
+	case xdr.LedgerEntryTypeConfigSetting:
+	case xdr.LedgerEntryTypeTtl:
+	}
+
+	return result, errors.Errorf("error invalid LedgerEntryData type %v", d.Type)
+}
+
+func ConvertLedgerEntryExt(e xdr.LedgerEntryExt) (LedgerEntryExt, error) {
+
+}
+
 func ConvertLedgerKeyAccount(k xdr.LedgerKeyAccount) LedgerKeyAccount {
 	accountId := PublicKey{
 		Ed25519: ConvertEd25519(k.AccountId.Ed25519),

@@ -672,7 +672,7 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 
 		asset, err := ConvertAsset(xdrCreateClaimableBalanceOp.Asset)
 		if err != nil {
-			return result, nil
+			return result, err
 		}
 
 		var claimaints []Claimant
@@ -698,7 +698,7 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 
 		balanceId, err := ConvertClaimableBalanceId(xdrClaimClaimableBalanceOp.BalanceId)
 		if err != nil {
-			return result, nil
+			return result, err
 		}
 
 		claimClaimableBalanceOp := &ClaimClaimableBalanceOp{
@@ -728,12 +728,12 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 
 		ledgerKey, err := ConvertLedgerKey(*xdrRevokeSponsorshipOp.LedgerKey)
 		if err != nil {
-			return result, nil
+			return result, err
 		}
 
 		signer, err := ConvertRevokeSponsorshipOpSigner(*xdrRevokeSponsorshipOp.Signer)
 		if err != nil {
-			return result, nil
+			return result, err
 		}
 
 		revokeSponsorshipOp := &RevokeSponsorshipOp{
@@ -748,12 +748,12 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 
 		asset, err := ConvertAsset(xdrClawbackOp.Asset)
 		if err != nil {
-			return result, nil
+			return result, err
 		}
 
 		from, err := ConvertMuxedAccount(xdrClawbackOp.From)
 		if err != nil {
-			return result, nil
+			return result, err
 		}
 
 		clawbackOp := &ClawbackOp{
@@ -769,7 +769,7 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 
 		balanceId, err := ConvertClaimableBalanceId(xdrClawbackClaimableBalanceOp.BalanceId)
 		if err != nil {
-			return result, nil
+			return result, err
 		}
 
 		clawbackClaimableBalanceOp := &ClawbackClaimableBalanceOp{
@@ -787,7 +787,7 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 
 		asset, err := ConvertAsset(xdrSetTrustLineFlagsOp.Asset)
 		if err != nil {
-			return result, nil
+			return result, err
 		}
 
 		setTrustLineFlagsOp := &SetTrustLineFlagsOp{

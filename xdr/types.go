@@ -859,6 +859,8 @@ type TransactionResultExt struct {
 	V int32 `json:"v,omitempty"`
 }
 
+type LedgerEntryChanges []LedgerEntryChange
+
 type LedgerEntryChange struct {
 	Created *LedgerEntry `json:"created,omitempty"`
 	Updated *LedgerEntry `json:"updated,omitempty"`
@@ -1139,4 +1141,80 @@ type LedgerEntryExtensionV1 struct {
 
 type LedgerEntryExtensionV1Ext struct {
 	V int32 `json:"v,omitempty"`
+}
+
+type TransactionMeta struct {
+	V          int32              `json:"v,omitempty"`
+	Operations *[]OperationMeta   `json:"operations,omitempty"`
+	V1         *TransactionMetaV1 `json:"v1,omitempty"`
+	V2         *TransactionMetaV2 `json:"v2,omitempty"`
+	V3         *TransactionMetaV3 `json:"v3,omitempty"`
+}
+
+type OperationMeta struct {
+	Changes LedgerEntryChanges `json:"changes,omitempty"`
+}
+
+type TransactionMetaV1 struct {
+	TxChanges  LedgerEntryChanges `json:"tx_changes,omitempty"`
+	Operations []OperationMeta    `json:"operations,omitempty"`
+}
+
+type TransactionMetaV2 struct {
+	TxChangesBefore LedgerEntryChanges `json:"tx_changes_before,omitempty"`
+	Operations      []OperationMeta    `json:"operations,omitempty"`
+	TxChangesAfter  LedgerEntryChanges `json:"tx_changes_after,omitempty"`
+}
+
+type TransactionMetaV3 struct {
+	Ext             ExtensionPoint          `json:"ext,omitempty"`
+	TxChangesBefore LedgerEntryChanges      `json:"tx_changes_before,omitempty"`
+	Operations      []OperationMeta         `json:"operations,omitempty"`
+	TxChangesAfter  LedgerEntryChanges      `json:"tx_changes_after,omitempty"`
+	SorobanMeta     *SorobanTransactionMeta `json:"soroban_meta,omitempty"`
+}
+
+type SorobanTransactionMeta struct {
+	Ext              ExtensionPoint    `json:"ext,omitempty"`
+	Events           []ContractEvent   `json:"events,omitempty"`
+	ReturnValue      ScVal             `json:"return_value,omitempty"`
+	DiagnosticEvents []DiagnosticEvent `json:"diagnostic_events,omitempty"`
+}
+
+type DiagnosticEvent struct {
+	InSuccessfulContractCall bool          `json:"in_successful_contract_call,omitempty"`
+	Event                    ContractEvent `json:"event,omitempty"`
+}
+
+type ContractEvent struct {
+	Ext        ExtensionPoint `json:"ext,omitempty"`
+	ContractId *string        `json:"contract_id,omitempty"`
+	Type       int32          `json:"type,omitempty"`
+	Transfer   *TransferEvent `json:"transfer,omitempty"`
+	Mint       *MintEvent     `json:"mint,omitempty"`
+	Clawback   *ClawbackEvent `json:"claw_back,omitempty"`
+	Burn       *BurnEvent     `json:"burn,omitempty"`
+}
+
+type TransferEvent struct {
+	From   string      `json:"from,omitempty"`
+	To     string      `json:"to,omitempty"`
+	Amount Int128Parts `json:"amount,omitempty"`
+}
+
+type MintEvent struct {
+	Admin  string      `json:"admin,omitempty"`
+	To     string      `json:"to,omitempty"`
+	Amount Int128Parts `json:"amount,omitempty"`
+}
+
+type ClawbackEvent struct {
+	Admin  string      `json:"admin,omitempty"`
+	From   string      `json:"from,omitempty"`
+	Amount Int128Parts `json:"amount,omitempty"`
+}
+
+type BurnEvent struct {
+	From   string      `json:"from,omitempty"`
+	Amount Int128Parts `json:"amount,omitempty"`
 }

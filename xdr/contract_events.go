@@ -87,12 +87,6 @@ var (
 // 	return evt, nil
 // }
 
-type TransferEvent struct {
-	From   string      `json:"from,omitempty"`
-	To     string      `json:"to,omitempty"`
-	Amount Int128Parts `json:"amount,omitempty"`
-}
-
 func (event *TransferEvent) parse(topics xdr.ScVec, value xdr.ScVal) error {
 	//
 	// The transfer event format is:
@@ -114,12 +108,6 @@ func (event *TransferEvent) parse(topics xdr.ScVec, value xdr.ScVal) error {
 
 func (e TransferEvent) ToJSON() ([]byte, error) {
 	return json.Marshal(e)
-}
-
-type MintEvent struct {
-	Admin  string      `json:"admin,omitempty"`
-	To     string      `json:"to,omitempty"`
-	Amount Int128Parts `json:"amount,omitempty"`
 }
 
 func (event *MintEvent) parse(topics xdr.ScVec, value xdr.ScVal) error {
@@ -145,12 +133,6 @@ func (e MintEvent) ToJSON() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-type ClawbackEvent struct {
-	Admin  string      `json:"admin,omitempty"`
-	From   string      `json:"from,omitempty"`
-	Amount Int128Parts `json:"amount,omitempty"`
-}
-
 func (event *ClawbackEvent) parse(topics xdr.ScVec, value xdr.ScVal) error {
 	//
 	// The clawback event format is:
@@ -172,11 +154,6 @@ func (event *ClawbackEvent) parse(topics xdr.ScVec, value xdr.ScVal) error {
 
 func (e ClawbackEvent) ToJSON() ([]byte, error) {
 	return json.Marshal(e)
-}
-
-type BurnEvent struct {
-	From   string      `json:"from,omitempty"`
-	Amount Int128Parts `json:"amount,omitempty"`
 }
 
 func (event *BurnEvent) parse(topics xdr.ScVec, value xdr.ScVal) error {

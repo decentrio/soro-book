@@ -10,27 +10,106 @@ import (
 // }
 
 func ConvertTransactionResultPair(r xdr.TransactionResultPair) (TransactionResultPair, error) {
+	var result TransactionResultPair
+	result.TransactionHash = r.TransactionHash.HexString()
 
+	rs, err := ConvertTransactionResult(r.Result)
+	if err != nil {
+		return result, err
+	}
+	result.Result = rs
+
+	return result, nil
 }
 
 func ConvertTransactionResult(r xdr.TransactionResult) (TransactionResult, error) {
+	var result TransactionResult
+	result.FeeCharged = int64(r.FeeCharged)
 
+	rs, err := ConvertTransactionResultResult(r.Result)
+	if err != nil {
+		return result, err
+	}
+	result.Result = rs
+
+	ext := ConvertTransactionResultExt(r.Ext)
+	result.Ext = ext
+
+	return result, nil
 }
 
 func ConvertTransactionResultResult(r xdr.TransactionResultResult) (TransactionResultResult, error) {
+	var result TransactionResultResult
+	result.Code = int32(r.Code)
 
+	if r.Code == xdr.TransactionResultCodeTxFeeBumpInnerSuccess || r.Code == xdr.TransactionResultCodeTxFeeBumpInnerFailed {
+		innerResult, err := ConvertInnerTransactionResultPair(*r.InnerResultPair)
+		if err != nil {
+			return result, err
+		}
+		result.InnerResultPair = &innerResult
+	} else if r.Code == xdr.TransactionResultCodeTxSuccess || r.Code == xdr.TransactionResultCodeTxFailed {
+		var opResult []OperationResult
+		for _, xdrResult := range *r.Results {
+			op, err := ConvertOperationResult(xdrResult)
+			if err != nil {
+				return result, err
+			}
+
+			opResult = append(opResult, op)
+		}
+		result.Results = &opResult
+	}
+	return result, nil
 }
 
 func ConvertInnerTransactionResultPair(r xdr.InnerTransactionResultPair) (InnerTransactionResultPair, error) {
+	var result InnerTransactionResultPair
+	result.TransactionHash = r.TransactionHash.HexString()
 
+	rs, err := ConvertInnerTransactionResult(r.Result)
+	if err != nil {
+		return result, err
+	}
+	result.Result = rs
+
+	return result, nil
 }
 
 func ConvertInnerTransactionResult(r xdr.InnerTransactionResult) (InnerTransactionResult, error) {
+	var result InnerTransactionResult
+	result.FeeCharged = int64(r.FeeCharged)
 
+	rs, err := ConvertInnerTransactionResultResult(r.Result)
+	if err != nil {
+		return result, err
+	}
+	result.Result = rs
+
+	ext := ConvertInnerTransactionResultExt(r.Ext)
+	result.Ext = ext
+
+	return result, nil
 }
 
 func ConvertInnerTransactionResultResult(r xdr.InnerTransactionResultResult) (InnerTransactionResultResult, error) {
+	var result InnerTransactionResultResult
+	result.Code = int32(r.Code)
 
+	if r.Code == xdr.TransactionResultCodeTxSuccess || r.Code == xdr.TransactionResultCodeTxFailed {
+		var opResults []OperationResult
+		for _, xdrResult := range *r.Results {
+			r, err := ConvertOperationResult(xdrResult)
+			if err != nil {
+				return result, err
+			}
+			opResults = append(opResults, r)
+		}
+
+		result.Results = &opResults
+	}
+
+	return result, nil
 }
 
 func ConvertInnerTransactionResultExt(e xdr.InnerTransactionResultExt) InnerTransactionResultExt {

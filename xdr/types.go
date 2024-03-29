@@ -858,3 +858,285 @@ type SimplePaymentResult struct {
 type TransactionResultExt struct {
 	V int32 `json:"v,omitempty"`
 }
+
+type LedgerEntryChange struct {
+	Created *LedgerEntry `json:"created,omitempty"`
+	Updated *LedgerEntry `json:"updated,omitempty"`
+	Removed *LedgerKey   `json:"removed,omitempty"`
+	State   *LedgerEntry `json:"state,omitempty"`
+}
+
+type LedgerEntry struct {
+	LastModifiedLedgerSeq uint32          `json:"last_modified_ledger_seq,omitempty"`
+	Data                  LedgerEntryData `json:"data,omitempty"`
+	Ext                   LedgerEntryExt  `json:"ext,omitempty"`
+}
+
+type LedgerEntryData struct {
+	Account          *AccountEntry          `json:"account,omitempty"`
+	TrustLine        *TrustLineEntry        `json:"trust_line,omitempty"`
+	Offer            *OfferEntry            `json:"offer,omitempty"`
+	Data             *DataEntry             `json:"data,omitempty"`
+	ClaimableBalance *ClaimableBalanceEntry `json:"claimable_balance,omitempty"`
+	LiquidityPool    *LiquidityPoolEntry    `json:"liquidity_pool,omitempty"`
+	ContractData     *ContractDataEntry     `json:"contract_data,omitempty"`
+	ContractCode     *ContractCodeEntry     `json:"contract_code,omitempty"`
+	ConfigSetting    *ConfigSettingEntry    `json:"config_setting,omitempty"`
+	Ttl              *TtlEntry              `json:"ttl,omitempty"`
+}
+
+type TtlEntry struct {
+	KeyHash            string `json:"key_hash,omitempty"`
+	LiveUntilLedgerSeq uint32 `json:"live_until_ledger_seq,omitempty"`
+}
+
+type ConfigSettingEntry struct {
+	ConfigSettingId            int32                                  `json:"config_setting_id,omitempty"`
+	ContractMaxSizeBytes       *uint32                                `json:"contract_max_size_bytes,omitempty"`
+	ContractCompute            *ConfigSettingContractComputeV0        `json:"contract_compute,omitempty"`
+	ContractLedgerCost         *ConfigSettingContractLedgerCostV0     `json:"contract_ledger_cost,omitempty"`
+	ContractHistoricalData     *ConfigSettingContractHistoricalDataV0 `json:"contract_historical_data,omitempty"`
+	ContractEvents             *ConfigSettingContractEventsV0         `json:"contract_events,omitempty"`
+	ContractBandwidth          *ConfigSettingContractBandwidthV0      `json:"contract_bandwith,omitempty"`
+	ContractCostParamsCpuInsns *ContractCostParams                    `json:"contract_cost_params_cpu_insns,omitempty"`
+	ContractCostParamsMemBytes *ContractCostParams                    `json:"contract_cost_params_mem_bytes,omitempty"`
+	ContractDataKeySizeBytes   *uint32                                `json:"contract_data_key_size_bytes,omitempty"`
+	ContractDataEntrySizeBytes *uint32                                `json:"contract_data_entry_size_bytes,omitempty"`
+	StateArchivalSettings      *StateArchivalSettings                 `json:"state_archival_settings,omitempty"`
+	ContractExecutionLanes     *ConfigSettingContractExecutionLanesV0 `json:"contract_execute_lanes,omitempty"`
+	BucketListSizeWindow       *[]uint64                              `json:"bucket_list_size_window,omitempty"`
+	EvictionIterator           *EvictionIterator                      `json:"eviction_iterator,omitempty"`
+}
+
+type EvictionIterator struct {
+	BucketListLevel  uint32 `json:"bucket_list_level,omitempty"`
+	IsCurrBucket     bool   `json:"is_curr_bucket,omitempty"`
+	BucketFileOffset uint64 `json:"bucket_file_offset,omitempty"`
+}
+
+type ConfigSettingContractExecutionLanesV0 struct {
+	LedgerMaxTxCount uint32 `json:"ttl,omitempty"`
+}
+
+type StateArchivalSettings struct {
+	MaxEntryTtl                    uint32 `json:"max_entry_ttl,omitempty"`
+	MinTemporaryTtl                uint32 `json:"min_temporary_ttl,omitempty"`
+	MinPersistentTtl               uint32 `json:"min_persistent_ttl,omitempty"`
+	PersistentRentRateDenominator  int64  `json:"persistent_rent_rate_denominator,omitempty"`
+	TempRentRateDenominator        int64  `json:"temp_rent_rate_denominator,omitempty"`
+	MaxEntriesToArchive            uint32 `json:"max_entries_to_archive,omitempty"`
+	BucketListSizeWindowSampleSize uint32 `json:"bucket_list_size_window_sample_size,omitempty"`
+	BucketListWindowSamplePeriod   uint32 `json:"bucket_list_window_sample_period,omitempty"`
+	EvictionScanSize               uint32 `json:"eviction_scan_size,omitempty"`
+	StartingEvictionScanLevel      uint32 `json:"starting_eviction_scan_level,omitempty"`
+}
+
+type ContractCostParams []ContractCostParamEntry
+
+type ContractCostParamEntry struct {
+	Ext        ExtensionPoint `json:"ext,omitempty"`
+	ConstTerm  int64          `json:"const_term,omitempty"`
+	LinearTerm int64          `json:"linear_term,omitempty"`
+}
+
+type ConfigSettingContractBandwidthV0 struct {
+	LedgerMaxTxsSizeBytes uint32 `json:"ledger_max_txs_size_bytes,omitempty"`
+	TxMaxSizeBytes        uint32 `json:"tx_max_size_bytes,omitempty"`
+	FeeTxSize1Kb          int64  `json:"fee_tx_size_1kb,omitempty"`
+}
+
+type ConfigSettingContractEventsV0 struct {
+	TxMaxContractEventsSizeBytes uint32 `json:"tx_max_contract_events_size_bytes,omitempty"`
+	FeeContractEvents1Kb         int64  `json:"fee_contract_events_1kb,omitempty"`
+}
+
+type ConfigSettingContractHistoricalDataV0 struct {
+	FeeHistorical1Kb int64 `json:"fee_historical_1kb,omitempty"`
+}
+
+type ConfigSettingContractLedgerCostV0 struct {
+	LedgerMaxReadLedgerEntries     uint32 `json:"ledger_max_read_ledger_entries,omitempty"`
+	LedgerMaxReadBytes             uint32 `json:"ledger_max_read_bytes,omitempty"`
+	LedgerMaxWriteLedgerEntries    uint32 `json:"ledger_max_write_ledger_entries,omitempty"`
+	LedgerMaxWriteBytes            uint32 `json:"ledger_max_write_bytes,omitempty"`
+	TxMaxReadLedgerEntries         uint32 `json:"tx_max_read_ledger_entries,omitempty"`
+	TxMaxReadBytes                 uint32 `json:"tx_max_read_bytes,omitempty"`
+	TxMaxWriteLedgerEntries        uint32 `json:"tx_max_write_ledger_entries,omitempty"`
+	TxMaxWriteBytes                uint32 `json:"tx_max_write_bytes,omitempty"`
+	FeeReadLedgerEntry             int64  `json:"fee_read_ledger_entry,omitempty"`
+	FeeWriteLedgerEntry            int64  `json:"fee_write_ledger_entry,omitempty"`
+	FeeRead1Kb                     int64  `json:"fee_read_1kb,omitempty"`
+	BucketListTargetSizeBytes      int64  `json:"bucket_list_target_size_bytes,omitempty"`
+	WriteFee1KbBucketListLow       int64  `json:"write_fee_1kb_bucket_list_low,omitempty"`
+	WriteFee1KbBucketListHigh      int64  `json:"write_fee_1kb_bucket_list_high,omitempty"`
+	BucketListWriteFeeGrowthFactor uint32 `json:"bucket_list_write_fee_growth_factor,omitempty"`
+}
+
+type ConfigSettingContractComputeV0 struct {
+	LedgerMaxInstructions           int64  `json:"ledger_max_instructions,omitempty"`
+	TxMaxInstructions               int64  `json:"tx_max_instructions,omitempty"`
+	FeeRatePerInstructionsIncrement int64  `json:"fee_rate_per_instructions_increment,omitempty"`
+	TxMemoryLimit                   uint32 `json:"tx_memory_limit,omitempty"`
+}
+
+type ContractCodeEntry struct {
+	Ext  ExtensionPoint `json:"ext,omitempty"`
+	Hash string         `json:"hash,omitempty"`
+	Code []byte         `json:"code,omitempty"`
+}
+
+type ContractDataEntry struct {
+	Ext        ExtensionPoint `json:"ext,omitempty"`
+	Contract   ScAddress      `json:"contract,omitempty"`
+	Key        ScVal          `json:"key,omitempty"`
+	Durability int32          `json:"durability,omitempty"` //ContractDataDurability
+	Val        ScVal          `json:"val,omitempty"`
+}
+
+type LiquidityPoolEntry struct {
+	LiquidityPoolId PoolId                 `json:"liquidity_pool_id,omitempty"`
+	Body            LiquidityPoolEntryBody `json:"body,omitempty"`
+}
+
+type LiquidityPoolEntryBody struct {
+	ConstantProduct *LiquidityPoolEntryConstantProduct `json:"constant_product,omitempty"`
+}
+
+type LiquidityPoolEntryConstantProduct struct {
+	Params                   LiquidityPoolConstantProductParameters `json:"params,omitempty"`
+	ReserveA                 int64                                  `json:"reserve_a,omitempty"`
+	ReserveB                 int64                                  `json:"reserve_b,omitempty"`
+	TotalPoolShares          int64                                  `json:"total_pool_shares,omitempty"`
+	PoolSharesTrustLineCount int64                                  `json:"pool_shares_trust_line_count,omitempty"`
+}
+
+type ClaimableBalanceEntry struct {
+	BalanceId ClaimableBalanceId       `json:"balance_id,omitempty"`
+	Claimants []Claimant               `json:"claimants,omitempty"`
+	Asset     Asset                    `json:"asset,omitempty"`
+	Amount    int64                    `json:"amount,omitempty"`
+	Ext       ClaimableBalanceEntryExt `json:"ext,omitempty"`
+}
+
+type ClaimableBalanceEntryExt struct {
+	V  int32                             `json:"v,omitempty"`
+	V1 *ClaimableBalanceEntryExtensionV1 `json:"v1,omitempty"`
+}
+
+type ClaimableBalanceEntryExtensionV1 struct {
+	Flags uint32                              `json:"flags,omitempty"`
+	Ext   ClaimableBalanceEntryExtensionV1Ext `json:"ext,omitempty"`
+}
+
+type ClaimableBalanceEntryExtensionV1Ext struct {
+	V int32 `json:"v,omitempty"`
+}
+
+type DataEntry struct {
+	AccountId PublicKey    `json:"account_id,omitempty"`
+	DataName  string       `json:"data_name,omitempty"`
+	DataValue []byte       `json:"data_value,omitempty"`
+	Ext       DataEntryExt `json:"ext,omitempty"`
+}
+
+type DataEntryExt struct {
+	V int32 `json:"v,omitempty"`
+}
+
+type TrustLineEntry struct {
+	AccountId PublicKey         `json:"account_id,omitempty"`
+	Asset     TrustLineAsset    `json:"asset,omitempty"`
+	Balance   int64             `json:"balance,omitempty"`
+	Limit     int64             `json:"limit,omitempty"`
+	Flags     uint32            `json:"flags,omitempty"`
+	Ext       TrustLineEntryExt `json:"ext,omitempty"`
+}
+
+type TrustLineEntryExt struct {
+	V  int32             `json:"v,omitempty"`
+	V1 *TrustLineEntryV1 `json:"v1,omitempty"`
+}
+
+type TrustLineEntryV1 struct {
+	Liabilities Liabilities         `json:"liabilities,omitempty"`
+	Ext         TrustLineEntryV1Ext `json:"ext,omitempty"`
+}
+
+type TrustLineEntryV1Ext struct {
+	V  int32                      `json:"v,omitempty"`
+	V2 *TrustLineEntryExtensionV2 `json:"v2,omitempty"`
+}
+
+type TrustLineEntryExtensionV2 struct {
+	LiquidityPoolUseCount int32                        `json:"liquidity_pool_use_count,omitempty"`
+	Ext                   TrustLineEntryExtensionV2Ext `json:"ext,omitempty"`
+}
+
+type TrustLineEntryExtensionV2Ext struct {
+	V int32 `json:"v,omitempty"`
+}
+
+type AccountEntry struct {
+	AccountId     PublicKey       `json:"account_id,omitempty"`
+	Balance       int64           `json:"balance,omitempty"`
+	SeqNum        int64           `json:"seq_num,omitempty"`
+	NumSubEntries uint32          `json:"num_sub_entries,omitempty"`
+	InflationDest *PublicKey      `json:"inflation_dest,omitempty"`
+	Flags         uint32          `json:"flags,omitempty"`
+	HomeDomain    string          `json:"home_domain,omitempty"`
+	Thresholds    []byte          `json:"thresholds,omitempty"`
+	Signers       []Signer        `json:"signers,omitempty"`
+	Ext           AccountEntryExt `json:"ext,omitempty"`
+}
+
+type AccountEntryExt struct {
+	V  int32                    `json:"v,omitempty"`
+	V1 *AccountEntryExtensionV1 `json:"v1,omitempty"`
+}
+
+type AccountEntryExtensionV1 struct {
+	Liabilities Liabilities                `json:"liabilities,omitempty"`
+	Ext         AccountEntryExtensionV1Ext `json:"ext,omitempty"`
+}
+
+type AccountEntryExtensionV1Ext struct {
+	V  int32                    `json:"v,omitempty"`
+	V2 *AccountEntryExtensionV2 `json:"v2,omitempty"`
+}
+
+type AccountEntryExtensionV2 struct {
+	NumSponsored        uint32                     `json:"num_sponsored,omitempty"`
+	NumSponsoring       uint32                     `json:"num_sponsoring,omitempty"`
+	SignerSponsoringIDs []PublicKey                `json:"signer_sponsoring_ids,omitempty"`
+	Ext                 AccountEntryExtensionV2Ext `json:"ext,omitempty"`
+}
+
+type AccountEntryExtensionV2Ext struct {
+	V  int32                    `json:"v,omitempty"`
+	V3 *AccountEntryExtensionV3 `json:"v3,omitempty"`
+}
+
+type AccountEntryExtensionV3 struct {
+	Ext       ExtensionPoint `json:"ext,omitempty"`
+	SeqLedger uint32         `json:"seq_ledger,omitempty"`
+	SeqTime   uint64         `json:"seq_time,omitempty"`
+}
+
+type Liabilities struct {
+	Buying  int64 `json:"buying,omitempty"`
+	Selling int64 `json:"selling,omitempty"`
+}
+
+type LedgerEntryExt struct {
+	V  int32                   `json:"v,omitempty"`
+	V1 *LedgerEntryExtensionV1 `json:"v1,omitempty"`
+}
+
+type LedgerEntryExtensionV1 struct {
+	SponsoringId PublicKey                 `json:"sponsoring_id,omitempty"`
+	Ext          LedgerEntryExtensionV1Ext `json:"ext,omitempty"`
+}
+
+type LedgerEntryExtensionV1Ext struct {
+	V int32 `json:"v,omitempty"`
+}

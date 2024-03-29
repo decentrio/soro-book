@@ -74,9 +74,18 @@ func ConvertLedgerEntryData(d xdr.LedgerEntryData) (LedgerEntryData, error) {
 
 		return result, nil
 	case xdr.LedgerEntryTypeConfigSetting:
-		cfgSettings := d.ConfigSetting
+		cfgSettings, err := ConvertConfigSettingEntry(*d.ConfigSetting)
+		if err != nil {
+			return result, err
+		}
+		result.ConfigSetting = &cfgSettings
+
+		return result, nil
 	case xdr.LedgerEntryTypeTtl:
-		ttl := d.Ttl
+		ttl := ConvertTtlEntry(*d.Ttl)
+		result.Ttl = &ttl
+
+		return result, nil
 	}
 
 	return result, errors.Errorf("error invalid LedgerEntryData type %v", d.Type)

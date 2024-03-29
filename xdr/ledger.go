@@ -25,21 +25,85 @@ func ConvertLedgerEntryData(d xdr.LedgerEntryData) (LedgerEntryData, error) {
 
 		return result, nil
 	case xdr.LedgerEntryTypeTrustline:
+		trustLine, err := ConvertTrustLineEntry(*d.TrustLine)
+		if err != nil {
+			return result, err
+		}
+		result.TrustLine = &trustLine
+
+		return result, nil
 	case xdr.LedgerEntryTypeOffer:
+		offer, err := ConvertOfferEntry(*d.Offer)
+		if err != nil {
+			return result, err
+		}
+		result.Offer = &offer
+
+		return result, nil
 	case xdr.LedgerEntryTypeData:
+		data := ConvertDataEntry(*d.Data)
+		result.Data = &data
+		return result, nil
 	case xdr.LedgerEntryTypeClaimableBalance:
+		balance, err := ConvertConvertClaimableBalanceEntry(*d.ClaimableBalance)
+		if err != nil {
+			return result, err
+		}
+		result.ClaimableBalance = &balance
+
+		return result, nil
 	case xdr.LedgerEntryTypeLiquidityPool:
+		lp, err := ConvertLiquidityPoolEntry(*d.LiquidityPool)
+		if err != nil {
+			return result, err
+		}
+		result.LiquidityPool = &lp
+
+		return result, nil
 	case xdr.LedgerEntryTypeContractData:
+		contractData, err := ConvertContractDataEntry(*d.ContractData)
+		if err != nil {
+			return result, err
+		}
+		result.ContractData = &contractData
+
+		return result, nil
 	case xdr.LedgerEntryTypeContractCode:
+		contractCode := ConvertContractCodeEntry(*d.ContractCode)
+		result.ContractCode = &contractCode
+
+		return result, nil
 	case xdr.LedgerEntryTypeConfigSetting:
+		cfgSettings := d.ConfigSetting
 	case xdr.LedgerEntryTypeTtl:
+		ttl := d.Ttl
 	}
 
 	return result, errors.Errorf("error invalid LedgerEntryData type %v", d.Type)
 }
 
-func ConvertLedgerEntryExt(e xdr.LedgerEntryExt) (LedgerEntryExt, error) {
+func ConvertLedgerEntryExt(e xdr.LedgerEntryExt) LedgerEntryExt {
+	v1 := ConvertLedgerEntryExtensionV1(*e.V1)
 
+	return LedgerEntryExt{
+		V:  e.V,
+		V1: &v1,
+	}
+}
+
+func ConvertLedgerEntryExtensionV1(e xdr.LedgerEntryExtensionV1) LedgerEntryExtensionV1 {
+	sponsoringId := PublicKey{
+		Ed25519: e.SponsoringId.Ed25519.String(),
+	}
+
+	return LedgerEntryExtensionV1{
+		SponsoringId: sponsoringId,
+		Ext:          ConvertLedgerEntryExtensionV1Ext(e.Ext),
+	}
+}
+
+func ConvertLedgerEntryExtensionV1Ext(e xdr.LedgerEntryExtensionV1Ext) LedgerEntryExtensionV1Ext {
+	return LedgerEntryExtensionV1Ext{V: e.V}
 }
 
 func ConvertLedgerKeyAccount(k xdr.LedgerKeyAccount) LedgerKeyAccount {

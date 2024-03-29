@@ -7,6 +7,65 @@ import (
 	"github.com/stellar/go/xdr"
 )
 
+func ConvertTrustLineEntry(e xdr.TrustLineEntry) (TrustLineEntry, error) {
+	var result TrustLineEntry
+	accountId := PublicKey{
+		Ed25519: e.AccountId.Ed25519.String(),
+	}
+
+	asset, err := ConvertTrustLineAsset(e.Asset)
+	if err != nil {
+		return result, err
+	}
+
+	ext := ConvertTrustLineEntryExt(e.Ext)
+
+	result.AccountId = accountId
+	result.Asset = asset
+	result.Balance = int64(e.Balance)
+	result.Limit = int64(e.Limit)
+	result.Flags = uint32(e.Flags)
+	result.Ext = ext
+
+	return result, nil
+}
+
+func ConvertTrustLineEntryExt(e xdr.TrustLineEntryExt) TrustLineEntryExt {
+	v1 := ConvertTrustLineEntryV1(*e.V1)
+
+	return TrustLineEntryExt{
+		V:  e.V,
+		V1: &v1,
+	}
+}
+
+func ConvertTrustLineEntryV1(e xdr.TrustLineEntryV1) TrustLineEntryV1 {
+	return TrustLineEntryV1{
+		Liabilities: ConvertLiabilities(e.Liabilities),
+		Ext:         ConvertTrustLineEntryV1Ext(e.Ext),
+	}
+}
+
+func ConvertTrustLineEntryV1Ext(e xdr.TrustLineEntryV1Ext) TrustLineEntryV1Ext {
+	v2 := ConvertTrustLineEntryExtensionV2(*e.V2)
+
+	return TrustLineEntryV1Ext{
+		V:  e.V,
+		V2: &v2,
+	}
+}
+
+func ConvertTrustLineEntryExtensionV2(e xdr.TrustLineEntryExtensionV2) TrustLineEntryExtensionV2 {
+	return TrustLineEntryExtensionV2{
+		LiquidityPoolUseCount: int32(e.LiquidityPoolUseCount),
+		Ext:                   ConvertTrustLineEntryExtensionV2Ext(e.Ext),
+	}
+}
+
+func ConvertTrustLineEntryExtensionV2Ext(e xdr.TrustLineEntryExtensionV2Ext) TrustLineEntryExtensionV2Ext {
+	return TrustLineEntryExtensionV2Ext{V: e.V}
+}
+
 // TODO: testing
 func ConvertAsset(as xdr.Asset) (Asset, error) {
 	var result Asset
@@ -206,6 +265,60 @@ func ConvertClaimant(c xdr.Claimant) (Claimant, error) {
 	}
 
 	return result, errors.Errorf("invalid claimant type %v", c.Type)
+}
+
+func ConvertConvertClaimableBalanceEntry(e xdr.ClaimableBalanceEntry) (ClaimableBalanceEntry, error) {
+	var result ClaimableBalanceEntry
+
+	balanceId, err := ConvertClaimableBalanceId(e.BalanceId)
+	if err != nil {
+		return result, err
+	}
+
+	var claimants []Claimant
+	for _, xdrClaimant := range e.Claimants {
+		claimant, err := ConvertClaimant(xdrClaimant)
+		if err != nil {
+			return result, err
+		}
+
+		claimants = append(claimants, claimant)
+	}
+
+	asset, err := ConvertAsset(e.Asset)
+	if err != nil {
+		return result, err
+	}
+
+	ext := ConvertClaimableBalanceEntryExt(e.Ext)
+
+	result.BalanceId = balanceId
+	result.Claimants = claimants
+	result.Asset = asset
+	result.Amount = int64(e.Amount)
+	result.Ext = ext
+
+	return result, nil
+}
+
+func ConvertClaimableBalanceEntryExt(e xdr.ClaimableBalanceEntryExt) ClaimableBalanceEntryExt {
+	v1 := ConvertClaimableBalanceEntryExtensionV1(*e.V1)
+
+	return ClaimableBalanceEntryExt{
+		V:  e.V,
+		V1: &v1,
+	}
+}
+
+func ConvertClaimableBalanceEntryExtensionV1(e xdr.ClaimableBalanceEntryExtensionV1) ClaimableBalanceEntryExtensionV1 {
+	return ClaimableBalanceEntryExtensionV1{
+		Flags: uint32(e.Flags),
+		Ext:   ConvertClaimableBalanceEntryExtensionV1Ext(e.Ext),
+	}
+}
+
+func ConvertClaimableBalanceEntryExtensionV1Ext(e xdr.ClaimableBalanceEntryExtensionV1Ext) ClaimableBalanceEntryExtensionV1Ext {
+	return ClaimableBalanceEntryExtensionV1Ext{V: e.V}
 }
 
 // TODO: testing
@@ -489,4 +602,51 @@ func ConvertInflationPayout(i xdr.InflationPayout) InflationPayout {
 		Destination: PublicKey{Ed25519: i.Destination.Ed25519.String()},
 		Amount:      int64(i.Amount),
 	}
+}
+
+func ConvertLiquidityPoolEntry(e xdr.LiquidityPoolEntry) (LiquidityPoolEntry, error) {
+	var result LiquidityPoolEntry
+	body, err := ConvertLiquidityPoolEntryBody(e.Body)
+	if err != nil {
+		return result, err
+	}
+
+	result.LiquidityPoolId = PoolId(e.LiquidityPoolId[:])
+	result.Body = body
+
+	return result, nil
+}
+
+func ConvertLiquidityPoolEntryBody(b xdr.LiquidityPoolEntryBody) (LiquidityPoolEntryBody, error) {
+	var result LiquidityPoolEntryBody
+
+	switch b.Type {
+	case xdr.LiquidityPoolTypeLiquidityPoolConstantProduct:
+		constProduct, err := ConvertLiquidityPoolEntryConstantProduct(*b.ConstantProduct)
+		if err != nil {
+			return result, err
+		}
+
+		result.ConstantProduct = &constProduct
+
+		return result, nil
+	}
+	return result, errors.Errorf("invalid LiquidityPoolEntryBody type %v", b.Type)
+}
+
+func ConvertLiquidityPoolEntryConstantProduct(p xdr.LiquidityPoolEntryConstantProduct) (LiquidityPoolEntryConstantProduct, error) {
+	var result LiquidityPoolEntryConstantProduct
+
+	params, err := ConvertLiquidityPoolConstantProductParameters(p.Params)
+	if err != nil {
+		return result, err
+	}
+
+	result.Params = params
+	result.ReserveA = int64(p.ReserveA)
+	result.ReserveB = int64(p.ReserveB)
+	result.TotalPoolShares = int64(p.TotalPoolShares)
+	result.PoolSharesTrustLineCount = int64(p.PoolSharesTrustLineCount)
+
+	return result, nil
 }

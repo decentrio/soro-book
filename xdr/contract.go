@@ -257,11 +257,48 @@ func ConvertContractIdPreimageFromAddress(p xdr.ContractIdPreimageFromAddress) (
 	var result ContractIdPreimageFromAddress
 	address, err := ConvertScAddress(p.Address)
 	if err != nil {
-		return result, nil
+		return result, err
 	}
 
 	result.Address = address
 	result.Salt = p.Salt.String()
+
+	return result, nil
+}
+
+func ConvertContractCodeEntry(e xdr.ContractCodeEntry) ContractCodeEntry {
+	return ContractCodeEntry{
+		Ext:  ConvertExtensionPoint(e.Ext),
+		Hash: e.Hash.HexString(),
+		Code: e.Code,
+	}
+}
+
+func ConvertContractDataEntry(e xdr.ContractDataEntry) (ContractDataEntry, error) {
+	var result ContractDataEntry
+
+	ext := ConvertExtensionPoint(e.Ext)
+
+	contract, err := ConvertScAddress(e.Contract)
+	if err != nil {
+		return result, err
+	}
+
+	key, err := ConvertScVal(e.Key)
+	if err != nil {
+		return result, err
+	}
+
+	val, err := ConvertScVal(e.Val)
+	if err != nil {
+		return result, err
+	}
+
+	result.Ext = ext
+	result.Contract = contract
+	result.Key = key
+	result.Durability = int32(e.Durability)
+	result.Val = val
 
 	return result, nil
 }

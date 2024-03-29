@@ -320,3 +320,31 @@ func ConvertFeeBumpTransactionInnerTx(f xdr.FeeBumpTransactionInnerTx) (FeeBumpT
 func ConvertFeeBumpTransactionExt(f xdr.FeeBumpTransactionExt) FeeBumpTransactionExt {
 	return FeeBumpTransactionExt{V: f.V}
 }
+
+func ConvertDataEntry(e xdr.DataEntry) DataEntry {
+	accountId := PublicKey{
+		Ed25519: e.AccountId.Ed25519.String(),
+	}
+
+	return DataEntry{
+		AccountId: accountId,
+		DataName:  string(e.DataName),
+		DataValue: e.DataValue,
+		Ext:       ConvertDataEntryExt(e.Ext),
+	}
+}
+
+func ConvertDataEntryExt(e xdr.DataEntryExt) DataEntryExt {
+	return DataEntryExt{V: e.V}
+}
+
+func ConvertTtlEntry(e xdr.TtlEntry) TtlEntry {
+	return TtlEntry{
+		KeyHash:            e.KeyHash.HexString(),
+		LiveUntilLedgerSeq: uint32(e.LiveUntilLedgerSeq),
+	}
+}
+
+func ConvertConfigSettingEntry(e xdr.ConfigSettingEntry) (ConfigSettingEntry, error) {
+
+}

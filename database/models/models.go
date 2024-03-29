@@ -23,8 +23,7 @@ type Event struct {
 	ContractId string `json:"contract_id,omitempty"`
 	TxHash     string `json:"tx_hash,omitempty"`
 	TxIndex    uint32 `json:"tx_index,omitempty"`
-	EventType  string `json:"event_type,omitempty"`
-	ValueXdr   []byte `json:"value_xdr,omitempty"`
+	EventXdr   []byte `json:"event_xdr,omitempty"`
 }
 
 type Topics struct {

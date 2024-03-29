@@ -85,9 +85,9 @@ func (tw TransactionWrapper) GetModelsTransaction() *models.Transaction {
 		Status:           tw.GetStatus(),
 		Ledger:           tw.GetLedgerSequence(),
 		ApplicationOrder: tw.GetApplicationOrder(),
-		EnvelopeXdr:      tw.GetEnvelopeXdr(),
-		ResultXdr:        tw.GetResultXdr(),
-		ResultMetaXdr:    tw.GetResultMetaXdr(),
+		EnvelopeXdr:      tw.GetEnvelopeXdr(),   // xdr.TransactionEnvelope
+		ResultXdr:        tw.GetResultXdr(),     // xdr.TransactionResultPair
+		ResultMetaXdr:    tw.GetResultMetaXdr(), //xdr.TransactionResultMeta
 		SourceAddress:    tw.Tx.Envelope.SourceAccount().ToAccountId().Address(),
 	}
 }

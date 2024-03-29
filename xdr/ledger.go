@@ -5,7 +5,7 @@ import (
 	"github.com/stellar/go/xdr"
 )
 
-func ConvertLedgerEntryChanges(c xdr.LedgerEntryChange) (LedgerEntryChange, error) {
+func ConvertLedgerEntryChange(c xdr.LedgerEntryChange) (LedgerEntryChange, error) {
 	var result LedgerEntryChange
 
 	switch c.Type {

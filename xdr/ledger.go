@@ -6,11 +6,60 @@ import (
 )
 
 func ConvertLedgerEntryChanges(c xdr.LedgerEntryChange) (LedgerEntryChange, error) {
+	var result LedgerEntryChange
 
+	switch c.Type {
+	case xdr.LedgerEntryChangeTypeLedgerEntryCreated:
+		created, err := ConvertLedgerEntry(*c.Created)
+		if err != nil {
+			return result, err
+		}
+
+		result.Created = &created
+		return result, nil
+	case xdr.LedgerEntryChangeTypeLedgerEntryUpdated:
+		updated, err := ConvertLedgerEntry(*c.Updated)
+		if err != nil {
+			return result, err
+		}
+
+		result.Updated = &updated
+		return result, nil
+	case xdr.LedgerEntryChangeTypeLedgerEntryRemoved:
+		removed, err := ConvertLedgerKey(*c.Removed)
+		if err != nil {
+			return result, err
+		}
+
+		result.Removed = &removed
+		return result, nil
+	case xdr.LedgerEntryChangeTypeLedgerEntryState:
+		state, err := ConvertLedgerEntry(*c.State)
+		if err != nil {
+			return result, err
+		}
+
+		result.State = &state
+		return result, nil
+	}
+	return result, errors.Errorf("error invalid LedgerEntryChange type %v", c.Type)
 }
 
 func ConvertLedgerEntry(e xdr.LedgerEntry) (LedgerEntry, error) {
+	var result LedgerEntry
 
+	data, err := ConvertLedgerEntryData(e.Data)
+	if err != nil {
+		return result, err
+	}
+
+	ext := ConvertLedgerEntryExt(e.Ext)
+
+	result.LastModifiedLedgerSeq = uint32(e.LastModifiedLedgerSeq)
+	result.Data = data
+	result.Ext = ext
+
+	return result, nil
 }
 
 func ConvertLedgerEntryData(d xdr.LedgerEntryData) (LedgerEntryData, error) {

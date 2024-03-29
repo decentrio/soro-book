@@ -9,6 +9,16 @@ func ConvertOperationResult(op xdr.OperationResult) (OperationResult, error) {
 	var result OperationResult
 	result.Code = int32(op.Code)
 
+	if op.Code == xdr.OperationResultCodeOpInner {
+		tr, err := ConvertOperationResultTr(*op.Tr)
+		if err != nil {
+			return result, err
+		}
+
+		result.Tr = &tr
+	}
+
+	return result, nil
 }
 
 func ConvertOperationResultTr(r xdr.OperationResultTr) (OperationResultTr, error) {

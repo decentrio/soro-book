@@ -5,6 +5,21 @@ import (
 	"github.com/stellar/go/xdr"
 )
 
+func ConvertOperationMeta(m xdr.OperationMeta) (OperationMeta, error) {
+	var result OperationMeta
+	var changes LedgerEntryChanges
+	for _, xdrChange := range m.Changes {
+		change, err := ConvertLedgerEntryChange(xdrChange)
+		if err != nil {
+			return result, err
+		}
+		changes = append(changes, change)
+	}
+	result.Changes = changes
+
+	return result, nil
+}
+
 func ConvertOperationResult(op xdr.OperationResult) (OperationResult, error) {
 	var result OperationResult
 	result.Code = int32(op.Code)

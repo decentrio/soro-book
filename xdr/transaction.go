@@ -1,13 +1,71 @@
 package xdr
 
 import (
-	"github.com/stellar/go/support/errors"
+	"github.com/pkg/errors"
 	"github.com/stellar/go/xdr"
 )
 
 // func ConvertTransactionJSON(tx models.Transaction) models.TransactionJSON {
 // 	return models.TransactionJSON{}
 // }
+
+func ConvertTransactionMeta(m xdr.TransactionMeta) (TransactionMeta, error) {
+	var result TransactionMeta
+
+	switch m.V {
+	case 0:
+		var ops []OperationMeta
+		for _, xdrOp := range *m.Operations {
+			op, err := ConvertOperationMeta(xdrOp)
+			if err != nil {
+				return result, err
+			}
+			ops = append(ops, op)
+		}
+
+		result.Operations = &ops
+
+		return result, nil
+	case 1:
+		v1, err := ConvertTransactionMetaV1(*m.V1)
+		if err != nil {
+			return result, err
+		}
+		result.V1 = &v1
+		return result, nil
+	case 2:
+		v2, err := ConvertTransactionMetaV2(*m.V2)
+		if err != nil {
+			return result, err
+		}
+		result.V2 = &v2
+		return result, nil
+	case 3:
+		v3, err := ConvertTransactionMetaV3(*m.V3)
+		if err != nil {
+			return result, err
+		}
+		result.V3 = &v3
+		return result, nil
+	}
+	return result, errors.Errorf("error invalid TransactionMeta type %v", m.V)
+}
+
+func ConvertTransactionMetaV1(m xdr.TransactionMetaV1) (TransactionMetaV1, error) {
+
+}
+
+func ConvertTransactionMetaV2(m xdr.TransactionMetaV2) (TransactionMetaV2, error) {
+
+}
+
+func ConvertTransactionMetaV3(m xdr.TransactionMetaV3) (TransactionMetaV3, error) {
+
+}
+
+func ConvertSorobanTransactionMeta(m xdr.SorobanTransactionMeta) (SorobanTransactionMeta, error) {
+
+}
 
 func ConvertTransactionResultPair(r xdr.TransactionResultPair) (TransactionResultPair, error) {
 	var result TransactionResultPair

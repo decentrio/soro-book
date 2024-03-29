@@ -15,6 +15,10 @@ var (
 	ErrNotBurnEvent          = errors.New("this is not burn event")
 )
 
+func ConvertContractEvent(e xdr.ContractEvent) ContractEvent {
+
+}
+
 // func ConvertContractEventJSON(event models.Event, topics []models.Topics) (*models.EventJSON, error) {
 // 	evt := &models.EventJSON{}
 

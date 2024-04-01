@@ -70,9 +70,10 @@ func ConvertContractEvent(e xdr.ContractEvent) (ContractEvent, error) {
 	result.Ext = ConvertExtensionPoint(e.Ext)
 	contractId := e.ContractId.HexString()
 	result.ContractId = &contractId
-	result.Type = int32(e.Type)
+	result.ContractEventType = int32(e.Type)
 
 	eventType, found := getEventType(e.Body)
+	result.EventType = eventType
 	if !found {
 		return result, nil
 	}

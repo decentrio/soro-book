@@ -1188,13 +1188,14 @@ type DiagnosticEvent struct {
 }
 
 type ContractEvent struct {
-	Ext        ExtensionPoint `json:"ext,omitempty"`
-	ContractId *string        `json:"contract_id,omitempty"`
-	Type       int32          `json:"type,omitempty"`
-	Transfer   *TransferEvent `json:"transfer,omitempty"`
-	Mint       *MintEvent     `json:"mint,omitempty"`
-	Clawback   *ClawbackEvent `json:"claw_back,omitempty"`
-	Burn       *BurnEvent     `json:"burn,omitempty"`
+	Ext               ExtensionPoint `json:"ext,omitempty"`
+	ContractId        *string        `json:"contract_id,omitempty"`
+	ContractEventType int32          `json:"contract_event_type,omitempty"`
+	EventType         string         `json:"event_type,omitempty"`
+	Transfer          *TransferEvent `json:"transfer,omitempty"`
+	Mint              *MintEvent     `json:"mint,omitempty"`
+	Clawback          *ClawbackEvent `json:"claw_back,omitempty"`
+	Burn              *BurnEvent     `json:"burn,omitempty"`
 }
 
 type TransferEvent struct {

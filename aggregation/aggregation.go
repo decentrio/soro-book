@@ -157,23 +157,10 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 		for _, op := range tw.Ops {
 			events := op.GetContractEvents()
 			for _, event := range events {
-				_, err := as.db.CreateEvent(&event.contractEvent)
+				_, err := as.db.CreateEvent(&event)
 				if err != nil {
 					as.Logger.Error(err.Error())
 					continue
-				}
-
-				for index, topic := range event.topics {
-					tp := models.Topics{
-						EventId:  event.contractEvent.Id,
-						TopicXdr: []byte(topic),
-						TopicIdx: int32(index),
-					}
-
-					_, err := as.db.CreateTopics(&tp)
-					if err != nil {
-						as.Logger.Error(err.Error())
-					}
 				}
 			}
 		}

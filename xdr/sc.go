@@ -222,17 +222,19 @@ func ConvertScContractInstance(i xdr.ScContractInstance) (ScContractInstance, er
 	}
 	result.Executable = executable
 
-	xdrStorage := *i.Storage
-	var scMapEntrys []ScMapEntry
-	for _, xdrScMapEntry := range xdrStorage {
-		scMapEntry, err := ConvertScMapEntry(xdrScMapEntry)
-		if err != nil {
-			return result, err
+	if i.Storage != nil {
+		xdrStorage := *i.Storage
+		var scMapEntrys []ScMapEntry
+		for _, xdrScMapEntry := range xdrStorage {
+			scMapEntry, err := ConvertScMapEntry(xdrScMapEntry)
+			if err != nil {
+				return result, err
+			}
+			scMapEntrys = append(scMapEntrys, scMapEntry)
 		}
-		scMapEntrys = append(scMapEntrys, scMapEntry)
+		storage := ScMap(scMapEntrys)
+		result.Storage = &storage
 	}
-	storage := ScMap(scMapEntrys)
-	result.Storage = &storage
 
 	return result, nil
 }

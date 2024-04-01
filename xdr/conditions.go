@@ -33,14 +33,23 @@ func ConvertPreconditions(c xdr.Preconditions) (Preconditions, error) {
 
 func ConvertPreconditionsV2(c xdr.PreconditionsV2) (PreconditionsV2, error) {
 	var result PreconditionsV2
+
+	var timeBounds *TimeBounds
+	var ledgerBounds LedgerBounds
+
 	timeBounds, err := ConvertTimeBounds(c.TimeBounds)
 	if err != nil {
 		return result, err
 	}
 
-	ledgerBounds := ConvertLedgerBounds(*c.LedgerBounds)
+	if c.LedgerBounds != nil {
+		ledgerBounds = ConvertLedgerBounds(*c.LedgerBounds)
+	}
 
-	minSeqNum := int64(*c.MinSeqNum)
+	var minSeqNum int64
+	if c.MinSeqNum != nil {
+		minSeqNum = int64(*c.MinSeqNum)
+	}
 
 	var extraSigners []SignerKey
 	for _, xdrSigner := range c.ExtraSigners {

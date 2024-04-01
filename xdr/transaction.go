@@ -9,6 +9,35 @@ import (
 // 	return models.TransactionJSON{}
 // }
 
+func ConvertTransactionResultMeta(r xdr.TransactionResultMeta) (TransactionResultMeta, error) {
+	var result TransactionResultMeta
+
+	rs, err := ConvertTransactionResultPair(r.Result)
+	if err != nil {
+		return result, err
+	}
+
+	var fees LedgerEntryChanges
+	for _, xdrFee := range r.FeeProcessing {
+		fee, err := ConvertLedgerEntryChange(xdrFee)
+		if err != nil {
+			return result, err
+		}
+		fees = append(fees, fee)
+	}
+
+	txMeta, err := ConvertTransactionMeta(r.TxApplyProcessing)
+	if err != nil {
+		return result, err
+	}
+
+	result.Result = rs
+	result.FeeProcessing = fees
+	result.TxApplyProcessing = txMeta
+
+	return result, nil
+}
+
 func ConvertTransactionMeta(m xdr.TransactionMeta) (TransactionMeta, error) {
 	var result TransactionMeta
 
@@ -155,9 +184,13 @@ func ConvertTransactionMetaV3(m xdr.TransactionMetaV3) (TransactionMetaV3, error
 		txChangesAfter = append(txChangesAfter, txChange)
 	}
 
-	sorobanMeta, err := ConvertSorobanTransactionMeta(*m.SorobanMeta)
-	if err != nil {
-		return result, err
+	var sorobanMeta SorobanTransactionMeta
+	if m.SorobanMeta != nil {
+		var err error
+		sorobanMeta, err = ConvertSorobanTransactionMeta(*m.SorobanMeta)
+		if err != nil {
+			return result, err
+		}
 	}
 
 	result.Ext = ext
@@ -245,15 +278,17 @@ func ConvertTransactionResultResult(r xdr.TransactionResultResult) (TransactionR
 		result.InnerResultPair = &innerResult
 	} else if r.Code == xdr.TransactionResultCodeTxSuccess || r.Code == xdr.TransactionResultCodeTxFailed {
 		var opResult []OperationResult
-		for _, xdrResult := range *r.Results {
-			op, err := ConvertOperationResult(xdrResult)
-			if err != nil {
-				return result, err
-			}
+		if r.Results != nil {
+			for _, xdrResult := range *r.Results {
+				op, err := ConvertOperationResult(xdrResult)
+				if err != nil {
+					return result, err
+				}
 
-			opResult = append(opResult, op)
+				opResult = append(opResult, op)
+			}
+			result.Results = &opResult
 		}
-		result.Results = &opResult
 	}
 	return result, nil
 }
@@ -424,6 +459,10 @@ func ConvertTransactionV0(tx xdr.TransactionV0) (TransactionV0, error) {
 
 // TODO: testing
 func ConvertTimeBounds(tb *xdr.TimeBounds) (*TimeBounds, error) {
+	if tb == nil {
+		return nil, nil
+	}
+
 	return &TimeBounds{
 		MinTime: uint64(tb.MinTime),
 		MaxTime: uint64(tb.MaxTime),
@@ -486,9 +525,14 @@ func ConvertTxV0Ext(e xdr.TransactionV0Ext) (TransactionV0Ext, error) {
 
 func ConvertTxExt(e xdr.TransactionExt) (TransactionExt, error) {
 	var result TransactionExt
-	data, err := ConvertSorobanTransactionData(*e.SorobanData)
-	if err != nil {
-		return result, err
+
+	var data SorobanTransactionData
+	var err error
+	if e.SorobanData != nil {
+		data, err = ConvertSorobanTransactionData(*e.SorobanData)
+		if err != nil {
+			return result, err
+		}
 	}
 
 	result.V = e.V

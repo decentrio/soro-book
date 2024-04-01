@@ -2,9 +2,7 @@ package xdr
 
 import (
 	"encoding/json"
-	"fmt"
 
-	"github.com/decentrio/soro-book/aggregation"
 	"github.com/pkg/errors"
 	"github.com/stellar/go/xdr"
 )
@@ -58,7 +56,9 @@ func getEventType(eventBody xdr.ContractEventBody) (string, bool) {
 
 	eventType, found := STELLAR_ASSET_CONTRACT_TOPICS[fn]
 	if !found {
-		return "", false
+		topics[0].GetSym()
+
+		return string(fn), false
 	}
 
 	return eventType, true
@@ -74,7 +74,7 @@ func ConvertContractEvent(e xdr.ContractEvent) (ContractEvent, error) {
 
 	eventType, found := getEventType(e.Body)
 	if !found {
-		return result, fmt.Errorf("event type not found")
+		return result, nil
 	}
 
 	topics := e.Body.V0.Topics
@@ -98,7 +98,7 @@ func ConvertContractEvent(e xdr.ContractEvent) (ContractEvent, error) {
 		burnEvent.parse(topics, value)
 		result.Burn = &burnEvent
 	default:
-		return result, errors.Wrapf(aggregation.ErrEventUnsupported, "event not supported %s", eventType)
+		return result, errors.Wrapf(ErrEventUnsupported, "event not supported %s", eventType)
 	}
 	return result, nil
 }

@@ -84,7 +84,7 @@ func NewAggregation(
 	as.log.SetLevel(logrus.ErrorLevel)
 	Config.Log = as.log
 
-	as.sequence = uint32(100_028)
+	as.sequence = uint32(103_345)
 
 	var err error
 	as.backend, err = backends.NewCaptive(Config)
@@ -163,6 +163,7 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 					continue
 				}
 			}
+
 		}
 	}
 }
@@ -224,11 +225,9 @@ func (as *Aggregation) getNewLedger() {
 				as.Logger.Error(err.Error())
 			}
 
-			tx.Result.Successful()
-
 			txWrapper := NewTransactionWrapper(tx, seq)
-
 			txWrappers = append(txWrappers, txWrapper)
+
 			operations += uint32(len(tx.Envelope.Operations()))
 			transactions++
 		}

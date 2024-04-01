@@ -31,7 +31,10 @@ func ConvertTrustLineEntry(e xdr.TrustLineEntry) (TrustLineEntry, error) {
 }
 
 func ConvertTrustLineEntryExt(e xdr.TrustLineEntryExt) TrustLineEntryExt {
-	v1 := ConvertTrustLineEntryV1(*e.V1)
+	var v1 TrustLineEntryV1
+	if e.V1 != nil {
+		v1 = ConvertTrustLineEntryV1(*e.V1)
+	}
 
 	return TrustLineEntryExt{
 		V:  e.V,
@@ -47,7 +50,10 @@ func ConvertTrustLineEntryV1(e xdr.TrustLineEntryV1) TrustLineEntryV1 {
 }
 
 func ConvertTrustLineEntryV1Ext(e xdr.TrustLineEntryV1Ext) TrustLineEntryV1Ext {
-	v2 := ConvertTrustLineEntryExtensionV2(*e.V2)
+	var v2 TrustLineEntryExtensionV2
+	if e.V2 != nil {
+		v2 = ConvertTrustLineEntryExtensionV2(*e.V2)
+	}
 
 	return TrustLineEntryV1Ext{
 		V:  e.V,
@@ -70,7 +76,10 @@ func ConvertTrustLineEntryExtensionV2Ext(e xdr.TrustLineEntryExtensionV2Ext) Tru
 func ConvertAsset(as xdr.Asset) (Asset, error) {
 	var result Asset
 	switch as.Type {
+	case xdr.AssetTypeAssetTypeNative:
+		result.AssetType = "native"
 	case xdr.AssetTypeAssetTypeCreditAlphanum4:
+		result.AssetType = "alphanum4"
 		result.AssetCode = as.AlphaNum4.AssetCode[:]
 
 		issuer := PublicKey{
@@ -80,6 +89,7 @@ func ConvertAsset(as xdr.Asset) (Asset, error) {
 
 		return result, nil
 	case xdr.AssetTypeAssetTypeCreditAlphanum12:
+		result.AssetType = "alphanum12"
 		result.AssetCode = as.AlphaNum12.AssetCode[:]
 
 		issuer := PublicKey{
@@ -88,10 +98,12 @@ func ConvertAsset(as xdr.Asset) (Asset, error) {
 		result.Issuer = issuer
 
 		return result, nil
+	case xdr.AssetTypeAssetTypePoolShare:
+		result.AssetType = "poolshare"
 	default:
 		return result, errors.Errorf("unsupported asset type %v", as.Type)
 	}
-
+	return result, nil
 }
 
 // TODO: testing
@@ -103,9 +115,11 @@ func ConvertTrustLineAsset(a xdr.TrustLineAsset) (TrustLineAsset, error) {
 	}
 	result.Asset = &asset
 
-	xdrLpId := xdr.Hash(*a.LiquidityPoolId)
-	lpId := PoolId(xdrLpId[:])
-	result.LiquidityPoolId = &lpId
+	if a.LiquidityPoolId != nil {
+		xdrLpId := xdr.Hash(*a.LiquidityPoolId)
+		lpId := PoolId(xdrLpId[:])
+		result.LiquidityPoolId = &lpId
+	}
 
 	return result, nil
 }
@@ -162,9 +176,13 @@ func ConvertChangeTrustAsset(ta xdr.ChangeTrustAsset) (ChangeTrustAsset, error) 
 	}
 	result.Asset = &asset
 
-	liquidityPool, err := ConvertLiquidityPoolParameters(*ta.LiquidityPool)
-	if err != nil {
-		return result, err
+	var liquidityPool LiquidityPoolParameters
+	if ta.LiquidityPool != nil {
+		var err error
+		liquidityPool, err = ConvertLiquidityPoolParameters(*ta.LiquidityPool)
+		if err != nil {
+			return result, err
+		}
 	}
 	result.LiquidityPool = &liquidityPool
 
@@ -302,7 +320,10 @@ func ConvertConvertClaimableBalanceEntry(e xdr.ClaimableBalanceEntry) (Claimable
 }
 
 func ConvertClaimableBalanceEntryExt(e xdr.ClaimableBalanceEntryExt) ClaimableBalanceEntryExt {
-	v1 := ConvertClaimableBalanceEntryExtensionV1(*e.V1)
+	var v1 ClaimableBalanceEntryExtensionV1
+	if e.V1 != nil {
+		v1 = ConvertClaimableBalanceEntryExtensionV1(*e.V1)
+	}
 
 	return ClaimableBalanceEntryExt{
 		V:  e.V,
@@ -549,11 +570,14 @@ func ConvertManageOfferSuccessResultOffer(r xdr.ManageOfferSuccessResultOffer) (
 
 	result.Effect = int32(r.Effect)
 
-	offer, err := ConvertOfferEntry(*r.Offer)
-	if err != nil {
-		return result, err
+	var offer OfferEntry
+	var err error
+	if r.Offer != nil {
+		offer, err = ConvertOfferEntry(*r.Offer)
+		if err != nil {
+			return result, err
+		}
 	}
-
 	result.Offer = &offer
 
 	return result, nil

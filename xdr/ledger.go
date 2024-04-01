@@ -141,7 +141,10 @@ func ConvertLedgerEntryData(d xdr.LedgerEntryData) (LedgerEntryData, error) {
 }
 
 func ConvertLedgerEntryExt(e xdr.LedgerEntryExt) LedgerEntryExt {
-	v1 := ConvertLedgerEntryExtensionV1(*e.V1)
+	var v1 LedgerEntryExtensionV1
+	if e.V1 != nil {
+		v1 = ConvertLedgerEntryExtensionV1(*e.V1)
+	}
 
 	return LedgerEntryExt{
 		V:  e.V,
@@ -150,8 +153,11 @@ func ConvertLedgerEntryExt(e xdr.LedgerEntryExt) LedgerEntryExt {
 }
 
 func ConvertLedgerEntryExtensionV1(e xdr.LedgerEntryExtensionV1) LedgerEntryExtensionV1 {
-	sponsoringId := PublicKey{
-		Ed25519: e.SponsoringId.Ed25519.String(),
+	var sponsoringId PublicKey
+	if e.SponsoringId != nil {
+		sponsoringId = PublicKey{
+			Ed25519: e.SponsoringId.Ed25519.String(),
+		}
 	}
 
 	return LedgerEntryExtensionV1{

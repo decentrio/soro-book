@@ -94,6 +94,7 @@ type PublicKey struct {
 }
 
 type Asset struct {
+	AssetType string    `json:"asset_type,omitempty"`
 	AssetCode []byte    `json:"asset_code,omitempty"`
 	Issuer    PublicKey `json:"issuer,omitempty"`
 }
@@ -1217,4 +1218,10 @@ type ClawbackEvent struct {
 type BurnEvent struct {
 	From   string      `json:"from,omitempty"`
 	Amount Int128Parts `json:"amount,omitempty"`
+}
+
+type TransactionResultMeta struct {
+	Result            TransactionResultPair `json:"result,omitempty"`
+	FeeProcessing     LedgerEntryChanges    `json:"fee_processing,omitempty"`
+	TxApplyProcessing TransactionMeta       `json:"tx_apply_processing,omitempty"`
 }

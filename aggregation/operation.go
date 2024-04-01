@@ -50,43 +50,27 @@ func (operation *transactionOperationWrapper) OperationType() xdr.OperationType 
 	return operation.operation.Body.Type
 }
 
-func (operation *transactionOperationWrapper) GetContractEvents() []ContractEventWrapper {
-	var ceWrappers []ContractEventWrapper
+func (operation *transactionOperationWrapper) GetContractEvents() []models.Event {
+	var evts []models.Event
 	var order = uint32(1)
 
 	for _, event := range operation.transaction.UnsafeMeta.V3.SorobanMeta.Events {
-		var topics []string
-		eventType, found := getEventType(event.Body)
-		if !found {
-			continue
-		}
-
-		for _, topic := range event.Body.V0.Topics {
-			bz, err := topic.MarshalBinary()
-			if err != nil {
-				break
-			}
-
-			topics = append(topics, string(bz))
-		}
-
-		valueBz, err := event.Body.V0.Data.MarshalBinary()
+		eventXdr, err := event.MarshalBinary()
 		if err != nil {
 			continue
 		}
 
-		ceWrapper := ContractEventWrapper{
-			contractEvent: models.Event{
-				Id:         fmt.Sprintf("%019d-%010d", operation.ID(), order), // ID should be combine from operation ID and event index
-				ContractId: event.ContractId.HexString(),
-				TxHash:     operation.transaction.Result.TransactionHash.HexString(),
-				ValueXdr:   valueBz,
-			},
+		evt := models.Event{
+			Id:         fmt.Sprintf("%019d-%010d", operation.ID(), order), // ID should be combine from operation ID and event index
+			ContractId: event.ContractId.HexString(),
+			TxHash:     operation.transaction.Result.TransactionHash.HexString(),
+			TxIndex:    operation.transaction.Index,
+			EventXdr:   eventXdr,
 		}
 
-		ceWrappers = append(ceWrappers, ceWrapper)
+		evts = append(evts, evt)
 		order++
 	}
 
-	return ceWrappers
+	return evts
 }

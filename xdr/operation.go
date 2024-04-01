@@ -374,9 +374,13 @@ func ConvertOperationResultTr(r xdr.OperationResultTr) (OperationResultTr, error
 // TODO: testing
 func ConvertOperation(op xdr.Operation) (Operation, error) {
 	var result Operation
-	sourceAccount, err := ConvertMuxedAccount(*op.SourceAccount)
-	if err != nil {
-		return result, err
+	var sourceAccount MuxedAccount
+	var err error
+	if op.SourceAccount != nil {
+		sourceAccount, err = ConvertMuxedAccount(*op.SourceAccount)
+		if err != nil {
+			return result, err
+		}
 	}
 	result.SourceAccount = &sourceAccount
 
@@ -467,7 +471,7 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 
 		return result, nil
 	case xdr.OperationTypeManageSellOffer:
-		xdrManageSellOffer := bd.ManageBuyOfferOp
+		xdrManageSellOffer := bd.ManageSellOfferOp
 
 		selling, err := ConvertAsset(xdrManageSellOffer.Selling)
 		if err != nil {
@@ -484,7 +488,7 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 		managerSellOfferOp := &ManageSellOfferOp{
 			Selling:   selling,
 			Buying:    buying,
-			BuyAmount: int64(xdrManageSellOffer.BuyAmount),
+			BuyAmount: int64(xdrManageSellOffer.Amount),
 			Price:     price,
 			OfferId:   int64(xdrManageSellOffer.OfferId),
 		}
@@ -516,21 +520,52 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 		return result, nil
 	case xdr.OperationTypeSetOptions:
 		xdrSetOptions := bd.SetOptionsOp
-		inflationDest := PublicKey{
-			Ed25519: ConvertEd25519(xdrSetOptions.InflationDest.Ed25519),
+
+		var inflationDest PublicKey
+		var clearFlags, setFlags, masterWeight, lowThreshold, medThreshold, highThreshold uint32
+		var homeDomain string
+		var signer Signer
+
+		if xdrSetOptions.InflationDest != nil {
+			inflationDest = PublicKey{
+				Ed25519: ConvertEd25519(xdrSetOptions.InflationDest.Ed25519),
+			}
 		}
 
-		clearFlags := uint32(*xdrSetOptions.ClearFlags)
-		setFlags := uint32(*xdrSetOptions.SetFlags)
-		masterWeight := uint32(*xdrSetOptions.MasterWeight)
-		lowThreshold := uint32(*xdrSetOptions.LowThreshold)
-		medThreshold := uint32(*xdrSetOptions.MedThreshold)
-		highThreshold := uint32(*xdrSetOptions.HighThreshold)
-		homeDomain := string(*xdrSetOptions.HomeDomain)
+		if xdrSetOptions.ClearFlags != nil {
+			clearFlags = uint32(*xdrSetOptions.ClearFlags)
+		}
 
-		signer, err := ConvertSigner(*xdrSetOptions.Signer)
-		if err != nil {
-			return result, err
+		if xdrSetOptions.SetFlags != nil {
+			setFlags = uint32(*xdrSetOptions.SetFlags)
+		}
+
+		if xdrSetOptions.MasterWeight != nil {
+			masterWeight = uint32(*xdrSetOptions.MasterWeight)
+		}
+
+		if xdrSetOptions.LowThreshold != nil {
+			lowThreshold = uint32(*xdrSetOptions.LowThreshold)
+		}
+
+		if xdrSetOptions.MedThreshold != nil {
+			medThreshold = uint32(*xdrSetOptions.MedThreshold)
+		}
+
+		if xdrSetOptions.HighThreshold != nil {
+			highThreshold = uint32(*xdrSetOptions.HighThreshold)
+		}
+
+		if xdrSetOptions.HomeDomain != nil {
+			homeDomain = string(*xdrSetOptions.HomeDomain)
+		}
+
+		var err error
+		if xdrSetOptions.Signer != nil {
+			signer, err = ConvertSigner(*xdrSetOptions.Signer)
+			if err != nil {
+				return result, err
+			}
 		}
 
 		setOptions := &SetOptionsOp{
@@ -741,14 +776,22 @@ func ConvertOperationBody(bd xdr.OperationBody) (OperationBody, error) {
 	case xdr.OperationTypeRevokeSponsorship:
 		xdrRevokeSponsorshipOp := bd.RevokeSponsorshipOp
 
-		ledgerKey, err := ConvertLedgerKey(*xdrRevokeSponsorshipOp.LedgerKey)
-		if err != nil {
-			return result, err
+		var ledgerKey LedgerKey
+		var signer RevokeSponsorshipOpSigner
+		var err error
+
+		if xdrRevokeSponsorshipOp.LedgerKey != nil {
+			ledgerKey, err = ConvertLedgerKey(*xdrRevokeSponsorshipOp.LedgerKey)
+			if err != nil {
+				return result, err
+			}
 		}
 
-		signer, err := ConvertRevokeSponsorshipOpSigner(*xdrRevokeSponsorshipOp.Signer)
-		if err != nil {
-			return result, err
+		if xdrRevokeSponsorshipOp.Signer != nil {
+			signer, err = ConvertRevokeSponsorshipOpSigner(*xdrRevokeSponsorshipOp.Signer)
+			if err != nil {
+				return result, err
+			}
 		}
 
 		revokeSponsorshipOp := &RevokeSponsorshipOp{

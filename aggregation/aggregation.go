@@ -84,7 +84,7 @@ func NewAggregation(
 	as.log.SetLevel(logrus.ErrorLevel)
 	Config.Log = as.log
 
-	as.sequence = uint32(100_028)
+	as.sequence = uint32(103_345)
 
 	var err error
 	as.backend, err = backends.NewCaptive(Config)
@@ -157,25 +157,13 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 		for _, op := range tw.Ops {
 			events := op.GetContractEvents()
 			for _, event := range events {
-				_, err := as.db.CreateEvent(&event.contractEvent)
+				_, err := as.db.CreateEvent(&event)
 				if err != nil {
 					as.Logger.Error(err.Error())
 					continue
 				}
-
-				for index, topic := range event.topics {
-					tp := models.Topics{
-						EventId:  event.contractEvent.Id,
-						TopicXdr: []byte(topic),
-						TopicIdx: int32(index),
-					}
-
-					_, err := as.db.CreateTopics(&tp)
-					if err != nil {
-						as.Logger.Error(err.Error())
-					}
-				}
 			}
+
 		}
 	}
 }
@@ -237,11 +225,9 @@ func (as *Aggregation) getNewLedger() {
 				as.Logger.Error(err.Error())
 			}
 
-			tx.Result.Successful()
-
 			txWrapper := NewTransactionWrapper(tx, seq)
-
 			txWrappers = append(txWrappers, txWrapper)
+
 			operations += uint32(len(tx.Envelope.Operations()))
 			transactions++
 		}

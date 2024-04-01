@@ -12,8 +12,11 @@ func ConvertAccountEntry(e xdr.AccountEntry) (AccountEntry, error) {
 		Ed25519: e.AccountId.Ed25519.String(),
 	}
 
-	inflationDest := PublicKey{
-		Ed25519: (*e.InflationDest).Ed25519.String(),
+	var inflationDest PublicKey
+	if e.InflationDest != nil {
+		inflationDest = PublicKey{
+			Ed25519: (*e.InflationDest).Ed25519.String(),
+		}
 	}
 
 	var signers []Signer
@@ -43,7 +46,10 @@ func ConvertAccountEntry(e xdr.AccountEntry) (AccountEntry, error) {
 }
 
 func ConvertAccountEntryExt(e xdr.AccountEntryExt) AccountEntryExt {
-	v1 := ConvertAccountEntryExtensionV1(*e.V1)
+	var v1 AccountEntryExtensionV1
+	if e.V1 != nil {
+		v1 = ConvertAccountEntryExtensionV1(*e.V1)
+	}
 
 	return AccountEntryExt{
 		V:  e.V,
@@ -66,7 +72,10 @@ func ConvertLiabilities(l xdr.Liabilities) Liabilities {
 }
 
 func ConvertAccountEntryExtensionV1Ext(e xdr.AccountEntryExtensionV1Ext) AccountEntryExtensionV1Ext {
-	v2 := ConvertAccountEntryExtensionV2(*e.V2)
+	var v2 AccountEntryExtensionV2
+	if e.V2 != nil {
+		v2 = ConvertAccountEntryExtensionV2(*e.V2)
+	}
 
 	return AccountEntryExtensionV1Ext{
 		V:  e.V,
@@ -76,13 +85,19 @@ func ConvertAccountEntryExtensionV1Ext(e xdr.AccountEntryExtensionV1Ext) Account
 
 func ConvertAccountEntryExtensionV2(e xdr.AccountEntryExtensionV2) AccountEntryExtensionV2 {
 	var signerSponsoringIDs []PublicKey
-	for _, xdrSigner := range e.SignerSponsoringIDs {
-		signer := PublicKey{
-			Ed25519: (*xdrSigner.Ed25519).String(),
-		}
+	if e.SignerSponsoringIDs != nil {
+		for _, xdrSigner := range e.SignerSponsoringIDs {
+			if xdrSigner != nil {
+				signer := PublicKey{
+					Ed25519: (*xdrSigner.Ed25519).String(),
+				}
 
-		signerSponsoringIDs = append(signerSponsoringIDs, signer)
+				signerSponsoringIDs = append(signerSponsoringIDs, signer)
+			}
+
+		}
 	}
+
 	ext := ConvertAccountEntryExtensionV2Ext(e.Ext)
 
 	return AccountEntryExtensionV2{
@@ -94,7 +109,11 @@ func ConvertAccountEntryExtensionV2(e xdr.AccountEntryExtensionV2) AccountEntryE
 }
 
 func ConvertAccountEntryExtensionV2Ext(e xdr.AccountEntryExtensionV2Ext) AccountEntryExtensionV2Ext {
-	v3 := ConvertAccountEntryExtensionV3(*e.V3)
+	var v3 AccountEntryExtensionV3
+	if e.V3 != nil {
+		v3 = ConvertAccountEntryExtensionV3(*e.V3)
+	}
+
 	return AccountEntryExtensionV2Ext{
 		V:  e.V,
 		V3: &v3,

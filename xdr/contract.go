@@ -37,9 +37,10 @@ func ConvertSorobanCredentials(c xdr.SorobanCredentials) (SorobanCredentials, er
 		}
 
 		result.Address = &address
+		return result, nil
 	}
 
-	return result, errors.Errorf("Invalid ConvertSorobanCredentials type %v", c.Type)
+	return result, errors.Errorf("Invalid ConvertSorobanCredentials type %v\n", c.Type)
 }
 
 func ConvertSorobanAddressCredentials(c xdr.SorobanAddressCredentials) (SorobanAddressCredentials, error) {

@@ -84,7 +84,7 @@ func NewAggregation(
 	as.log.SetLevel(logrus.ErrorLevel)
 	Config.Log = as.log
 
-	as.sequence = uint32(103_345)
+	as.sequence = uint32(100_029)
 
 	var err error
 	as.backend, err = backends.NewCaptive(Config)
@@ -163,7 +163,6 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 					continue
 				}
 			}
-
 		}
 	}
 }

@@ -2,21 +2,17 @@ package aggregation
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"io"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/decentrio/soro-book/converter"
 	"github.com/decentrio/soro-book/lib/log"
 	"github.com/sirupsen/logrus"
 	"github.com/stellar/go/ingest"
 	backends "github.com/stellar/go/ingest/ledgerbackend"
 	stellar_log "github.com/stellar/go/support/log"
-	"github.com/stellar/go/xdr"
 
 	"github.com/decentrio/soro-book/config"
 	db "github.com/decentrio/soro-book/database/handlers"
@@ -166,15 +162,6 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 					as.Logger.Error(err.Error())
 					continue
 				}
-
-				var evtXdr xdr.ContractEvent
-				evtXdr.UnmarshalBinary(event.EventXdr)
-				evtJSON, err := converter.ConvertContractEvent(evtXdr)
-				if err != nil {
-					as.Logger.Error(err.Error())
-				}
-				str, _ := json.Marshal(evtJSON)
-				fmt.Printf("%s\n", str)
 			}
 		}
 	}

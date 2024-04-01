@@ -18,23 +18,12 @@ type Transaction struct {
 	ResultMetaXdr    []byte `json:"result_meta_xdr,omitempty"`
 	SourceAddress    string `json:"source_address,omitempty"`
 }
-
 type Event struct {
 	Id         string `json:"id,omitempty"`
 	ContractId string `json:"contract_id,omitempty"`
 	TxHash     string `json:"tx_hash,omitempty"`
 	TxIndex    uint32 `json:"tx_index,omitempty"`
-	EventType  string `json:"event_type,omitempty"`
-	ValueXdr   []byte `json:"value_xdr,omitempty"`
-}
-
-type EventJSON struct {
-	Id         string `json:"id,omitempty"`
-	ContractId string `json:"contract_id,omitempty"`
-	LedgerSeq  uint32 `json:"ledger_seq,omitempty"`
-	TxHash     string `json:"tx_hash,omitempty"`
-	EventType  string `json:"event_type,omitempty"`
-	Data       []byte `json:"data,omitempty"`
+	EventXdr   []byte `json:"event_xdr,omitempty"`
 }
 
 type Topics struct {

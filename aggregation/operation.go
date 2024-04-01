@@ -18,7 +18,6 @@ type transactionOperationWrapper struct {
 
 type ContractEventWrapper struct {
 	contractEvent models.Event
-	topics        []string
 }
 
 // ID returns the ID for the operation.
@@ -81,10 +80,8 @@ func (operation *transactionOperationWrapper) GetContractEvents() []ContractEven
 				Id:         fmt.Sprintf("%019d-%010d", operation.ID(), order), // ID should be combine from operation ID and event index
 				ContractId: event.ContractId.HexString(),
 				TxHash:     operation.transaction.Result.TransactionHash.HexString(),
-				EventType:  eventType,
 				ValueXdr:   valueBz,
 			},
-			topics: topics,
 		}
 
 		ceWrappers = append(ceWrappers, ceWrapper)

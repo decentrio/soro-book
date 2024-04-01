@@ -52,19 +52,156 @@ func ConvertTransactionMeta(m xdr.TransactionMeta) (TransactionMeta, error) {
 }
 
 func ConvertTransactionMetaV1(m xdr.TransactionMetaV1) (TransactionMetaV1, error) {
+	var result TransactionMetaV1
 
+	var txChanges LedgerEntryChanges
+	for _, xdrTxChange := range m.TxChanges {
+		txChange, err := ConvertLedgerEntryChange(xdrTxChange)
+		if err != nil {
+			return result, err
+		}
+
+		txChanges = append(txChanges, txChange)
+	}
+
+	var operations []OperationMeta
+	for _, xdrOp := range m.Operations {
+		op, err := ConvertOperationMeta(xdrOp)
+		if err != nil {
+			return result, err
+		}
+
+		operations = append(operations, op)
+	}
+
+	result.TxChanges = txChanges
+	result.Operations = operations
+
+	return result, nil
 }
 
 func ConvertTransactionMetaV2(m xdr.TransactionMetaV2) (TransactionMetaV2, error) {
+	var result TransactionMetaV2
 
+	var txChangesBefore LedgerEntryChanges
+	for _, xdrTxChange := range m.TxChangesBefore {
+		txChange, err := ConvertLedgerEntryChange(xdrTxChange)
+		if err != nil {
+			return result, err
+		}
+
+		txChangesBefore = append(txChangesBefore, txChange)
+	}
+
+	var operations []OperationMeta
+	for _, xdrOp := range m.Operations {
+		op, err := ConvertOperationMeta(xdrOp)
+		if err != nil {
+			return result, err
+		}
+
+		operations = append(operations, op)
+	}
+
+	var txChangesAfter LedgerEntryChanges
+	for _, xdrTxChange := range m.TxChangesAfter {
+		txChange, err := ConvertLedgerEntryChange(xdrTxChange)
+		if err != nil {
+			return result, err
+		}
+
+		txChangesAfter = append(txChangesAfter, txChange)
+	}
+
+	result.TxChangesBefore = txChangesBefore
+	result.Operations = operations
+	result.TxChangesAfter = txChangesAfter
+
+	return result, nil
 }
 
 func ConvertTransactionMetaV3(m xdr.TransactionMetaV3) (TransactionMetaV3, error) {
+	var result TransactionMetaV3
 
+	ext := ConvertExtensionPoint(m.Ext)
+
+	var txChangesBefore LedgerEntryChanges
+	for _, xdrTxChange := range m.TxChangesBefore {
+		txChange, err := ConvertLedgerEntryChange(xdrTxChange)
+		if err != nil {
+			return result, err
+		}
+
+		txChangesBefore = append(txChangesBefore, txChange)
+	}
+
+	var operations []OperationMeta
+	for _, xdrOp := range m.Operations {
+		op, err := ConvertOperationMeta(xdrOp)
+		if err != nil {
+			return result, err
+		}
+
+		operations = append(operations, op)
+	}
+
+	var txChangesAfter LedgerEntryChanges
+	for _, xdrTxChange := range m.TxChangesAfter {
+		txChange, err := ConvertLedgerEntryChange(xdrTxChange)
+		if err != nil {
+			return result, err
+		}
+
+		txChangesAfter = append(txChangesAfter, txChange)
+	}
+
+	sorobanMeta, err := ConvertSorobanTransactionMeta(*m.SorobanMeta)
+	if err != nil {
+		return result, err
+	}
+
+	result.Ext = ext
+	result.TxChangesBefore = txChangesBefore
+	result.Operations = operations
+	result.TxChangesAfter = txChangesAfter
+	result.SorobanMeta = &sorobanMeta
+
+	return result, nil
 }
 
 func ConvertSorobanTransactionMeta(m xdr.SorobanTransactionMeta) (SorobanTransactionMeta, error) {
+	var result SorobanTransactionMeta
+	ext := ConvertExtensionPoint(m.Ext)
 
+	var events []ContractEvent
+	for _, xdrEvent := range m.Events {
+		event, err := ConvertContractEvent(xdrEvent)
+		if err != nil {
+			return result, err
+		}
+		events = append(events, event)
+	}
+
+	returnValue, err := ConvertScVal(m.ReturnValue)
+	if err != nil {
+		return result, err
+	}
+
+	var diagnosticEvents []DiagnosticEvent
+	for _, xdrEvent := range m.DiagnosticEvents {
+		event, err := ConvertDiagnosticEvent(xdrEvent)
+		if err != nil {
+			return result, err
+		}
+		diagnosticEvents = append(diagnosticEvents, event)
+	}
+
+	result.Ext = ext
+	result.Events = events
+	result.ReturnValue = returnValue
+	result.DiagnosticEvents = diagnosticEvents
+
+	return result, nil
 }
 
 func ConvertTransactionResultPair(r xdr.TransactionResultPair) (TransactionResultPair, error) {

@@ -2,7 +2,9 @@ package xdr
 
 import (
 	"encoding/json"
+	"fmt"
 
+	"github.com/decentrio/soro-book/aggregation"
 	"github.com/pkg/errors"
 	"github.com/stellar/go/xdr"
 )
@@ -15,81 +17,105 @@ var (
 	ErrNotBurnEvent          = errors.New("this is not burn event")
 )
 
-func ConvertContractEvent(e xdr.ContractEvent) ContractEvent {
+const (
+	// Implemented
+	EventTypeTransfer = "transfer"
+	EventTypeMint     = "mint"
+	EventTypeClawback = "clawback"
+	EventTypeBurn     = "burn"
+	// TODO: Not implemented
+	EventTypeIncrAllow
+	EventTypeDecrAllow
+	EventTypeSetAuthorized
+	EventTypeSetAdmin
+)
 
+var (
+	STELLAR_ASSET_CONTRACT_TOPICS = map[xdr.ScSymbol]string{
+		xdr.ScSymbol("transfer"): EventTypeTransfer,
+		xdr.ScSymbol("mint"):     EventTypeMint,
+		xdr.ScSymbol("clawback"): EventTypeClawback,
+		xdr.ScSymbol("burn"):     EventTypeBurn,
+	}
+
+	ErrNotStellarAssetContract = errors.New("event was not from a Stellar Asset Contract")
+	ErrEventUnsupported        = errors.New("this type of Stellar Asset Contract event is unsupported")
+	ErrEventIntegrity          = errors.New("contract ID doesn't match asset + passphrase")
+)
+
+func getEventType(eventBody xdr.ContractEventBody) (string, bool) {
+	topics := eventBody.V0.Topics
+
+	if len(topics) <= 2 {
+		return "", false
+	}
+
+	// Filter out events for function calls we don't care about
+	fn, ok := topics[0].GetSym()
+	if !ok {
+		return "", false
+	}
+
+	eventType, found := STELLAR_ASSET_CONTRACT_TOPICS[fn]
+	if !found {
+		return "", false
+	}
+
+	return eventType, true
 }
 
-// func ConvertContractEventJSON(event models.Event, topics []models.Topics) (*models.EventJSON, error) {
-// 	evt := &models.EventJSON{}
+func ConvertContractEvent(e xdr.ContractEvent) (ContractEvent, error) {
+	var result ContractEvent
 
-// 	evt.Id = event.Id
-// 	evt.ContractId = event.ContractId
-// 	evt.TxHash = event.TxHash
-// 	evt.EventType = event.EventType
+	result.Ext = ConvertExtensionPoint(e.Ext)
+	contractId := e.ContractId.HexString()
+	result.ContractId = &contractId
+	result.Type = int32(e.Type)
 
-// 	var xdrTopics []xdr.ScVal
-// 	for _, topic := range topics {
-// 		var xdrTopic xdr.ScVal
-// 		err := xdrTopic.UnmarshalBinary([]byte(topic.TopicXdr))
-// 		if err != nil {
-// 			return evt, fmt.Errorf("Error Unmarshal topic binary")
-// 		}
-// 		xdrTopics = append(xdrTopics, xdrTopic)
-// 	}
+	eventType, found := getEventType(e.Body)
+	if !found {
+		return result, fmt.Errorf("event type not found")
+	}
 
-// 	var value xdr.ScVal
-// 	err := value.UnmarshalBinary([]byte(event.ValueXdr))
-// 	if err != nil {
-// 		return evt, fmt.Errorf("Error Unmarshal value binary")
-// 	}
+	topics := e.Body.V0.Topics
+	value := e.Body.V0.Data
 
-// 	switch evt.EventType {
-// 	case aggregation.EventTypeTransfer:
-// 		transferEvent := TransferEvent{}
-// 		transferEvent.parse(xdrTopics, value)
+	switch eventType {
+	case EventTypeTransfer:
+		transferEvent := TransferEvent{}
+		transferEvent.parse(topics, value)
+		result.Transfer = &transferEvent
+	case EventTypeMint:
+		mintEvent := MintEvent{}
+		mintEvent.parse(topics, value)
+		result.Mint = &mintEvent
+	case EventTypeClawback:
+		cbEvent := ClawbackEvent{}
+		cbEvent.parse(topics, value)
+		result.Clawback = &cbEvent
+	case EventTypeBurn:
+		burnEvent := BurnEvent{}
+		burnEvent.parse(topics, value)
+		result.Burn = &burnEvent
+	default:
+		return result, errors.Wrapf(aggregation.ErrEventUnsupported, "event not supported %s", eventType)
+	}
+	return result, nil
+}
 
-// 		bz, err := transferEvent.ToJSON()
-// 		if err != nil {
-// 			return evt, err
-// 		}
+func ConvertDiagnosticEvent(e xdr.DiagnosticEvent) (DiagnosticEvent, error) {
+	var result DiagnosticEvent
 
-// 		evt.Data = bz
-// 	case aggregation.EventTypeMint:
-// 		mintEvent := MintEvent{}
-// 		mintEvent.parse(xdrTopics, value)
+	event, err := ConvertContractEvent(e.Event)
+	if err != nil {
+		return result, err
+	}
 
-// 		bz, err := mintEvent.ToJSON()
-// 		if err != nil {
-// 			return evt, err
-// 		}
+	result.InSuccessfulContractCall = e.InSuccessfulContractCall
+	result.Event = event
 
-// 		evt.Data = bz
-// 	case aggregation.EventTypeClawback:
-// 		cbEvent := ClawbackEvent{}
-// 		cbEvent.parse(xdrTopics, value)
-
-// 		bz, err := cbEvent.ToJSON()
-// 		if err != nil {
-// 			return evt, err
-// 		}
-
-// 		evt.Data = bz
-// 	case aggregation.EventTypeBurn:
-// 		burnEvent := BurnEvent{}
-// 		burnEvent.parse(xdrTopics, value)
-
-// 		bz, err := burnEvent.ToJSON()
-// 		if err != nil {
-// 			return evt, err
-// 		}
-
-// 		evt.Data = bz
-// 	default:
-// 		return evt, errors.Wrapf(aggregation.ErrEventUnsupported, "event not supported %s", evt.EventType)
-// 	}
-
-// 	return evt, nil
-// }
+	return result, nil
+}
 
 func (event *TransferEvent) parse(topics xdr.ScVec, value xdr.ScVal) error {
 	//

@@ -1,4 +1,4 @@
-package xdr
+package converter
 
 import (
 	"encoding/json"

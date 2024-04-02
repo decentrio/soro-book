@@ -26,8 +26,10 @@ type Event struct {
 	EventXdr   []byte `json:"event_xdr,omitempty"`
 }
 
-type Topics struct {
-	EventId  string `json:"event_id,omitempty"`
-	TopicXdr []byte `json:"topic_xdr,omitempty"`
-	TopicIdx int32  `json:"topic_idx,omitempty"`
+type Contract struct {
+	ContractId          string `json:"contract_id,omitempty"`
+	ExpirationLedgerSeq uint32 `json:"expiration_ledger_seq,omitempty"`
+	KeyXdr              []byte `json:"key_xdr,omitempty"`
+	ValueXdr            []byte `json:"value_xdr,omitempty"`
+	Durability          int32  `json:"durability,omitempty"`
 }

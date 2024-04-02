@@ -29,7 +29,7 @@ type Event struct {
 type Contract struct {
 	ContractId          string `json:"contract_id,omitempty"`
 	ExpirationLedgerSeq uint32 `json:"expiration_ledger_seq,omitempty"`
-	Key                 []byte `json:"expiration_ledger_seq,omitempty"`
-	Value               []byte `json:"expiration_ledger_seq,omitempty"`
+	KeyXdr              []byte `json:"key_xdr,omitempty"`
+	ValueXdr            []byte `json:"value_xdr,omitempty"`
 	Durability          int32  `json:"durability,omitempty"`
 }

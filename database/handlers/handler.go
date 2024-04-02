@@ -35,5 +35,5 @@ func (h *DBHandler) CreateContractEntry(data *models.Contract) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s-%s", data.ContractId, string(data.Key)), nil
+	return fmt.Sprintf("%s-%s", data.ContractId, string(data.KeyXdr)), nil
 }

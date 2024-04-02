@@ -108,8 +108,8 @@ func (tw TransactionWrapper) GetModelsContractDataEntry() []models.Contract {
 				entry := models.Contract{
 					ContractId:          (*entry.Contract.ContractId).HexString(),
 					ExpirationLedgerSeq: tw.GetLedgerSequence(),
-					Key:                 keyBz,
-					Value:               valBz,
+					KeyXdr:              keyBz,
+					ValueXdr:            valBz,
 					Durability:          int32(entry.Durability),
 				}
 				entries = append(entries, entry)

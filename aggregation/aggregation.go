@@ -130,18 +130,18 @@ func (as *Aggregation) dataProcessing() {
 // handleReceiveTx
 func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 	// Create Ledger
-	_, err := as.db.CreateLedger(&lw.ledger)
-	if err != nil {
-		as.Logger.Error(err.Error())
-	}
+	// _, err := as.db.CreateLedger(&lw.ledger)
+	// if err != nil {
+	// 	as.Logger.Error(err.Error())
+	// }
 
 	// Create Tx and Soroban events
 	for _, tw := range lw.txs {
-		tx := tw.GetModelsTransaction()
-		_, err := as.db.CreateTransaction(tx)
-		if err != nil {
-			as.Logger.Error(err.Error())
-		}
+		// tx := tw.GetModelsTransaction()
+		// _, err := as.db.CreateTransaction(tx)
+		// if err != nil {
+		// 	as.Logger.Error(err.Error())
+		// }
 
 		// Contract entry
 		entries := tw.GetModelsContractDataEntry()
@@ -164,16 +164,16 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 		}
 
 		// Create Event
-		for _, op := range tw.Ops {
-			events := op.GetContractEvents()
-			for _, event := range events {
-				_, err := as.db.CreateEvent(&event)
-				if err != nil {
-					as.Logger.Error(err.Error())
-					continue
-				}
-			}
-		}
+		// for _, op := range tw.Ops {
+		// events := op.GetContractEvents()
+		// for _, event := range events {
+		// 	_, err := as.db.CreateEvent(&event)
+		// 	if err != nil {
+		// 		as.Logger.Error(err.Error())
+		// 		continue
+		// 	}
+		// }
+		// }
 	}
 }
 

@@ -91,3 +91,31 @@ func (tw TransactionWrapper) GetModelsTransaction() *models.Transaction {
 		SourceAddress:    tw.Tx.Envelope.SourceAccount().ToAccountId().Address(),
 	}
 }
+
+func (tw TransactionWrapper) GetModelsContractDataEntry() []models.Contract {
+	v3 := tw.Tx.UnsafeMeta.V3
+	if v3 == nil {
+		return nil
+	}
+
+	var entries []models.Contract
+	for _, op := range v3.Operations {
+		for _, change := range op.Changes {
+			entry, found := ContractDataEntry(change)
+			if found {
+				keyBz, _ := entry.Key.MarshalBinary()
+				valBz, _ := entry.Val.MarshalBinary()
+				entry := models.Contract{
+					ContractId:          (*entry.Contract.ContractId).HexString(),
+					ExpirationLedgerSeq: tw.GetLedgerSequence(),
+					Key:                 keyBz,
+					Value:               valBz,
+					Durability:          int32(entry.Durability),
+				}
+				entries = append(entries, entry)
+			}
+		}
+	}
+
+	return entries
+}

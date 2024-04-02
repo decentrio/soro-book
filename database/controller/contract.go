@@ -8,22 +8,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CreateTopics(h *handlers.DBHandler) gin.HandlerFunc {
+func CreateContractEntry(h *handlers.DBHandler) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var dataItem models.Topics
+		var dataItem models.Contract
 
 		if err := c.BindJSON(&dataItem); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		topicIndex, err := h.CreateTopics(&dataItem)
+		entry, err := h.CreateContractEntry(&dataItem)
 
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"data": topicIndex})
+		c.JSON(http.StatusOK, gin.H{"data": entry})
 	}
 }

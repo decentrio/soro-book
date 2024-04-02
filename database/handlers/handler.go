@@ -30,10 +30,10 @@ func (h *DBHandler) CreateEvent(data *models.Event) (string, error) {
 	return data.Id, nil
 }
 
-func (h *DBHandler) CreateTopics(data *models.Topics) (string, error) {
+func (h *DBHandler) CreateContractEntry(data *models.Contract) (string, error) {
 	if err := h.db.Create(data).Error; err != nil {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s-%d", data.EventId, data.TopicIdx), nil
+	return fmt.Sprintf("%s-%s", data.ContractId, string(data.Key)), nil
 }

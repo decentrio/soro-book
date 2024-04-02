@@ -143,6 +143,16 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 			as.Logger.Error(err.Error())
 		}
 
+		// Contract entry
+		entries := tw.GetModelsContractDataEntry()
+		for _, entry := range entries {
+			_, err := as.db.CreateContractEntry(&entry)
+			if err != nil {
+				as.Logger.Error(err.Error())
+				continue
+			}
+		}
+
 		// Check if tx metadata is v3
 		txMetaV3, ok := tw.Tx.UnsafeMeta.GetV3()
 		if !ok {

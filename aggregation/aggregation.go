@@ -84,7 +84,7 @@ func NewAggregation(
 	as.log.SetLevel(logrus.ErrorLevel)
 	Config.Log = as.log
 
-	as.sequence = uint32(100_489)
+	as.sequence = uint32(100_000)
 
 	var err error
 	as.backend, err = backends.NewCaptive(Config)

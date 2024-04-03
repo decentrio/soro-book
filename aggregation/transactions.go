@@ -105,8 +105,19 @@ func (tw TransactionWrapper) GetModelsContractDataEntry() []models.Contract {
 			if found {
 				keyBz, _ := entry.Key.MarshalBinary()
 				valBz, _ := entry.Val.MarshalBinary()
+				var contractId string
+				if entry.Contract.ContractId != nil {
+					contractId = (*entry.Contract.ContractId).HexString()
+				}
+
+				var accountId string
+				if entry.Contract.AccountId != nil {
+					accountId = (*entry.Contract.AccountId).Address()
+				}
+
 				entry := models.Contract{
-					ContractId:          (*entry.Contract.ContractId).HexString(),
+					ContractId:          contractId,
+					AccountId:           accountId,
 					ExpirationLedgerSeq: tw.GetLedgerSequence(),
 					KeyXdr:              keyBz,
 					ValueXdr:            valBz,

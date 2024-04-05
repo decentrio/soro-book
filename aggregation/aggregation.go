@@ -199,7 +199,7 @@ func (as *Aggregation) getNewLedger() {
 		//"is greater than max available in history archives"
 		err = pauseWaitLedger(as.config, err)
 		if err != nil {
-			as.Logger.Error(err.Error())
+			as.Logger.Error(fmt.Sprintf("Error pauseWaitLedger %s", err.Error()))
 		}
 
 		return
@@ -208,6 +208,7 @@ func (as *Aggregation) getNewLedger() {
 		// get ledger
 		ledgerCloseMeta, err := as.backend.GetLedger(as.ctx, seq)
 		if err != nil {
+			as.Logger.Error(fmt.Sprintf("Error GetLedger %s", err.Error()))
 			continue
 		}
 
@@ -232,7 +233,7 @@ func (as *Aggregation) getNewLedger() {
 			}
 
 			if err != nil {
-				as.Logger.Error(err.Error())
+				as.Logger.Error(fmt.Sprintf("Error txReader %s", err.Error()))
 			}
 
 			txWrapper := NewTransactionWrapper(tx, seq)

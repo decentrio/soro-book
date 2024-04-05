@@ -2,6 +2,7 @@ package aggregation
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"regexp"
 	"strconv"
@@ -84,7 +85,7 @@ func NewAggregation(
 	as.log.SetLevel(logrus.ErrorLevel)
 	Config.Log = as.log
 
-	as.sequence = uint32(100_000)
+	as.sequence = uint32(963_359)
 
 	var err error
 	as.backend, err = backends.NewCaptive(Config)
@@ -132,7 +133,7 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 	// Create Ledger
 	_, err := as.db.CreateLedger(&lw.ledger)
 	if err != nil {
-		as.Logger.Error(err.Error())
+		as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", lw.ledger.Sequence, err.Error()))
 	}
 
 	// Create Tx and Soroban events
@@ -140,7 +141,7 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 		tx := tw.GetModelsTransaction()
 		_, err := as.db.CreateTransaction(tx)
 		if err != nil {
-			as.Logger.Error(err.Error())
+			as.Logger.Error(fmt.Sprintf("Error create ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
 		}
 
 		// Contract entry
@@ -148,7 +149,7 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 		for _, entry := range entries {
 			_, err := as.db.CreateContractEntry(&entry)
 			if err != nil {
-				as.Logger.Error(err.Error())
+				as.Logger.Error(fmt.Sprintf("Error create contract data entry ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
 				continue
 			}
 		}
@@ -169,7 +170,7 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 			for _, event := range events {
 				_, err := as.db.CreateEvent(&event)
 				if err != nil {
-					as.Logger.Error(err.Error())
+					as.Logger.Error(fmt.Sprintf("Error create event ledger %d tx %s event %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), event.ContractId, err.Error()))
 					continue
 				}
 			}

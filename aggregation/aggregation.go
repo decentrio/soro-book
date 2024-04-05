@@ -4,9 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"regexp"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/decentrio/soro-book/lib/log"
@@ -197,11 +194,7 @@ func (as *Aggregation) getNewLedger() {
 	err := as.backend.PrepareRange(as.ctx, ledgerRange)
 	if err != nil {
 		//"is greater than max available in history archives"
-		err = pauseWaitLedger(as.config, err)
-		if err != nil {
-			as.Logger.Error(fmt.Sprintf("Error pauseWaitLedger %s", err.Error()))
-		}
-
+		time.Sleep(time.Second)
 		return
 	}
 	for seq := from; seq < to; seq++ {
@@ -264,35 +257,35 @@ func (as *Aggregation) ReSync(block uint64) {
 }
 
 // to limit computational resources
-func pauseWaitLedger(config backends.CaptiveCoreConfig, err error) error {
-	if !strings.Contains(err.Error(), "is greater than max available in history archives") {
-		// if not err by LatestLedger: xxx is greater than max available in history archives yyy
-		return err
-	}
+// func pauseWaitLedger(config backends.CaptiveCoreConfig, err error) error {
+// 	if !strings.Contains(err.Error(), "is greater than max available in history archives") {
+// 		// if not err by LatestLedger: xxx is greater than max available in history archives yyy
+// 		return err
+// 	}
 
-	re := regexp.MustCompile(`(\d+)`)
-	matches := re.FindAllString(err.Error(), -1)
-	seqHistoryArchives, err := strconv.Atoi(matches[1])
+// 	re := regexp.MustCompile(`(\d+)`)
+// 	matches := re.FindAllString(err.Error(), -1)
+// 	seqHistoryArchives, err := strconv.Atoi(matches[1])
 
-	if err != nil {
-		return err
-	}
-	estimateSeqNext := int64(seqHistoryArchives) + prepareStep
+// 	if err != nil {
+// 		return err
+// 	}
+// 	estimateSeqNext := int64(seqHistoryArchives) + prepareStep
 
-	latestLedger, err := GetLatestLedger(config)
-	if err != nil {
-		return err
-	}
+// 	latestLedger, err := GetLatestLedger(config)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	numLedgerWait := estimateSeqNext - int64(latestLedger) + 1
+// 	numLedgerWait := estimateSeqNext - int64(latestLedger) + 1
 
-	if numLedgerWait < 0 {
-		return nil
-	}
-	// Ledger closing time is ~4s/ledger
-	ledgerClosingTime := 4 * time.Second
-	estimateTimeWait := numLedgerWait * ledgerClosingTime.Nanoseconds()
+// 	if numLedgerWait < 0 {
+// 		return nil
+// 	}
+// 	// Ledger closing time is ~4s/ledger
+// 	ledgerClosingTime := 4 * time.Second
+// 	estimateTimeWait := numLedgerWait * ledgerClosingTime.Nanoseconds()
 
-	time.Sleep(time.Duration(estimateTimeWait))
-	return nil
-}
+// 	time.Sleep(time.Duration(estimateTimeWait))
+// 	return nil
+// }

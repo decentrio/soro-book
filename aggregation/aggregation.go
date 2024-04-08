@@ -2,10 +2,8 @@ package aggregation
 
 import (
 	"context"
+	"fmt"
 	"io"
-	"regexp"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/decentrio/soro-book/lib/log"
@@ -84,7 +82,7 @@ func NewAggregation(
 	as.log.SetLevel(logrus.ErrorLevel)
 	Config.Log = as.log
 
-	as.sequence = uint32(100_000)
+	as.sequence = uint32(0)
 
 	var err error
 	as.backend, err = backends.NewCaptive(Config)
@@ -132,7 +130,7 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 	// Create Ledger
 	_, err := as.db.CreateLedger(&lw.ledger)
 	if err != nil {
-		as.Logger.Error(err.Error())
+		as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", lw.ledger.Sequence, err.Error()))
 	}
 
 	// Create Tx and Soroban events
@@ -140,7 +138,7 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 		tx := tw.GetModelsTransaction()
 		_, err := as.db.CreateTransaction(tx)
 		if err != nil {
-			as.Logger.Error(err.Error())
+			as.Logger.Error(fmt.Sprintf("Error create ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
 		}
 
 		// Contract entry
@@ -148,7 +146,7 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 		for _, entry := range entries {
 			_, err := as.db.CreateContractEntry(&entry)
 			if err != nil {
-				as.Logger.Error(err.Error())
+				as.Logger.Error(fmt.Sprintf("Error create contract data entry ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
 				continue
 			}
 		}
@@ -169,7 +167,7 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 			for _, event := range events {
 				_, err := as.db.CreateEvent(&event)
 				if err != nil {
-					as.Logger.Error(err.Error())
+					as.Logger.Error(fmt.Sprintf("Error create event ledger %d tx %s event %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), event.ContractId, err.Error()))
 					continue
 				}
 			}
@@ -196,17 +194,14 @@ func (as *Aggregation) getNewLedger() {
 	err := as.backend.PrepareRange(as.ctx, ledgerRange)
 	if err != nil {
 		//"is greater than max available in history archives"
-		err = pauseWaitLedger(as.config, err)
-		if err != nil {
-			as.Logger.Error(err.Error())
-		}
-
+		time.Sleep(time.Second)
 		return
 	}
 	for seq := from; seq < to; seq++ {
 		// get ledger
 		ledgerCloseMeta, err := as.backend.GetLedger(as.ctx, seq)
 		if err != nil {
+			as.Logger.Error(fmt.Sprintf("Error GetLedger %s", err.Error()))
 			continue
 		}
 
@@ -231,7 +226,7 @@ func (as *Aggregation) getNewLedger() {
 			}
 
 			if err != nil {
-				as.Logger.Error(err.Error())
+				as.Logger.Error(fmt.Sprintf("Error txReader %s", err.Error()))
 			}
 
 			txWrapper := NewTransactionWrapper(tx, seq)
@@ -259,38 +254,4 @@ func (as *Aggregation) getNewLedger() {
 // Method allow trigger for resync
 func (as *Aggregation) ReSync(block uint64) {
 	as.isReSync = true
-}
-
-// to limit computational resources
-func pauseWaitLedger(config backends.CaptiveCoreConfig, err error) error {
-	if !strings.Contains(err.Error(), "is greater than max available in history archives") {
-		// if not err by LatestLedger: xxx is greater than max available in history archives yyy
-		return err
-	}
-
-	re := regexp.MustCompile(`(\d+)`)
-	matches := re.FindAllString(err.Error(), -1)
-	seqHistoryArchives, err := strconv.Atoi(matches[1])
-
-	if err != nil {
-		return err
-	}
-	estimateSeqNext := int64(seqHistoryArchives) + prepareStep
-
-	latestLedger, err := GetLatestLedger(config)
-	if err != nil {
-		return err
-	}
-
-	numLedgerWait := estimateSeqNext - int64(latestLedger) + 1
-
-	if numLedgerWait < 0 {
-		return nil
-	}
-	// Ledger closing time is ~4s/ledger
-	ledgerClosingTime := 4 * time.Second
-	estimateTimeWait := numLedgerWait * ledgerClosingTime.Nanoseconds()
-
-	time.Sleep(time.Duration(estimateTimeWait))
-	return nil
 }

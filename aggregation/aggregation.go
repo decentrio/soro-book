@@ -255,37 +255,3 @@ func (as *Aggregation) getNewLedger() {
 func (as *Aggregation) ReSync(block uint64) {
 	as.isReSync = true
 }
-
-// to limit computational resources
-// func pauseWaitLedger(config backends.CaptiveCoreConfig, err error) error {
-// 	if !strings.Contains(err.Error(), "is greater than max available in history archives") {
-// 		// if not err by LatestLedger: xxx is greater than max available in history archives yyy
-// 		return err
-// 	}
-
-// 	re := regexp.MustCompile(`(\d+)`)
-// 	matches := re.FindAllString(err.Error(), -1)
-// 	seqHistoryArchives, err := strconv.Atoi(matches[1])
-
-// 	if err != nil {
-// 		return err
-// 	}
-// 	estimateSeqNext := int64(seqHistoryArchives) + prepareStep
-
-// 	latestLedger, err := GetLatestLedger(config)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	numLedgerWait := estimateSeqNext - int64(latestLedger) + 1
-
-// 	if numLedgerWait < 0 {
-// 		return nil
-// 	}
-// 	// Ledger closing time is ~4s/ledger
-// 	ledgerClosingTime := 4 * time.Second
-// 	estimateTimeWait := numLedgerWait * ledgerClosingTime.Nanoseconds()
-
-// 	time.Sleep(time.Duration(estimateTimeWait))
-// 	return nil
-// }

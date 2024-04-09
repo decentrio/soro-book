@@ -1,6 +1,8 @@
 package aggregation
 
 import (
+	"fmt"
+
 	"github.com/decentrio/soro-book/database/models"
 	"github.com/stellar/go/ingest"
 	"github.com/stellar/go/xdr"
@@ -30,7 +32,43 @@ func (as *Aggregation) transactionProcessing() {
 }
 
 func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
+	tx := tw.GetModelsTransaction()
+	_, err := as.db.CreateTransaction(tx)
+	if err != nil {
+		as.Logger.Error(fmt.Sprintf("Error create ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
+	}
 
+	// Contract entry
+	// entries := tw.GetModelsContractDataEntry()
+	// for _, entry := range entries {
+	// 	_, err := as.db.CreateContractEntry(&entry)
+	// 	if err != nil {
+	// 		as.Logger.Error(fmt.Sprintf("Error create contract data entry ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
+	// 		continue
+	// 	}
+	// }
+
+	// Check if tx metadata is v3
+	// txMetaV3, ok := tw.Tx.UnsafeMeta.GetV3()
+	// if !ok {
+	// 	continue
+	// }
+
+	// if txMetaV3.SorobanMeta == nil {
+	// 	continue
+	// }
+
+	// // Create Event
+	// for _, op := range tw.Ops {
+	// 	events := op.GetContractEvents()
+	// 	for _, event := range events {
+	// 		_, err := as.db.CreateWasmContractEvent(&event)
+	// 		if err != nil {
+	// 			as.Logger.Error(fmt.Sprintf("Error create event ledger %d tx %s event %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), event.ContractId, err.Error()))
+	// 			continue
+	// 		}
+	// 	}
+	// }
 }
 
 type TransactionWrapper struct {

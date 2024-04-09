@@ -22,7 +22,7 @@ func (h *DBHandler) CreateTransaction(data *models.Transaction) (string, error) 
 	return data.Hash, nil
 }
 
-func (h *DBHandler) CreateEvent(data *models.Event) (string, error) {
+func (h *DBHandler) CreateWasmContractEvent(data *models.WasmContractEvent) (string, error) {
 	if err := h.db.Create(data).Error; err != nil {
 		return "", err
 	}

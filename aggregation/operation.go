@@ -17,7 +17,7 @@ type transactionOperationWrapper struct {
 }
 
 type ContractEventWrapper struct {
-	contractEvent models.Event
+	contractEvent models.WasmContractEvent
 }
 
 // ID returns the ID for the operation.
@@ -50,8 +50,8 @@ func (operation *transactionOperationWrapper) OperationType() xdr.OperationType 
 	return operation.operation.Body.Type
 }
 
-func (operation *transactionOperationWrapper) GetContractEvents() []models.Event {
-	var evts []models.Event
+func (operation *transactionOperationWrapper) GetContractEvents() []models.WasmContractEvent {
+	var evts []models.WasmContractEvent
 	var order = uint32(1)
 
 	for _, event := range operation.transaction.UnsafeMeta.V3.SorobanMeta.Events {
@@ -60,12 +60,12 @@ func (operation *transactionOperationWrapper) GetContractEvents() []models.Event
 			continue
 		}
 
-		evt := models.Event{
+		evt := models.WasmContractEvent{
 			Id:         fmt.Sprintf("%019d-%010d", operation.ID(), order), // ID should be combine from operation ID and event index
 			ContractId: event.ContractId.HexString(),
 			TxHash:     operation.transaction.Result.TransactionHash.HexString(),
-			TxIndex:    operation.transaction.Index,
-			EventXdr:   eventXdr,
+			// TxIndex:    operation.transaction.Index,
+			EventXdr: eventXdr,
 		}
 
 		evts = append(evts, evt)

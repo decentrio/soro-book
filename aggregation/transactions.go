@@ -11,6 +11,28 @@ const (
 	FAILED  = "failed"
 )
 
+func (as *Aggregation) transactionProcessing() {
+	for {
+		// Block until state have sync successful
+		if as.isReSync {
+			continue
+		}
+
+		select {
+		// Receive a new tx
+		case tx := <-as.txQueue:
+			as.handleReceiveNewTransaction(tx)
+		// Terminate process
+		case <-as.BaseService.Terminate():
+			return
+		}
+	}
+}
+
+func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
+
+}
+
 type TransactionWrapper struct {
 	LedgerSequence uint32
 	Tx             ingest.LedgerTransaction
@@ -116,12 +138,12 @@ func (tw TransactionWrapper) GetModelsContractDataEntry() []models.Contract {
 				}
 
 				entry := models.Contract{
-					ContractId:          contractId,
-					AccountId:           accountId,
-					ExpirationLedgerSeq: tw.GetLedgerSequence(),
-					KeyXdr:              keyBz,
-					ValueXdr:            valBz,
-					Durability:          int32(entry.Durability),
+					ContractId: contractId,
+					AccountId:  accountId,
+					Ledger:     tw.GetLedgerSequence(),
+					KeyXdr:     keyBz,
+					ValueXdr:   valBz,
+					Durability: int32(entry.Durability),
 				}
 				entries = append(entries, entry)
 			}

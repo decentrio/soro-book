@@ -2,15 +2,18 @@ package aggregation
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"time"
 
 	"github.com/decentrio/soro-book/lib/log"
+	converter "github.com/decentrio/xdr-converter/converter"
 	"github.com/sirupsen/logrus"
 	"github.com/stellar/go/ingest"
 	backends "github.com/stellar/go/ingest/ledgerbackend"
 	stellar_log "github.com/stellar/go/support/log"
+	"github.com/stellar/go/xdr"
 
 	"github.com/decentrio/soro-book/config"
 	db "github.com/decentrio/soro-book/database/handlers"
@@ -82,7 +85,7 @@ func NewAggregation(
 	as.log.SetLevel(logrus.ErrorLevel)
 	Config.Log = as.log
 
-	as.sequence = uint32(0)
+	as.sequence = uint32(200_000)
 
 	var err error
 	as.backend, err = backends.NewCaptive(Config)
@@ -128,50 +131,67 @@ func (as *Aggregation) dataProcessing() {
 // handleReceiveTx
 func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 	// Create Ledger
-	_, err := as.db.CreateLedger(&lw.ledger)
-	if err != nil {
-		as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", lw.ledger.Sequence, err.Error()))
-	}
+	// _, err := as.db.CreateLedger(&lw.ledger)
+	// if err != nil {
+	// 	as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", lw.ledger.Sequence, err.Error()))
+	// }
 
 	// Create Tx and Soroban events
 	for _, tw := range lw.txs {
-		tx := tw.GetModelsTransaction()
-		_, err := as.db.CreateTransaction(tx)
-		if err != nil {
-			as.Logger.Error(fmt.Sprintf("Error create ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
-		}
+		// tx := tw.GetModelsTransaction()
+		// _, err := as.db.CreateTransaction(tx)
+		// if err != nil {
+		// 	as.Logger.Error(fmt.Sprintf("Error create ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
+		// }
 
 		// Contract entry
 		entries := tw.GetModelsContractDataEntry()
 		for _, entry := range entries {
-			_, err := as.db.CreateContractEntry(&entry)
-			if err != nil {
-				as.Logger.Error(fmt.Sprintf("Error create contract data entry ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
-				continue
-			}
+			var keyXdr xdr.ScVal
+			var valXdr xdr.ScVal
+
+			_ = keyXdr.UnmarshalBinary(entry.KeyXdr)
+			_ = valXdr.UnmarshalBinary(entry.ValueXdr)
+
+			key, _ := converter.ConvertScVal(keyXdr)
+			keyJSON, _ := json.Marshal(key)
+			val, _ := converter.ConvertScVal(valXdr)
+			valJSON, _ := json.Marshal(val)
+
+			fmt.Println("")
+			fmt.Println("Ledger ", lw.ledger.Sequence)
+			fmt.Printf("Tx: %s\n", tw.Tx.Result.TransactionHash.HexString())
+			fmt.Printf("Key: %s\n", keyJSON)
+			fmt.Printf("Val: %s\n", valJSON)
+			fmt.Println("")
+			// _, err := as.db.CreateContractEntry(&entry)
+			// if err != nil {
+			// 	as.Logger.Error(fmt.Sprintf("Error create contract data entry ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
+			// 	continue
+			// }
 		}
 
 		// Check if tx metadata is v3
-		txMetaV3, ok := tw.Tx.UnsafeMeta.GetV3()
-		if !ok {
-			continue
-		}
+		// txMetaV3, ok := tw.Tx.UnsafeMeta.GetV3()
+		// if !ok {
+		// 	continue
+		// }
 
-		if txMetaV3.SorobanMeta == nil {
-			continue
-		}
+		// if txMetaV3.SorobanMeta == nil {
+		// 	continue
+		// }
 
-		// Create Event
-		for _, op := range tw.Ops {
-			events := op.GetContractEvents()
-			for _, event := range events {
-				_, err := as.db.CreateEvent(&event)
-				if err != nil {
-					as.Logger.Error(fmt.Sprintf("Error create event ledger %d tx %s event %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), event.ContractId, err.Error()))
-					continue
-				}
-			}
-		}
+		// // Create Event
+		// for _, op := range tw.Ops {
+		// 	events := op.GetContractEvents()
+		// 	for _, event := range events {
+		// 		_, err := as.db.CreateEvent(&event)
+		// 		if err != nil {
+		// 			as.Logger.Error(fmt.Sprintf("Error create event ledger %d tx %s event %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), event.ContractId, err.Error()))
+		// 			continue
+		// 		}
+		// 	}
+		// }
 	}
 }
 

@@ -11,18 +11,6 @@ import (
 	"github.com/stellar/go/xdr"
 )
 
-func (as *Aggregation) aggregation() {
-	for {
-		select {
-		// Terminate process
-		case <-as.BaseService.Terminate():
-			return
-		default:
-			as.getNewLedger()
-		}
-	}
-}
-
 func (as *Aggregation) getNewLedger() {
 	from := as.sequence
 	to := as.sequence + prepareStep
@@ -103,6 +91,7 @@ func (as *Aggregation) ledgerProcessing() {
 		case <-as.BaseService.Terminate():
 			return
 		}
+		time.Sleep(time.Millisecond)
 	}
 }
 

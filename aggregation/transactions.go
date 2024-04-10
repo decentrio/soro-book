@@ -2,6 +2,7 @@ package aggregation
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/decentrio/soro-book/database/models"
 	"github.com/stellar/go/ingest"
@@ -28,6 +29,7 @@ func (as *Aggregation) transactionProcessing() {
 		case <-as.BaseService.Terminate():
 			return
 		}
+		time.Sleep(time.Millisecond)
 	}
 }
 
@@ -48,27 +50,24 @@ func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
 	// 	}
 	// }
 
-	// Check if tx metadata is v3
-	// txMetaV3, ok := tw.Tx.UnsafeMeta.GetV3()
-	// if !ok {
-	// 	continue
-	// }
+	wasmEvent, assetEvent, err := tw.GetContractEvents()
+	if err != nil {
+		return
+	}
 
-	// if txMetaV3.SorobanMeta == nil {
-	// 	continue
-	// }
+	// Soroban stellar asset events
+	for _, e := range assetEvent {
+		go func(ae models.StellarAssetContractEvent) {
+			as.assetContractEventsQueue <- ae
+		}(e)
+	}
 
-	// // Create Event
-	// for _, op := range tw.Ops {
-	// 	events := op.GetContractEvents()
-	// 	for _, event := range events {
-	// 		_, err := as.db.CreateWasmContractEvent(&event)
-	// 		if err != nil {
-	// 			as.Logger.Error(fmt.Sprintf("Error create event ledger %d tx %s event %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), event.ContractId, err.Error()))
-	// 			continue
-	// 		}
-	// 	}
-	// }
+	// Soroban wasm contract events
+	for _, e := range wasmEvent {
+		go func(we models.WasmContractEvent) {
+			as.wasmContractEventsQueue <- we
+		}(e)
+	}
 }
 
 type TransactionWrapper struct {

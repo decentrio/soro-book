@@ -2,6 +2,7 @@ package aggregation
 
 import (
 	"context"
+	"time"
 
 	"github.com/decentrio/soro-book/lib/log"
 	"github.com/sirupsen/logrus"
@@ -15,7 +16,7 @@ import (
 )
 
 const (
-	txQueueSize = 1000
+	QueueSize   = 1000
 	prepareStep = 64
 )
 
@@ -38,8 +39,10 @@ type Aggregation struct {
 	backend *backends.CaptiveStellarCore
 
 	// txQueue channel for trigger new tx
-	ledgerQueue chan LedgerWrapper
-	txQueue     chan TransactionWrapper
+	ledgerQueue              chan LedgerWrapper
+	txQueue                  chan TransactionWrapper
+	assetContractEventsQueue chan models.StellarAssetContractEvent
+	wasmContractEventsQueue  chan models.WasmContractEvent
 
 	// isReSync is flag represent if services is
 	// re-synchronize
@@ -60,10 +63,12 @@ func NewAggregation(
 	options ...AggregationOption,
 ) *Aggregation {
 	as := &Aggregation{
-		cfg:         cfg,
-		ledgerQueue: make(chan LedgerWrapper, txQueueSize),
-		txQueue:     make(chan TransactionWrapper, txQueueSize),
-		isReSync:    false,
+		cfg:                      cfg,
+		ledgerQueue:              make(chan LedgerWrapper, QueueSize),
+		txQueue:                  make(chan TransactionWrapper, QueueSize),
+		assetContractEventsQueue: make(chan models.StellarAssetContractEvent, QueueSize),
+		wasmContractEventsQueue:  make(chan models.WasmContractEvent, QueueSize),
+		isReSync:                 false,
 	}
 
 	as.BaseService = *service.NewBaseService("Aggregation", as)
@@ -93,6 +98,7 @@ func (as *Aggregation) OnStart() error {
 	as.Logger.Info("Start")
 	go as.ledgerProcessing()
 	go as.transactionProcessing()
+	go as.contractEventsProcessing()
 	// Note that when using goroutines, you need to be careful to ensure that no
 	// race conditions occur when accessing the txQueue.
 	go as.aggregation()
@@ -103,6 +109,19 @@ func (as *Aggregation) OnStop() error {
 	as.Logger.Info("Stop")
 	as.backend.Close()
 	return nil
+}
+
+func (as *Aggregation) aggregation() {
+	for {
+		select {
+		// Terminate process
+		case <-as.BaseService.Terminate():
+			return
+		default:
+			as.getNewLedger()
+		}
+		time.Sleep(time.Millisecond)
+	}
 }
 
 // Method allow trigger for resync

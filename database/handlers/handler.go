@@ -30,6 +30,38 @@ func (h *DBHandler) CreateWasmContractEvent(data *models.WasmContractEvent) (str
 	return data.Id, nil
 }
 
+func (h *DBHandler) CreateAssetContractTransferEvent(data *models.AssetContractTransferEvent) (string, error) {
+	if err := h.db.Create(data).Error; err != nil {
+		return "", err
+	}
+
+	return data.Id, nil
+}
+
+func (h *DBHandler) CreateAssetContractMintEvent(data *models.AssetContractMintEvent) (string, error) {
+	if err := h.db.Create(data).Error; err != nil {
+		return "", err
+	}
+
+	return data.Id, nil
+}
+
+func (h *DBHandler) CreateAssetContractBurnEvent(data *models.AssetContractBurnEvent) (string, error) {
+	if err := h.db.Create(data).Error; err != nil {
+		return "", err
+	}
+
+	return data.Id, nil
+}
+
+func (h *DBHandler) CreateAssetContractClawbackEvent(data *models.AssetContractClawbackEvent) (string, error) {
+	if err := h.db.Create(data).Error; err != nil {
+		return "", err
+	}
+
+	return data.Id, nil
+}
+
 func (h *DBHandler) CreateContractEntry(data *models.Contract) (string, error) {
 	if err := h.db.Create(data).Error; err != nil {
 		return "", err

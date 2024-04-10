@@ -2,6 +2,7 @@ package aggregation
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/decentrio/soro-book/database/models"
 	"github.com/stellar/go/strkey"
@@ -29,6 +30,63 @@ var (
 		xdr.ScSymbol("burn"):     EventTypeBurn,
 	}
 )
+
+// aggregation process
+func (as *Aggregation) contractEventsProcessing() {
+	for {
+		// Block until state have sync successful
+		if as.isReSync {
+			continue
+		}
+
+		select {
+		// Receive a new tx
+		case event := <-as.assetContractEventsQueue:
+			eventType := event.GetType()
+			switch eventType {
+			case EventTypeTransfer:
+				// Create AssetContractTransferEvent
+				transferEvent := event.(*models.AssetContractTransferEvent)
+				_, err := as.db.CreateAssetContractTransferEvent(transferEvent)
+				if err != nil {
+					as.Logger.Error(fmt.Sprintf("Error create asset contract transfer event tx %s: %s", transferEvent.TxHash, err.Error()))
+				}
+			case EventTypeMint:
+				// Create AssetContractTransferEvent
+				mintEvent := event.(*models.AssetContractMintEvent)
+				_, err := as.db.CreateAssetContractMintEvent(mintEvent)
+				if err != nil {
+					as.Logger.Error(fmt.Sprintf("Error create asset contract mint event tx %s: %s", mintEvent.TxHash, err.Error()))
+				}
+			case EventTypeClawback:
+				// Create AssetContractTransferEvent
+				cbEvent := event.(*models.AssetContractClawbackEvent)
+				_, err := as.db.CreateAssetContractClawbackEvent(cbEvent)
+				if err != nil {
+					as.Logger.Error(fmt.Sprintf("Error create asset contract clawback event tx %s: %s", cbEvent.TxHash, err.Error()))
+				}
+			case EventTypeBurn:
+				// Create AssetContractTransferEvent
+				burnEvent := event.(*models.AssetContractBurnEvent)
+				_, err := as.db.CreateAssetContractBurnEvent(burnEvent)
+				if err != nil {
+					as.Logger.Error(fmt.Sprintf("Error create asset contract burn event tx %s: %s", burnEvent.TxHash, err.Error()))
+				}
+			}
+			// as.handleReceiveNewLedger(ledger)
+		case event := <-as.wasmContractEventsQueue:
+			// Create WasmContractEvents
+			_, err := as.db.CreateWasmContractEvent(&event)
+			if err != nil {
+				as.Logger.Error(fmt.Sprintf("Error create wasm contract event tx %s: %s", event.TxHash, err.Error()))
+			}
+		// Terminate process
+		case <-as.BaseService.Terminate():
+			return
+		}
+		time.Sleep(time.Millisecond)
+	}
+}
 
 func (tx TransactionWrapper) GetContractEvents() ([]models.WasmContractEvent, []models.StellarAssetContractEvent, error) {
 	var wasmContractevents []models.WasmContractEvent
@@ -91,7 +149,6 @@ func (tx TransactionWrapper) GetWasmContractEvents(event xdr.ContractEvent, id i
 
 func (tx TransactionWrapper) GetStellarAssetContractEvents(event xdr.ContractEvent, id int64, order *uint32) (models.StellarAssetContractEvent, error) {
 	topics := event.Body.V0.Topics
-	value := event.Body.V0.Data
 
 	// Get event type
 	fn, _ := topics[0].GetSym()
@@ -109,61 +166,51 @@ func (tx TransactionWrapper) GetStellarAssetContractEvents(event xdr.ContractEve
 	// Get Tx Hash
 	txHash := tx.Tx.Result.TransactionHash.HexString()
 
+	// Get Event body
+	eventBodyXdr, err := event.Body.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+
 	// Get event data
 	switch eventType {
 	case EventTypeTransfer:
-		transferEvent := models.AssetContractTransferEvent{}
-		transferEvent.Id = eventId
-		transferEvent.ContractId = contractId
-		transferEvent.TxHash = txHash
-
-		err := transferEvent.Parse(topics, value)
-		if err != nil {
-			return nil, err
+		transferEvent := models.AssetContractTransferEvent{
+			Id:           eventId,
+			ContractId:   contractId,
+			TxHash:       txHash,
+			EventBodyXdr: eventBodyXdr,
 		}
-
 		*order++
 
 		return &transferEvent, nil
 	case EventTypeMint:
-		mintEvent := models.AssetContractMintEvent{}
-		mintEvent.Id = eventId
-		mintEvent.ContractId = contractId
-		mintEvent.TxHash = txHash
-
-		err := mintEvent.Parse(topics, value)
-		if err != nil {
-			return nil, err
+		mintEvent := models.AssetContractMintEvent{
+			Id:           eventId,
+			ContractId:   contractId,
+			TxHash:       txHash,
+			EventBodyXdr: eventBodyXdr,
 		}
-
 		*order++
 
 		return &mintEvent, nil
 	case EventTypeClawback:
-		cbEvent := models.AssetContractClawbackEvent{}
-		cbEvent.Id = eventId
-		cbEvent.ContractId = contractId
-		cbEvent.TxHash = txHash
-
-		err := cbEvent.Parse(topics, value)
-		if err != nil {
-			return nil, err
+		cbEvent := models.AssetContractClawbackEvent{
+			Id:           eventId,
+			ContractId:   contractId,
+			TxHash:       txHash,
+			EventBodyXdr: eventBodyXdr,
 		}
-
 		*order++
 
 		return &cbEvent, nil
 	case EventTypeBurn:
-		burnEvent := models.AssetContractBurnEvent{}
-		burnEvent.Id = eventId
-		burnEvent.ContractId = contractId
-		burnEvent.TxHash = txHash
-
-		err := burnEvent.Parse(topics, value)
-		if err != nil {
-			return nil, err
+		burnEvent := models.AssetContractBurnEvent{
+			Id:           eventId,
+			ContractId:   contractId,
+			TxHash:       txHash,
+			EventBodyXdr: eventBodyXdr,
 		}
-
 		*order++
 
 		return &burnEvent, nil

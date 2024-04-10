@@ -11,14 +11,14 @@ import (
 
 func CreateEvent(h *handlers.DBHandler) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var dataItem models.Event
+		var dataItem models.WasmContractEvent
 
 		if err := c.BindJSON(&dataItem); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		eventId, err := h.CreateEvent(&dataItem)
+		eventId, err := h.CreateWasmContractEvent(&dataItem)
 
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

@@ -1,6 +1,9 @@
 package aggregation
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/decentrio/soro-book/database/models"
 	"github.com/stellar/go/ingest"
 	"github.com/stellar/go/xdr"
@@ -10,6 +13,62 @@ const (
 	SUCCESS = "success"
 	FAILED  = "failed"
 )
+
+func (as *Aggregation) transactionProcessing() {
+	for {
+		// Block until state have sync successful
+		if as.isReSync {
+			continue
+		}
+
+		select {
+		// Receive a new tx
+		case tx := <-as.txQueue:
+			as.handleReceiveNewTransaction(tx)
+		// Terminate process
+		case <-as.BaseService.Terminate():
+			return
+		}
+		time.Sleep(time.Millisecond)
+	}
+}
+
+func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
+	tx := tw.GetModelsTransaction()
+	_, err := as.db.CreateTransaction(tx)
+	if err != nil {
+		as.Logger.Error(fmt.Sprintf("Error create ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
+	}
+
+	// Contract entry
+	// entries := tw.GetModelsContractDataEntry()
+	// for _, entry := range entries {
+	// 	_, err := as.db.CreateContractEntry(&entry)
+	// 	if err != nil {
+	// 		as.Logger.Error(fmt.Sprintf("Error create contract data entry ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
+	// 		continue
+	// 	}
+	// }
+
+	wasmEvent, assetEvent, err := tw.GetContractEvents()
+	if err != nil {
+		return
+	}
+
+	// Soroban stellar asset events
+	for _, e := range assetEvent {
+		go func(ae models.StellarAssetContractEvent) {
+			as.assetContractEventsQueue <- ae
+		}(e)
+	}
+
+	// Soroban wasm contract events
+	for _, e := range wasmEvent {
+		go func(we models.WasmContractEvent) {
+			as.wasmContractEventsQueue <- we
+		}(e)
+	}
+}
 
 type TransactionWrapper struct {
 	LedgerSequence uint32
@@ -22,7 +81,7 @@ func NewTransactionWrapper(tx ingest.LedgerTransaction, seq uint32) TransactionW
 	for opi, op := range tx.Envelope.Operations() {
 		operation := transactionOperationWrapper{
 			index:          uint32(opi),
-			transaction:    tx,
+			txIndex:        tx.Index,
 			operation:      op,
 			ledgerSequence: seq,
 		}
@@ -116,12 +175,12 @@ func (tw TransactionWrapper) GetModelsContractDataEntry() []models.Contract {
 				}
 
 				entry := models.Contract{
-					ContractId:          contractId,
-					AccountId:           accountId,
-					ExpirationLedgerSeq: tw.GetLedgerSequence(),
-					KeyXdr:              keyBz,
-					ValueXdr:            valBz,
-					Durability:          int32(entry.Durability),
+					ContractId: contractId,
+					AccountId:  accountId,
+					Ledger:     tw.GetLedgerSequence(),
+					KeyXdr:     keyBz,
+					ValueXdr:   valBz,
+					Durability: int32(entry.Durability),
 				}
 				entries = append(entries, entry)
 			}

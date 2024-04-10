@@ -82,7 +82,7 @@ func NewTransactionWrapper(tx ingest.LedgerTransaction, seq uint32) TransactionW
 	for opi, op := range tx.Envelope.Operations() {
 		operation := transactionOperationWrapper{
 			index:          uint32(opi),
-			transaction:    tx,
+			txIndex:        tx.Index,
 			operation:      op,
 			ledgerSequence: seq,
 		}

@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/decentrio/soro-book/database/models"
+	"github.com/stellar/go/support/db"
+	"github.com/stellar/go/xdr"
 )
 
 func (h *DBHandler) CreateLedger(data *models.Ledger) (string, error) {
@@ -63,9 +65,41 @@ func (h *DBHandler) CreateAssetContractClawbackEvent(data *models.AssetContractC
 }
 
 func (h *DBHandler) CreateContractEntry(data *models.Contract) (string, error) {
+	data.IsNewest = true
 	if err := h.db.Create(data).Error; err != nil {
-		return "", err
+		return "ERROR: create contract data entry", err
 	}
 
-	return fmt.Sprintf("%s-%s", data.ContractId, string(data.KeyXdr)), nil
+	switch data.EntryType {
+	case "updated":
+		var oldData models.Contract
+		if err := h.db.Table("contracts").
+			Where("is_newest = ?", true).
+			Where("key_xdr = ?", data.KeyXdr).
+			First(&oldData).Error; err != nil {
+			return "ERROR: not found update contract data entry", err
+		}
+
+		oldData.IsNewest = false;
+		if err := h.db.Save(oldData).Error; err != nil {
+			return "ERROR: update old contract data entry", err
+		}
+		break
+	case "removed":
+		var oldData models.Contract
+		if err := h.db.Table("contracts").
+			Where("is_newest = ?", true).
+			Where("key_xdr = ?", data.KeyXdr).
+			First(&oldData).Error; err != nil {
+			return "ERROR: not found update contract data entry", err
+		}
+
+		oldData.IsNewest = false;
+		if err := h.db.Save(oldData).Error; err != nil {
+			return "ERROR: remove old contract data entry", err
+		}
+		break
+	}
+
+	return fmt.Sprintf("%s: %s-%s", data.EntryType, data.ContractId, string(data.KeyXdr)), nil
 }

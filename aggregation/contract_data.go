@@ -52,7 +52,11 @@ func (tw TransactionWrapper) GetModelsContractDataEntry() []models.Contract {
 			}
 			if found {
 				keyBz, _ := entry.Key.MarshalBinary()
-				valBz, _ := entry.Val.MarshalBinary()
+
+				var valBz []byte
+				if entryType != "removed" {
+					valBz, _ = entry.Val.MarshalBinary()
+				}
 				var contractId string
 				var err error
 				if entry.Contract.ContractId != nil {

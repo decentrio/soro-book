@@ -43,6 +43,10 @@ func (tw TransactionWrapper) GetModelsContractDataEntry() []models.Contract {
 	for _, op := range v3.Operations {
 		for _, change := range op.Changes {
 			entry, entryType, found := ContractDataEntry(change)
+			// continue with "state" because we don't want to store this entry
+			if entryType == "state" {
+				continue
+			}
 			if found {
 				keyBz, _ := entry.Key.MarshalBinary()
 				valBz, _ := entry.Val.MarshalBinary()

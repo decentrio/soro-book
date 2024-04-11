@@ -164,7 +164,7 @@ func (tx TransactionWrapper) GetStellarAssetContractEvents(event xdr.ContractEve
 	}
 
 	// Get Tx Hash
-	txHash := tx.Tx.Result.TransactionHash.HexString()
+	txHash := tx.GetTransactionHash()
 
 	// Get Event body
 	eventBodyXdr, err := event.Body.MarshalBinary()

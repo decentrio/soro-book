@@ -3,7 +3,6 @@ module github.com/decentrio/soro-book
 go 1.21.7
 
 require (
-	github.com/decentrio/xdr-converter v0.0.0-20240409050113-50705975d7a7
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-kit/log v0.2.1
 	github.com/go-logfmt/logfmt v0.5.1

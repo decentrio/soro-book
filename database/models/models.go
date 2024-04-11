@@ -32,6 +32,7 @@ type ScAddress struct {
 }
 
 type Contract struct {
+	Id         string `json:"id,omitempty"`
 	ContractId string `json:"contract_id,omitempty"`
 	AccountId  string `json:"account_id,omitempty"`
 	TxHash     string `json:"tx_hash,omitempty"`

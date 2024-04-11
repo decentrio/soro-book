@@ -136,7 +136,13 @@ func ContractDataEntry(c xdr.LedgerEntryChange) (xdr.ContractDataEntry, string, 
 			return result, "updated", true
 		}
 	case xdr.LedgerEntryChangeTypeLedgerEntryRemoved:
-		return result, "removed", false
+		ledgerKey := c.Removed
+		if ledgerKey.ContractData != nil {
+			result.Contract = ledgerKey.ContractData.Contract
+			result.Key = ledgerKey.ContractData.Key
+			result.Durability = ledgerKey.ContractData.Durability
+			return result, "removed", true
+		}
 	case xdr.LedgerEntryChangeTypeLedgerEntryState:
 		state := *c.State
 		if state.Data.ContractData != nil {

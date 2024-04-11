@@ -41,27 +41,23 @@ func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
 	}
 
 	// Contract entry
-	// entries := tw.GetModelsContractDataEntry()
-	// for _, entry := range entries {
-	// 	_, err := as.db.CreateContractEntry(&entry)
-	// 	if err != nil {
-	// 		as.Logger.Error(fmt.Sprintf("Error create contract data entry ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
-	// 		continue
-	// 	}
-	// }
+	entries := tw.GetModelsContractDataEntry()
+	for _, entry := range entries {
+		go func(e models.Contract) {
+			as.contractDataEntrysQueue <- e
+		}(entry)
+	}
 
 	wasmEvent, assetEvent, err := tw.GetContractEvents()
 	if err != nil {
 		return
 	}
-
 	// Soroban stellar asset events
 	for _, e := range assetEvent {
 		go func(ae models.StellarAssetContractEvent) {
 			as.assetContractEventsQueue <- ae
 		}(e)
 	}
-
 	// Soroban wasm contract events
 	for _, e := range wasmEvent {
 		go func(we models.WasmContractEvent) {
@@ -149,43 +145,4 @@ func (tw TransactionWrapper) GetModelsTransaction() *models.Transaction {
 		ResultMetaXdr:    tw.GetResultMetaXdr(), //xdr.TransactionResultMeta
 		SourceAddress:    tw.Tx.Envelope.SourceAccount().ToAccountId().Address(),
 	}
-}
-
-func (tw TransactionWrapper) GetModelsContractDataEntry() []models.Contract {
-	v3 := tw.Tx.UnsafeMeta.V3
-	if v3 == nil {
-		return nil
-	}
-
-	var entries []models.Contract
-	for _, op := range v3.Operations {
-		for _, change := range op.Changes {
-			entry, found := ContractDataEntry(change)
-			if found {
-				keyBz, _ := entry.Key.MarshalBinary()
-				valBz, _ := entry.Val.MarshalBinary()
-				var contractId string
-				if entry.Contract.ContractId != nil {
-					contractId = (*entry.Contract.ContractId).HexString()
-				}
-
-				var accountId string
-				if entry.Contract.AccountId != nil {
-					accountId = (*entry.Contract.AccountId).Address()
-				}
-
-				entry := models.Contract{
-					ContractId: contractId,
-					AccountId:  accountId,
-					Ledger:     tw.GetLedgerSequence(),
-					KeyXdr:     keyBz,
-					ValueXdr:   valBz,
-					Durability: int32(entry.Durability),
-				}
-				entries = append(entries, entry)
-			}
-		}
-	}
-
-	return entries
 }

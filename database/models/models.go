@@ -28,11 +28,14 @@ type Transaction struct {
 
 type Contract struct {
 	ContractId string `json:"contract_id,omitempty"`
+	TxHash     string `json:"tx_hash,omitempty"`
 	AccountId  string `json:"account_id,omitempty"`
 	Ledger     uint32 `json:"ledger,omitempty"`
+	EntryType  string `json:"entry_type,omitempty"`
 	KeyXdr     []byte `json:"key_xdr,omitempty"`
 	ValueXdr   []byte `json:"value_xdr,omitempty"`
 	Durability int32  `json:"durability,omitempty"`
+	IsNewest   bool   `json:"is_newest,omitempty"`
 }
 
 type Int128Parts struct {

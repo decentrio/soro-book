@@ -43,6 +43,7 @@ type Aggregation struct {
 	txQueue                  chan TransactionWrapper
 	assetContractEventsQueue chan models.StellarAssetContractEvent
 	wasmContractEventsQueue  chan models.WasmContractEvent
+	contractDataEntrysQueue  chan models.Contract
 
 	// isReSync is flag represent if services is
 	// re-synchronize
@@ -68,6 +69,7 @@ func NewAggregation(
 		txQueue:                  make(chan TransactionWrapper, QueueSize),
 		assetContractEventsQueue: make(chan models.StellarAssetContractEvent, QueueSize),
 		wasmContractEventsQueue:  make(chan models.WasmContractEvent, QueueSize),
+		contractDataEntrysQueue:  make(chan models.Contract, QueueSize),
 		isReSync:                 false,
 	}
 
@@ -98,6 +100,7 @@ func (as *Aggregation) OnStart() error {
 	as.Logger.Info("Start")
 	go as.ledgerProcessing()
 	go as.transactionProcessing()
+	go as.contractDataEntryProcessing()
 	go as.contractEventsProcessing()
 	// Note that when using goroutines, you need to be careful to ensure that no
 	// race conditions occur when accessing the txQueue.

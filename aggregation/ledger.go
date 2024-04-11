@@ -119,7 +119,7 @@ func getLedgerFromCloseMeta(ledgerCloseMeta xdr.LedgerCloseMeta) models.Ledger {
 	}
 }
 
-func ContractDataEntry(c xdr.LedgerEntryChange) (xdr.ContractDataEntry, bool) {
+func ContractDataEntry(c xdr.LedgerEntryChange) (xdr.ContractDataEntry, string, bool) {
 	var result xdr.ContractDataEntry
 
 	switch c.Type {
@@ -127,23 +127,23 @@ func ContractDataEntry(c xdr.LedgerEntryChange) (xdr.ContractDataEntry, bool) {
 		created := *c.Created
 		if created.Data.ContractData != nil {
 			result = *created.Data.ContractData
-			return result, true
+			return result, "created", true
 		}
 	case xdr.LedgerEntryChangeTypeLedgerEntryUpdated:
 		updated := *c.Updated
 		if updated.Data.ContractData != nil {
 			result = *updated.Data.ContractData
-			return result, true
+			return result, "updated", true
 		}
 	case xdr.LedgerEntryChangeTypeLedgerEntryRemoved:
-		return result, false
+		return result, "removed", false
 	case xdr.LedgerEntryChangeTypeLedgerEntryState:
 		state := *c.State
 		if state.Data.ContractData != nil {
 			result = *state.Data.ContractData
-			return result, true
+			return result, "state", true
 		}
 
 	}
-	return result, false
+	return result, "", false
 }

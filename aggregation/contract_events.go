@@ -149,6 +149,7 @@ func (tx TransactionWrapper) GetWasmContractEvents(event xdr.ContractEvent, id i
 
 func (tx TransactionWrapper) GetStellarAssetContractEvents(event xdr.ContractEvent, id int64, order *uint32) (models.StellarAssetContractEvent, error) {
 	topics := event.Body.V0.Topics
+	value := event.Body.V0.Data
 
 	// Get event type
 	fn, _ := topics[0].GetSym()
@@ -166,50 +167,56 @@ func (tx TransactionWrapper) GetStellarAssetContractEvents(event xdr.ContractEve
 	// Get Tx Hash
 	txHash := tx.GetTransactionHash()
 
-	// Get Event body
-	eventBodyXdr, err := event.Body.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-
 	// Get event data
 	switch eventType {
 	case EventTypeTransfer:
 		transferEvent := models.AssetContractTransferEvent{
-			Id:           eventId,
-			ContractId:   contractId,
-			TxHash:       txHash,
-			EventBodyXdr: eventBodyXdr,
+			Id:         eventId,
+			ContractId: contractId,
+			TxHash:     txHash,
+		}
+		err := transferEvent.Parse(topics, value)
+		if err != nil {
+			return nil, err
 		}
 		*order++
 
 		return &transferEvent, nil
 	case EventTypeMint:
 		mintEvent := models.AssetContractMintEvent{
-			Id:           eventId,
-			ContractId:   contractId,
-			TxHash:       txHash,
-			EventBodyXdr: eventBodyXdr,
+			Id:         eventId,
+			ContractId: contractId,
+			TxHash:     txHash,
+		}
+		err := mintEvent.Parse(topics, value)
+		if err != nil {
+			return nil, err
 		}
 		*order++
 
 		return &mintEvent, nil
 	case EventTypeClawback:
 		cbEvent := models.AssetContractClawbackEvent{
-			Id:           eventId,
-			ContractId:   contractId,
-			TxHash:       txHash,
-			EventBodyXdr: eventBodyXdr,
+			Id:         eventId,
+			ContractId: contractId,
+			TxHash:     txHash,
+		}
+		err := cbEvent.Parse(topics, value)
+		if err != nil {
+			return nil, err
 		}
 		*order++
 
 		return &cbEvent, nil
 	case EventTypeBurn:
 		burnEvent := models.AssetContractBurnEvent{
-			Id:           eventId,
-			ContractId:   contractId,
-			TxHash:       txHash,
-			EventBodyXdr: eventBodyXdr,
+			Id:         eventId,
+			ContractId: contractId,
+			TxHash:     txHash,
+		}
+		err := burnEvent.Parse(topics, value)
+		if err != nil {
+			return nil, err
 		}
 		*order++
 

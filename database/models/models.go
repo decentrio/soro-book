@@ -57,6 +57,7 @@ type WasmContractEvent struct {
 
 type StellarAssetContractEvent interface {
 	GetType() string
+	Parse(topics xdr.ScVec, value xdr.ScVal) error
 }
 
 var (
@@ -68,47 +69,152 @@ var (
 )
 
 type AssetContractTransferEvent struct {
-	Id           string `json:"id,omitempty"`
-	ContractId   string `json:"contract_id,omitempty"`
-	TxHash       string `json:"tx_hash,omitempty"`
-	EventBodyXdr []byte `json:"event_body_xdr,omitempty"`
+	Id         string `json:"id,omitempty"`
+	ContractId string `json:"contract_id,omitempty"`
+	TxHash     string `json:"tx_hash,omitempty"`
+	From       string `json:"from,omitempty"`
+	To         string `json:"to,omitempty"`
+	AmountHi   int64  `json:"amount_hi,omitempty"`
+	AmountLo   uint64 `json:"amount_lo,omitempty"`
 }
 
 func (AssetContractTransferEvent) GetType() string {
 	return "transfer"
 }
 
+func (a *AssetContractTransferEvent) Parse(topics xdr.ScVec, value xdr.ScVal) error {
+	//
+	// The transfer event format is:
+	//
+	// 	"transfer"  Symbol
+	//  <from> 		Address
+	//  <to> 		Address
+	// 	<asset>		Bytes
+	//
+	// 	<amount> 	i128
+	//
+	var err error
+	a.From, a.To, a.AmountHi, a.AmountLo, err = parseBalanceChangeEvent(topics, value)
+	if err != nil {
+		return ErrNotTransferEvent
+	}
+	return nil
+}
+
 type AssetContractMintEvent struct {
-	Id           string `json:"id,omitempty"`
-	ContractId   string `json:"contract_id,omitempty"`
-	TxHash       string `json:"tx_hash,omitempty"`
-	EventBodyXdr []byte `json:"event_body_xdr,omitempty"`
+	Id         string `json:"id,omitempty"`
+	ContractId string `json:"contract_id,omitempty"`
+	TxHash     string `json:"tx_hash,omitempty"`
+	Admin      string `json:"admin,omitempty"`
+	To         string `json:"to,omitempty"`
+	AmountHi   int64  `json:"amount_hi,omitempty"`
+	AmountLo   uint64 `json:"amount_lo,omitempty"`
 }
 
 func (AssetContractMintEvent) GetType() string {
 	return "mint"
 }
 
+func (a *AssetContractMintEvent) Parse(topics xdr.ScVec, value xdr.ScVal) error {
+	//
+	// The mint event format is:
+	//
+	// 	"mint"  	Symbol
+	//  <admin>		Address
+	//  <to> 		Address
+	// 	<asset>		Bytes
+	//
+	// 	<amount> 	i128
+	//
+	var err error
+	a.Admin, a.To, a.AmountHi, a.AmountLo, err = parseBalanceChangeEvent(topics, value)
+	if err != nil {
+		return ErrNotTransferEvent
+	}
+	return nil
+}
+
 type AssetContractBurnEvent struct {
-	Id           string `json:"id,omitempty"`
-	ContractId   string `json:"contract_id,omitempty"`
-	TxHash       string `json:"tx_hash,omitempty"`
-	EventBodyXdr []byte `json:"event_body_xdr,omitempty"`
+	Id         string `json:"id,omitempty"`
+	ContractId string `json:"contract_id,omitempty"`
+	TxHash     string `json:"tx_hash,omitempty"`
+	From       string `json:"from,omitempty"`
+	AmountHi   int64  `json:"amount_hi,omitempty"`
+	AmountLo   uint64 `json:"amount_lo,omitempty"`
 }
 
 func (AssetContractBurnEvent) GetType() string {
 	return "burn"
 }
 
+func (event *AssetContractBurnEvent) Parse(topics xdr.ScVec, value xdr.ScVal) error {
+	//
+	// The burn event format is:
+	//
+	// 	"burn"  	Symbol
+	//  <from> 		Address
+	// 	<asset>		Bytes
+	//
+	// 	<amount> 	i128
+	//
+	if len(topics) != 3 {
+		return ErrNotBurnEvent
+	}
+
+	from, ok := topics[1].GetAddress()
+	if !ok {
+		return ErrNotBurnEvent
+	}
+
+	var err error
+	event.From, err = from.String()
+	if err != nil {
+		return errors.Wrap(err, ErrNotBurnEvent.Error())
+	}
+
+	amount, ok := value.GetI128()
+	if !ok {
+		return ErrNotBurnEvent
+	}
+	val := XdrInt128PartsConvert(amount)
+
+	event.AmountHi = val.Hi
+	event.AmountLo = val.Lo
+
+	return nil
+}
+
 type AssetContractClawbackEvent struct {
-	Id           string `json:"id,omitempty"`
-	ContractId   string `json:"contract_id,omitempty"`
-	TxHash       string `json:"tx_hash,omitempty"`
-	EventBodyXdr []byte `json:"event_body_xdr,omitempty"`
+	Id         string `json:"id,omitempty"`
+	ContractId string `json:"contract_id,omitempty"`
+	TxHash     string `json:"tx_hash,omitempty"`
+	Admin      string `json:"admin,omitempty"`
+	From       string `json:"from,omitempty"`
+	AmountHi   int64  `json:"amount_hi,omitempty"`
+	AmountLo   uint64 `json:"amount_lo,omitempty"`
 }
 
 func (AssetContractClawbackEvent) GetType() string {
 	return "clawback"
+}
+
+func (a *AssetContractClawbackEvent) Parse(topics xdr.ScVec, value xdr.ScVal) error {
+	//
+	// The clawback event format is:
+	//
+	// 	"clawback" 	Symbol
+	//  <admin>		Address
+	//  <from> 		Address
+	// 	<asset>		Bytes
+	//
+	// 	<amount> 	i128
+	//
+	var err error
+	a.Admin, a.From, a.AmountHi, a.AmountLo, err = parseBalanceChangeEvent(topics, value)
+	if err != nil {
+		return ErrNotTransferEvent
+	}
+	return nil
 }
 
 // parseBalanceChangeEvent is a generalization of a subset of the Stellar Asset
@@ -119,7 +225,8 @@ func (AssetContractClawbackEvent) GetType() string {
 func parseBalanceChangeEvent(topics xdr.ScVec, value xdr.ScVal) (
 	first string,
 	second string,
-	amount Int128Parts,
+	amountHi int64,
+	amountlo uint64,
 	err error,
 ) {
 	err = ErrNotBalanceChangeEvent
@@ -153,9 +260,9 @@ func parseBalanceChangeEvent(topics xdr.ScVec, value xdr.ScVal) (
 		return
 	}
 
-	amount = XdrInt128PartsConvert(xdrAmount)
+	amount := XdrInt128PartsConvert(xdrAmount)
 
-	return first, second, amount, nil
+	return first, second, amount.Hi, amount.Lo, nil
 }
 
 func XdrInt128PartsConvert(in xdr.Int128Parts) Int128Parts {

@@ -10,7 +10,7 @@ import (
 type Ledger struct {
 	Hash         string `json:"hash,omitempty"`
 	PrevHash     string `json:"prev_hash,omitempty"`
-	Sequence     uint32 `json:"sequence,omitempty"`
+	Seq          uint32 `json:"seq,omitempty"`
 	Transactions uint32 `json:"transaction,omitempty"`
 	Operations   uint32 `json:"operations,omitempty"`
 }
@@ -72,8 +72,8 @@ type AssetContractTransferEvent struct {
 	Id         string `json:"id,omitempty"`
 	ContractId string `json:"contract_id,omitempty"`
 	TxHash     string `json:"tx_hash,omitempty"`
-	From       string `json:"from,omitempty"`
-	To         string `json:"to,omitempty"`
+	FromAddr   string `json:"from_addr,omitempty"`
+	ToAddr     string `json:"to_addr,omitempty"`
 	AmountHi   int64  `json:"amount_hi,omitempty"`
 	AmountLo   uint64 `json:"amount_lo,omitempty"`
 }
@@ -94,7 +94,7 @@ func (a *AssetContractTransferEvent) Parse(topics xdr.ScVec, value xdr.ScVal) er
 	// 	<amount> 	i128
 	//
 	var err error
-	a.From, a.To, a.AmountHi, a.AmountLo, err = parseBalanceChangeEvent(topics, value)
+	a.FromAddr, a.ToAddr, a.AmountHi, a.AmountLo, err = parseBalanceChangeEvent(topics, value)
 	if err != nil {
 		return ErrNotTransferEvent
 	}
@@ -105,8 +105,8 @@ type AssetContractMintEvent struct {
 	Id         string `json:"id,omitempty"`
 	ContractId string `json:"contract_id,omitempty"`
 	TxHash     string `json:"tx_hash,omitempty"`
-	Admin      string `json:"admin,omitempty"`
-	To         string `json:"to,omitempty"`
+	AdminAddr  string `json:"admin_addr,omitempty"`
+	ToAddr     string `json:"to_addr,omitempty"`
 	AmountHi   int64  `json:"amount_hi,omitempty"`
 	AmountLo   uint64 `json:"amount_lo,omitempty"`
 }
@@ -127,7 +127,7 @@ func (a *AssetContractMintEvent) Parse(topics xdr.ScVec, value xdr.ScVal) error 
 	// 	<amount> 	i128
 	//
 	var err error
-	a.Admin, a.To, a.AmountHi, a.AmountLo, err = parseBalanceChangeEvent(topics, value)
+	a.AdminAddr, a.ToAddr, a.AmountHi, a.AmountLo, err = parseBalanceChangeEvent(topics, value)
 	if err != nil {
 		return ErrNotTransferEvent
 	}
@@ -138,7 +138,7 @@ type AssetContractBurnEvent struct {
 	Id         string `json:"id,omitempty"`
 	ContractId string `json:"contract_id,omitempty"`
 	TxHash     string `json:"tx_hash,omitempty"`
-	From       string `json:"from,omitempty"`
+	FromAddr   string `json:"from_addr,omitempty"`
 	AmountHi   int64  `json:"amount_hi,omitempty"`
 	AmountLo   uint64 `json:"amount_lo,omitempty"`
 }
@@ -167,7 +167,7 @@ func (event *AssetContractBurnEvent) Parse(topics xdr.ScVec, value xdr.ScVal) er
 	}
 
 	var err error
-	event.From, err = from.String()
+	event.FromAddr, err = from.String()
 	if err != nil {
 		return errors.Wrap(err, ErrNotBurnEvent.Error())
 	}
@@ -188,8 +188,8 @@ type AssetContractClawbackEvent struct {
 	Id         string `json:"id,omitempty"`
 	ContractId string `json:"contract_id,omitempty"`
 	TxHash     string `json:"tx_hash,omitempty"`
-	Admin      string `json:"admin,omitempty"`
-	From       string `json:"from,omitempty"`
+	AdminAddr  string `json:"admin_addr,omitempty"`
+	FromAddr   string `json:"from_addr,omitempty"`
 	AmountHi   int64  `json:"amount_hi,omitempty"`
 	AmountLo   uint64 `json:"amount_lo,omitempty"`
 }
@@ -210,7 +210,7 @@ func (a *AssetContractClawbackEvent) Parse(topics xdr.ScVec, value xdr.ScVal) er
 	// 	<amount> 	i128
 	//
 	var err error
-	a.Admin, a.From, a.AmountHi, a.AmountLo, err = parseBalanceChangeEvent(topics, value)
+	a.AdminAddr, a.FromAddr, a.AmountHi, a.AmountLo, err = parseBalanceChangeEvent(topics, value)
 	if err != nil {
 		return ErrNotTransferEvent
 	}

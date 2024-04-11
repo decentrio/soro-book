@@ -86,6 +86,7 @@ func (h *DBHandler) CreateContractEntry(data *models.Contract) (string, error) {
 			Where("is_newest = ?", true).
 			Where("key_xdr = ?", data.KeyXdr).
 			First(&oldData).Error; err == nil {
+			fmt.Println("CreateContractEntry Removed")
 			oldData.IsNewest = false
 			if err := h.db.Table("contracts").Save(oldData).Error; err != nil {
 				return "ERROR: update old contract data entry", err

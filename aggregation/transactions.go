@@ -41,27 +41,23 @@ func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
 	}
 
 	// Contract entry
-	// entries := tw.GetModelsContractDataEntry()
-	// for _, entry := range entries {
-	// 	_, err := as.db.CreateContractEntry(&entry)
-	// 	if err != nil {
-	// 		as.Logger.Error(fmt.Sprintf("Error create contract data entry ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
-	// 		continue
-	// 	}
-	// }
+	entries := tw.GetModelsContractDataEntry()
+	for _, entry := range entries {
+		go func(e models.Contract) {
+			as.contractDataEntrysQueue <- e
+		}(entry)
+	}
 
 	wasmEvent, assetEvent, err := tw.GetContractEvents()
 	if err != nil {
 		return
 	}
-
 	// Soroban stellar asset events
 	for _, e := range assetEvent {
 		go func(ae models.StellarAssetContractEvent) {
 			as.assetContractEventsQueue <- ae
 		}(e)
 	}
-
 	// Soroban wasm contract events
 	for _, e := range wasmEvent {
 		go func(we models.WasmContractEvent) {

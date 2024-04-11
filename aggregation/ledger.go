@@ -91,7 +91,7 @@ func (as *Aggregation) ledgerProcessing() {
 		case <-as.BaseService.Terminate():
 			return
 		}
-		time.Sleep(time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 

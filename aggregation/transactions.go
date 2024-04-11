@@ -29,7 +29,7 @@ func (as *Aggregation) transactionProcessing() {
 		case <-as.BaseService.Terminate():
 			return
 		}
-		time.Sleep(time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}
 }
 

@@ -26,10 +26,15 @@ type Transaction struct {
 	SourceAddress    string `json:"source_address,omitempty"`
 }
 
+type ScAddress struct {
+	AccountId  *string `json:"account_id,omitempty"`
+	ContractId *string `json:"contract_id,omitempty"`
+}
+
 type Contract struct {
 	ContractId string `json:"contract_id,omitempty"`
-	TxHash     string `json:"tx_hash,omitempty"`
 	AccountId  string `json:"account_id,omitempty"`
+	TxHash     string `json:"tx_hash,omitempty"`
 	Ledger     uint32 `json:"ledger,omitempty"`
 	EntryType  string `json:"entry_type,omitempty"`
 	KeyXdr     []byte `json:"key_xdr,omitempty"`

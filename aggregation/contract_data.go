@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/decentrio/soro-book/database/models"
+	"github.com/stellar/go/strkey"
 )
 
 func (as *Aggregation) contractDataEntryProcessing() {
@@ -51,19 +52,26 @@ func (tw TransactionWrapper) GetModelsContractDataEntry() []models.Contract {
 				keyBz, _ := entry.Key.MarshalBinary()
 				valBz, _ := entry.Val.MarshalBinary()
 				var contractId string
+				var err error
 				if entry.Contract.ContractId != nil {
-					contractId = (*entry.Contract.ContractId).HexString()
+					contractId, err = strkey.Encode(strkey.VersionByteContract, entry.Contract.ContractId[:])
+					if err != nil {
+						continue
+					}
 				}
 
 				var accountId string
 				if entry.Contract.AccountId != nil {
-					accountId = (*entry.Contract.AccountId).Address()
+					accountId, err = entry.Contract.AccountId.GetAddress()
+					if err != nil {
+						continue
+					}
 				}
 
 				entry := models.Contract{
 					ContractId: contractId,
-					TxHash:     tw.GetTransactionHash(),
 					AccountId:  accountId,
+					TxHash:     tw.GetTransactionHash(),
 					Ledger:     tw.GetLedgerSequence(),
 					EntryType:  entryType,
 					KeyXdr:     keyBz,

@@ -118,38 +118,3 @@ func getLedgerFromCloseMeta(ledgerCloseMeta xdr.LedgerCloseMeta) models.Ledger {
 		Sequence: ledgerCloseMeta.LedgerSequence(),
 	}
 }
-
-func ContractDataEntry(c xdr.LedgerEntryChange) (xdr.ContractDataEntry, string, bool) {
-	var result xdr.ContractDataEntry
-
-	switch c.Type {
-	case xdr.LedgerEntryChangeTypeLedgerEntryCreated:
-		created := *c.Created
-		if created.Data.ContractData != nil {
-			result = *created.Data.ContractData
-			return result, "created", true
-		}
-	case xdr.LedgerEntryChangeTypeLedgerEntryUpdated:
-		updated := *c.Updated
-		if updated.Data.ContractData != nil {
-			result = *updated.Data.ContractData
-			return result, "updated", true
-		}
-	case xdr.LedgerEntryChangeTypeLedgerEntryRemoved:
-		ledgerKey := c.Removed
-		if ledgerKey.ContractData != nil {
-			result.Contract = ledgerKey.ContractData.Contract
-			result.Key = ledgerKey.ContractData.Key
-			result.Durability = ledgerKey.ContractData.Durability
-			return result, "removed", true
-		}
-	case xdr.LedgerEntryChangeTypeLedgerEntryState:
-		state := *c.State
-		if state.Data.ContractData != nil {
-			result = *state.Data.ContractData
-			return result, "state", true
-		}
-
-	}
-	return result, "", false
-}

@@ -123,7 +123,7 @@ func (as *Aggregation) aggregation() {
 		default:
 			as.getNewLedger()
 		}
-		time.Sleep(time.Millisecond)
+		time.Sleep(time.Second)
 	}
 }
 

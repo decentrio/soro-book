@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/decentrio/soro-book/config"
+	cfg "github.com/decentrio/soro-book/config"
+	"github.com/decentrio/soro-book/lib/cli"
 	"github.com/decentrio/soro-book/lib/log"
 	"github.com/decentrio/soro-book/manager"
 	"github.com/spf13/cobra"
@@ -31,9 +33,11 @@ func NewRunNodeCmd() *cobra.Command {
 		Use:     "start",
 		Aliases: []string{"node", "run"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO: We need to read config
-			cfg := &config.ManagerConfig{}
-			m := manager.DefaultNewManager(cfg, logger)
+			config, err := ParseConfig(cmd)
+			if err != nil {
+				return err
+			}
+			m := manager.DefaultNewManager(config, logger)
 
 			if err := m.Start(); err != nil {
 				return fmt.Errorf("failed to start node: %w", err)
@@ -59,4 +63,73 @@ func NewRunNodeCmd() *cobra.Command {
 	}
 
 	return cmd
+}
+
+// ParseConfig retrieves the default environment configuration,
+// sets up the CometBFT root and ensures that the root exists
+func ParseConfig(cmd *cobra.Command) (*cfg.Config, error) {
+	conf := cfg.DefaultConfig()
+
+	home, err := cmd.Flags().GetString(cli.HomeFlag)
+	if err != nil {
+		return nil, err
+	}
+
+	conf.RootDir = home
+	conf.SetRoot(conf.RootDir)
+
+	var managerConfig cfg.ManagerConfig
+	managerConfigFile := conf.ManagerConfigFile()
+	if FileExists(managerConfigFile) {
+		managerConfig = LoadManagerConfig(managerConfigFile)
+	} else {
+		managerConfig = cfg.DefaultManagerConfig()
+	}
+	conf.ManagerCfg = &managerConfig
+
+	var aggregationConfig cfg.AggregationConfig
+	aggregationConfigFile := conf.AggregationConfigFile()
+	if FileExists(aggregationConfigFile) {
+		aggregationConfig = LoadAggregationConfig(aggregationConfigFile)
+	} else {
+		aggregationConfig = cfg.DefaultAggregationConfig()
+	}
+	conf.AggregationCfg = &aggregationConfig
+
+	return conf, nil
+}
+
+func LoadManagerConfig(path string) cfg.ManagerConfig {
+	bz, err := os.ReadFile(path)
+	if err != nil {
+		os.Exit(1)
+	}
+
+	var config cfg.ManagerConfig
+	err = json.Unmarshal(bz, &config)
+	if err != nil {
+		os.Exit(1)
+	}
+
+	return config
+}
+
+func LoadAggregationConfig(path string) cfg.AggregationConfig {
+	bz, err := os.ReadFile(path)
+	if err != nil {
+		os.Exit(1)
+	}
+
+	var config cfg.AggregationConfig
+	err = json.Unmarshal(bz, &config)
+	if err != nil {
+		os.Exit(1)
+	}
+
+	return config
+}
+
+func FileExists(filePath string) bool {
+	_, err := os.Stat(filePath)
+	return !os.IsNotExist(err)
 }

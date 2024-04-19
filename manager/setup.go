@@ -7,8 +7,7 @@ import (
 	"github.com/decentrio/soro-book/config"
 )
 
-func DefaultNewManager(cfg *config.ManagerConfig, logger log.Logger) *Manager {
-	asConfig := &config.AggregationConfig{}
-	as := aggregation.NewAggregation(asConfig, logger)
-	return NewManager(cfg, as, logger)
+func DefaultNewManager(cfg *config.Config, logger log.Logger) *Manager {
+	as := aggregation.NewAggregation(cfg.AggregationCfg, logger)
+	return NewManager(cfg.ManagerCfg, as, logger)
 }

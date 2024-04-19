@@ -12,8 +12,7 @@ import (
 
 func (as *Aggregation) contractDataEntryProcessing() {
 	for {
-		// Block until state have sync successful
-		if as.isReSync {
+		if as.state != CONTRACT {
 			continue
 		}
 

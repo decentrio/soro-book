@@ -11,13 +11,19 @@ import (
 	"github.com/stellar/go/xdr"
 )
 
+type LedgerWrapper struct {
+	ledger models.Ledger
+	txs    []TransactionWrapper
+}
+
 func (as *Aggregation) getNewLedger() {
-	from := as.sequence
-	to := as.sequence + prepareStep
+	from := as.startLedgerSeq
+	to := as.startLedgerSeq + as.prepareStep
 	ledgerRange := backends.BoundedRange(from, to)
 	err := as.backend.PrepareRange(as.ctx, ledgerRange)
 	if err != nil {
 		//"is greater than max available in history archives"
+		as.prepareStep = 1
 		time.Sleep(time.Second)
 		return
 	}
@@ -36,7 +42,7 @@ func (as *Aggregation) getNewLedger() {
 		var operations = uint32(0)
 		// get tx
 		txReader, err := ingest.NewLedgerTransactionReader(
-			as.ctx, as.backend, Config.NetworkPassphrase, seq,
+			as.ctx, as.backend, as.cfg.NetworkPassphrase, seq,
 		)
 		panicIf(err)
 		defer txReader.Close()
@@ -72,14 +78,13 @@ func (as *Aggregation) getNewLedger() {
 			as.ledgerQueue <- lwi
 		}(lw)
 	}
-	as.sequence = to
+	as.startLedgerSeq = to
 }
 
 // aggregation process
 func (as *Aggregation) ledgerProcessing() {
 	for {
-		// Block until state have sync successful
-		if as.isReSync {
+		if as.state != LEDGER {
 			continue
 		}
 
@@ -87,6 +92,8 @@ func (as *Aggregation) ledgerProcessing() {
 		// Receive a new tx
 		case ledger := <-as.ledgerQueue:
 			as.handleReceiveNewLedger(ledger)
+			as.state = TX
+			as.currLedgerSeq = ledger.ledger.Seq
 		// Terminate process
 		case <-as.BaseService.Terminate():
 			return

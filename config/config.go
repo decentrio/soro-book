@@ -50,9 +50,11 @@ func DefaultManagerConfig() ManagerConfig {
 }
 
 type AggregationConfig struct {
-	archiveURL        string
-	networkPassphrase string
-	toml              *ledgerbackend.CaptiveCoreToml
+	ArchiveURL        string
+	NetworkPassphrase string
+	BinaryPath        string
+	Core              *ledgerbackend.CaptiveCoreToml
+	LedgerHeight      uint64
 }
 
 func DefaultAggregationConfig() AggregationConfig {

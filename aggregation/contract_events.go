@@ -34,8 +34,7 @@ var (
 // aggregation process
 func (as *Aggregation) contractEventsProcessing() {
 	for {
-		// Block until state have sync successful
-		if as.isReSync {
+		if as.state != CONTRACT {
 			continue
 		}
 

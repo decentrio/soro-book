@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
@@ -67,7 +66,7 @@ func NewRunNodeCmd() *cobra.Command {
 
 // ParseConfig retrieves the default environment configuration,
 // sets up the CometBFT root and ensures that the root exists
-func ParseConfig(cmd *cobra.Command) (*cfg.Config, error) {
+func ParseConfig(cmd *cobra.Command) (*cfg.ManagerConfig, error) {
 	conf := cfg.DefaultConfig()
 
 	home, err := cmd.Flags().GetString(cli.HomeFlag)
@@ -78,58 +77,19 @@ func ParseConfig(cmd *cobra.Command) (*cfg.Config, error) {
 	conf.RootDir = home
 	conf.SetRoot(conf.RootDir)
 
-	var managerConfig cfg.ManagerConfig
 	managerConfigFile := conf.ManagerConfigFile()
-	if FileExists(managerConfigFile) {
-		managerConfig = LoadManagerConfig(managerConfigFile)
-	} else {
-		managerConfig = cfg.DefaultManagerConfig()
+	if cfg.FileExists(managerConfigFile) {
+		conf.LoadManagerConfig(managerConfigFile)
 	}
-	conf.ManagerCfg = &managerConfig
 
 	var aggregationConfig cfg.AggregationConfig
 	aggregationConfigFile := conf.AggregationConfigFile()
-	if FileExists(aggregationConfigFile) {
-		aggregationConfig = LoadAggregationConfig(aggregationConfigFile)
+	if cfg.FileExists(aggregationConfigFile) {
+		aggregationConfig = cfg.LoadAggregationConfig(aggregationConfigFile)
 	} else {
 		aggregationConfig = cfg.DefaultAggregationConfig()
 	}
 	conf.AggregationCfg = &aggregationConfig
 
 	return conf, nil
-}
-
-func LoadManagerConfig(path string) cfg.ManagerConfig {
-	bz, err := os.ReadFile(path)
-	if err != nil {
-		os.Exit(1)
-	}
-
-	var config cfg.ManagerConfig
-	err = json.Unmarshal(bz, &config)
-	if err != nil {
-		os.Exit(1)
-	}
-
-	return config
-}
-
-func LoadAggregationConfig(path string) cfg.AggregationConfig {
-	bz, err := os.ReadFile(path)
-	if err != nil {
-		os.Exit(1)
-	}
-
-	var config cfg.AggregationConfig
-	err = json.Unmarshal(bz, &config)
-	if err != nil {
-		os.Exit(1)
-	}
-
-	return config
-}
-
-func FileExists(filePath string) bool {
-	_, err := os.Stat(filePath)
-	return !os.IsNotExist(err)
 }

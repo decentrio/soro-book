@@ -6,17 +6,15 @@ import (
 	"github.com/stellar/go/ingest/ledgerbackend"
 )
 
-func CaptiveCoreConfig(archiveURLs []string, networkPassphrase string, binaryPath string, core *ledgerbackend.CaptiveCoreToml) ledgerbackend.CaptiveCoreConfig {
+func CaptiveCoreConfig(archiveURLs []string, networkPassphrase string, binaryPath string) ledgerbackend.CaptiveCoreConfig {
 	captiveCoreToml, err := ledgerbackend.NewCaptiveCoreToml(ledgerbackend.CaptiveCoreTomlParams{
 		NetworkPassphrase:  networkPassphrase,
 		HistoryArchiveURLs: archiveURLs,
 	})
 	panicIf(err)
 
-	if core == nil {
-		core, err = captiveCoreToml.CatchupToml()
-		panicIf(err)
-	}
+	core, err := captiveCoreToml.CatchupToml()
+	panicIf(err)
 
 	return ledgerbackend.CaptiveCoreConfig{
 		// Change these based on your environment:

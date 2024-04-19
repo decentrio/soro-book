@@ -47,7 +47,7 @@ func (as *Aggregation) getNewLedger() {
 		var operations = uint32(0)
 		// get tx
 		txReader, err := ingest.NewLedgerTransactionReader(
-			as.ctx, as.backend, as.cfg.NetworkPassphrase, seq,
+			as.ctx, as.backend, as.Cfg.NetworkPassphrase, seq,
 		)
 		panicIf(err)
 		defer txReader.Close()
@@ -96,7 +96,7 @@ func (as *Aggregation) ledgerProcessing() {
 		case ledger := <-as.ledgerQueue:
 			as.handleReceiveNewLedger(ledger)
 			as.state = TX
-			as.currLedgerSeq = ledger.ledger.Seq
+			as.CurrLedgerSeq = ledger.ledger.Seq
 		// Terminate process
 		case <-as.BaseService.Terminate():
 			return

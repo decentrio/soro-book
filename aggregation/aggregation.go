@@ -32,7 +32,7 @@ type Aggregation struct {
 	service.BaseService
 
 	ctx     context.Context
-	cfg     *config.AggregationConfig
+	Cfg     *config.AggregationConfig
 	backend *backends.CaptiveStellarCore
 
 	// txQueue channel for trigger new tx
@@ -49,7 +49,7 @@ type Aggregation struct {
 
 	state          State
 	startLedgerSeq uint32
-	currLedgerSeq  uint32
+	CurrLedgerSeq  uint32
 
 	db *db.DBHandler
 }
@@ -63,7 +63,7 @@ func NewAggregation(
 	options ...AggregationOption,
 ) *Aggregation {
 	as := &Aggregation{
-		cfg:                      cfg,
+		Cfg:                      cfg,
 		ledgerQueue:              make(chan LedgerWrapper, QueueSize),
 		txQueue:                  make(chan TransactionWrapper, QueueSize),
 		assetContractEventsQueue: make(chan models.StellarAssetContractEvent, QueueSize),
@@ -85,12 +85,12 @@ func NewAggregation(
 
 	as.ctx = context.Background()
 
-	Config := CaptiveCoreConfig([]string{as.cfg.ArchiveURL}, as.cfg.NetworkPassphrase, as.cfg.BinaryPath, nil)
+	Config := CaptiveCoreConfig([]string{as.Cfg.ArchiveURL}, as.Cfg.NetworkPassphrase, as.Cfg.BinaryPath)
 	log := stellar_log.New()
 	log.SetLevel(logrus.ErrorLevel)
 	Config.Log = log
 
-	as.startLedgerSeq = uint32(as.cfg.LedgerHeight)
+	as.startLedgerSeq = uint32(as.Cfg.LedgerHeight)
 
 	var err error
 	as.backend, err = backends.NewCaptive(Config)
@@ -114,6 +114,7 @@ func (as *Aggregation) OnStart() error {
 func (as *Aggregation) OnStop() error {
 	as.Logger.Info("Stop")
 	as.backend.Close()
+
 	return nil
 }
 

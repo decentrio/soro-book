@@ -1,7 +1,9 @@
 package config
 
 import (
+	"fmt"
 	"path/filepath"
+	"runtime"
 
 	"github.com/stellar/go/ingest/ledgerbackend"
 )
@@ -58,5 +60,21 @@ type AggregationConfig struct {
 }
 
 func DefaultAggregationConfig() AggregationConfig {
-	return AggregationConfig{}
+	var binaryPath string
+	os := runtime.GOOS
+	switch os {
+	case "darwin":
+		binaryPath = "../bin/stellar-core-mac"
+	case "linux":
+		binaryPath = "../bin/stellar-core-linux"
+	default:
+		fmt.Printf("%s.\n", os)
+	}
+
+	return AggregationConfig{
+		ArchiveURL:        "https://history.stellar.org/prd/core-testnet/core_testnet_002",
+		NetworkPassphrase: "Test SDF Network ; September 2015",
+		BinaryPath:        binaryPath,
+		LedgerHeight:      2,
+	}
 }

@@ -23,6 +23,7 @@ func (as *Aggregation) contractDataEntryProcessing() {
 		// Terminate process
 		case <-as.BaseService.Terminate():
 			return
+		default:
 		}
 		time.Sleep(time.Millisecond)
 	}

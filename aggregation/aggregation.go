@@ -31,9 +31,8 @@ const (
 type Aggregation struct {
 	service.BaseService
 
-	ctx context.Context
-	cfg *config.AggregationConfig
-
+	ctx     context.Context
+	cfg     *config.AggregationConfig
 	backend *backends.CaptiveStellarCore
 
 	// txQueue channel for trigger new tx
@@ -127,7 +126,7 @@ func (as *Aggregation) aggregation() {
 		default:
 			as.getNewLedger()
 		}
-		time.Sleep(time.Microsecond)
+		time.Sleep(time.Millisecond)
 	}
 }
 

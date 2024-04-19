@@ -23,8 +23,13 @@ func (as *Aggregation) getNewLedger() {
 	err := as.backend.PrepareRange(as.ctx, ledgerRange)
 	if err != nil {
 		//"is greater than max available in history archives"
-		as.prepareStep = 1
-		time.Sleep(time.Second)
+		fmt.Println("Error Prepare")
+		if as.prepareStep > 1 {
+			as.prepareStep = as.prepareStep / 2
+		} else {
+			as.prepareStep = 1
+		}
+		time.Sleep(time.Millisecond)
 		return
 	}
 	for seq := from; seq < to; seq++ {
@@ -73,10 +78,7 @@ func (as *Aggregation) getNewLedger() {
 			ledger: ledger,
 			txs:    txWrappers,
 		}
-
-		go func(lwi LedgerWrapper) {
-			as.ledgerQueue <- lwi
-		}(lw)
+		as.ledgerQueue <- lw
 	}
 	as.startLedgerSeq = to
 }
@@ -85,6 +87,7 @@ func (as *Aggregation) getNewLedger() {
 func (as *Aggregation) ledgerProcessing() {
 	for {
 		if as.state != LEDGER {
+			// fmt.Println(as.state)
 			continue
 		}
 
@@ -97,6 +100,7 @@ func (as *Aggregation) ledgerProcessing() {
 		// Terminate process
 		case <-as.BaseService.Terminate():
 			return
+		default:
 		}
 		time.Sleep(time.Millisecond)
 	}
@@ -112,9 +116,7 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 
 	// Create Tx and Soroban events
 	for _, tw := range lw.txs {
-		go func(twi TransactionWrapper) {
-			as.txQueue <- twi
-		}(tw)
+		as.txQueue <- tw
 	}
 }
 

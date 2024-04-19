@@ -6,7 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/decentrio/soro-book/config"
+	cfg "github.com/decentrio/soro-book/config"
+	"github.com/decentrio/soro-book/lib/cli"
 	"github.com/decentrio/soro-book/lib/log"
 	"github.com/decentrio/soro-book/manager"
 	"github.com/spf13/cobra"
@@ -31,9 +32,11 @@ func NewRunNodeCmd() *cobra.Command {
 		Use:     "start",
 		Aliases: []string{"node", "run"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO: We need to read config
-			cfg := &config.ManagerConfig{}
-			m := manager.DefaultNewManager(cfg, logger)
+			config, err := ParseConfig(cmd)
+			if err != nil {
+				return err
+			}
+			m := manager.DefaultNewManager(config, logger)
 
 			if err := m.Start(); err != nil {
 				return fmt.Errorf("failed to start node: %w", err)
@@ -59,4 +62,34 @@ func NewRunNodeCmd() *cobra.Command {
 	}
 
 	return cmd
+}
+
+// ParseConfig retrieves the default environment configuration,
+// sets up the CometBFT root and ensures that the root exists
+func ParseConfig(cmd *cobra.Command) (*cfg.ManagerConfig, error) {
+	conf := cfg.DefaultConfig()
+
+	home, err := cmd.Flags().GetString(cli.HomeFlag)
+	if err != nil {
+		return nil, err
+	}
+
+	conf.RootDir = home
+	conf.SetRoot(conf.RootDir)
+
+	managerConfigFile := conf.ManagerConfigFile()
+	if cfg.FileExists(managerConfigFile) {
+		conf.LoadManagerConfig(managerConfigFile)
+	}
+
+	var aggregationConfig cfg.AggregationConfig
+	aggregationConfigFile := conf.AggregationConfigFile()
+	if cfg.FileExists(aggregationConfigFile) {
+		aggregationConfig = cfg.LoadAggregationConfig(aggregationConfigFile)
+	} else {
+		aggregationConfig = cfg.DefaultAggregationConfig()
+	}
+	conf.AggregationCfg = &aggregationConfig
+
+	return conf, nil
 }

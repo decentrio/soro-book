@@ -12,8 +12,7 @@ import (
 
 func (as *Aggregation) contractDataEntryProcessing() {
 	for {
-		// Block until state have sync successful
-		if as.isReSync {
+		if as.state != CONTRACT {
 			continue
 		}
 
@@ -24,6 +23,7 @@ func (as *Aggregation) contractDataEntryProcessing() {
 		// Terminate process
 		case <-as.BaseService.Terminate():
 			return
+		default:
 		}
 		time.Sleep(time.Millisecond)
 	}

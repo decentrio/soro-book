@@ -8,7 +8,6 @@ import (
 )
 
 func DefaultNewManager(cfg *config.ManagerConfig, logger log.Logger) *Manager {
-	asConfig := &config.AggregationConfig{}
-	as := aggregation.NewAggregation(asConfig, logger)
+	as := aggregation.NewAggregation(cfg.AggregationCfg, logger)
 	return NewManager(cfg, as, logger)
 }

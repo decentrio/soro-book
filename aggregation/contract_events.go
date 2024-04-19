@@ -34,8 +34,7 @@ var (
 // aggregation process
 func (as *Aggregation) contractEventsProcessing() {
 	for {
-		// Block until state have sync successful
-		if as.isReSync {
+		if as.state != CONTRACT {
 			continue
 		}
 
@@ -73,7 +72,6 @@ func (as *Aggregation) contractEventsProcessing() {
 					as.Logger.Error(fmt.Sprintf("Error create asset contract burn event tx %s: %s", burnEvent.TxHash, err.Error()))
 				}
 			}
-			// as.handleReceiveNewLedger(ledger)
 		case event := <-as.wasmContractEventsQueue:
 			// Create WasmContractEvents
 			_, err := as.db.CreateWasmContractEvent(&event)
@@ -83,6 +81,7 @@ func (as *Aggregation) contractEventsProcessing() {
 		// Terminate process
 		case <-as.BaseService.Terminate():
 			return
+		default:
 		}
 		time.Sleep(time.Millisecond)
 	}

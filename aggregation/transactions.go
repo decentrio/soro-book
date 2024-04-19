@@ -16,18 +16,29 @@ const (
 
 func (as *Aggregation) transactionProcessing() {
 	for {
-		// Block until state have sync successful
-		if as.isReSync {
+		if as.state == CONTRACT {
+			if len(as.assetContractEventsQueue) == 0 && len(as.wasmContractEventsQueue) == 0 && len(as.contractDataEntrysQueue) == 0 {
+				as.state = TX
+			}
+		}
+
+		if as.state != TX {
 			continue
+		}
+
+		if len(as.txQueue) == 0 {
+			as.state = LEDGER
 		}
 
 		select {
 		// Receive a new tx
 		case tx := <-as.txQueue:
 			as.handleReceiveNewTransaction(tx)
+			as.state = CONTRACT
 		// Terminate process
 		case <-as.BaseService.Terminate():
 			return
+		default:
 		}
 		time.Sleep(time.Millisecond)
 	}
@@ -43,9 +54,7 @@ func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
 	// Contract entry
 	entries := tw.GetModelsContractDataEntry()
 	for _, entry := range entries {
-		go func(e models.Contract) {
-			as.contractDataEntrysQueue <- e
-		}(entry)
+		as.contractDataEntrysQueue <- entry
 	}
 
 	wasmEvent, assetEvent, err := tw.GetContractEvents()
@@ -54,15 +63,11 @@ func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
 	}
 	// Soroban stellar asset events
 	for _, e := range assetEvent {
-		go func(ae models.StellarAssetContractEvent) {
-			as.assetContractEventsQueue <- ae
-		}(e)
+		as.assetContractEventsQueue <- e
 	}
 	// Soroban wasm contract events
 	for _, e := range wasmEvent {
-		go func(we models.WasmContractEvent) {
-			as.wasmContractEventsQueue <- we
-		}(e)
+		as.wasmContractEventsQueue <- e
 	}
 }
 

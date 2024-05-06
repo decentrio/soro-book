@@ -75,10 +75,10 @@ func DefaultAggregationConfig() AggregationConfig {
 	}
 
 	return AggregationConfig{
-		ArchiveURL:        "https://history.stellar.org/prd/core-testnet/core_testnet_002",
-		NetworkPassphrase: "Test SDF Network ; September 2015",
+		ArchiveURL:        "https://history.stellar.org/prd/core-live/core_live_001/",
+		NetworkPassphrase: "Public Global Stellar Network ; September 2015",
 		BinaryPath:        binaryPath,
-		LedgerHeight:      1193200,
+		LedgerHeight:      2,
 	}
 }
 

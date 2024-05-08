@@ -5,6 +5,7 @@
 Sorobook is an indexing service for stellar soroban platforms. It indexes soroban transactions and soroban events which is served in friendly json-format data via a grpc server.
 
 This repository contains the source code for the data aggregation process:
+
     1. Fetching ledger data from stellar node
     2. Processing ledger data into usable soroban data
     3. Pushing soroban data into postgres backend

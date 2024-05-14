@@ -19,6 +19,7 @@ func (as *Aggregation) transactionProcessing() {
 		if as.state == CONTRACT {
 			if len(as.assetContractEventsQueue) == 0 && len(as.wasmContractEventsQueue) == 0 && len(as.contractDataEntrysQueue) == 0 {
 				as.state = TX
+				as.Logger.Info(fmt.Sprintf("state transition state: %s", as.state))
 			}
 		}
 
@@ -28,13 +29,17 @@ func (as *Aggregation) transactionProcessing() {
 
 		if len(as.txQueue) == 0 {
 			as.state = LEDGER
+			as.Logger.Info(fmt.Sprintf("state transition state: %s", as.state))
 		}
 
 		select {
 		// Receive a new tx
 		case tx := <-as.txQueue:
+			as.Logger.Info("getting new Tx")
 			as.handleReceiveNewTransaction(tx)
+
 			as.state = CONTRACT
+			as.Logger.Info(fmt.Sprintf("state transition state: %s", as.state))
 		// Terminate process
 		case <-as.BaseService.Terminate():
 			return

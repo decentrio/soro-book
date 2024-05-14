@@ -19,6 +19,7 @@ func (as *Aggregation) contractDataEntryProcessing() {
 		select {
 		// Receive a new tx
 		case e := <-as.contractDataEntrysQueue:
+			as.Logger.Info("Getting new contract data entry")
 			as.handleReceiveNewContractDataEntry(e)
 		// Terminate process
 		case <-as.BaseService.Terminate():

@@ -80,25 +80,27 @@ type TransactionWrapper struct {
 	LedgerSequence uint32
 	Tx             ingest.LedgerTransaction
 	Ops            []transactionOperationWrapper
+	ProcessedAt    uint64
 }
 
-func NewTransactionWrapper(tx ingest.LedgerTransaction, seq uint32) TransactionWrapper {
+func NewTransactionWrapper(tx ingest.LedgerTransaction, ledgerSeq uint32, processedUnixTime uint64) TransactionWrapper {
 	var ops []transactionOperationWrapper
 	for opi, op := range tx.Envelope.Operations() {
 		operation := transactionOperationWrapper{
 			index:          uint32(opi),
 			txIndex:        tx.Index,
 			operation:      op,
-			ledgerSequence: seq,
+			ledgerSequence: ledgerSeq,
 		}
 
 		ops = append(ops, operation)
 	}
 
 	return TransactionWrapper{
-		LedgerSequence: seq,
+		LedgerSequence: ledgerSeq,
 		Tx:             tx,
 		Ops:            ops,
+		ProcessedAt:    processedUnixTime,
 	}
 }
 

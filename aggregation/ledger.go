@@ -64,7 +64,7 @@ func (as *Aggregation) getNewLedger() {
 				as.Logger.Error(fmt.Sprintf("Error txReader %s", err.Error()))
 			}
 
-			txWrapper := NewTransactionWrapper(tx, seq)
+			txWrapper := NewTransactionWrapper(tx, seq, ledger.CreatedAt)
 			txWrappers = append(txWrappers, txWrapper)
 
 			operations += uint32(len(tx.Envelope.Operations()))
@@ -124,9 +124,22 @@ func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 }
 
 func getLedgerFromCloseMeta(ledgerCloseMeta xdr.LedgerCloseMeta) models.Ledger {
+	var ledgerHeader xdr.LedgerHeaderHistoryEntry
+	switch ledgerCloseMeta.V {
+	case 0:
+		ledgerHeader = ledgerCloseMeta.MustV0().LedgerHeader
+	case 1:
+		ledgerHeader = ledgerCloseMeta.MustV1().LedgerHeader
+	default:
+		panic(fmt.Sprintf("Unsupported LedgerCloseMeta.V: %d", ledgerCloseMeta.V))
+	}
+
+	timeStamp := uint64(ledgerHeader.Header.ScpValue.CloseTime)
+
 	return models.Ledger{
-		Hash:     ledgerCloseMeta.LedgerHash().HexString(),
-		PrevHash: ledgerCloseMeta.PreviousLedgerHash().HexString(),
-		Seq:      ledgerCloseMeta.LedgerSequence(),
+		Hash:      ledgerCloseMeta.LedgerHash().HexString(),
+		PrevHash:  ledgerCloseMeta.PreviousLedgerHash().HexString(),
+		Seq:       ledgerCloseMeta.LedgerSequence(),
+		CreatedAt: timeStamp,
 	}
 }

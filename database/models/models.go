@@ -13,6 +13,7 @@ type Ledger struct {
 	Seq          uint32 `json:"seq,omitempty"`
 	Transactions uint32 `json:"transaction,omitempty"`
 	Operations   uint32 `json:"operations,omitempty"`
+	CreatedAt    uint64 `json:"created_at,omitempty"`
 }
 
 type Transaction struct {

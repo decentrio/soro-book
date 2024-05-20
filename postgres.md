@@ -1,8 +1,7 @@
 # PostgresQL setup
 
-First, install postgresql via package manager
+First, install postgresql via package manager. This is example of installing postgres on Ubuntu OS.
 
-- For Ubuntu / Debian
 ```bash
 sudo apt install curl ca-certificates
 sudo install -d /usr/share/postgresql-common/pgdg
@@ -12,7 +11,7 @@ sudo apt update
 sudo apt -y install postgresql
 ```
 
-After that, we will need to adjust settings in `postgresql.conf` set `listen_addresses` to '*' so the database will listen to all hosts
+After that, we will need to adjust settings in `postgresql.conf` set `listen_addresses` to '*' so the database will listen to all hosts. If you want postgres to listen to only internal host, leave the param as default, or set to `localhost`.
 ```
 #------------------------------------------------------------------------------
 # CONNECTIONS AND AUTHENTICATION
@@ -23,31 +22,25 @@ After that, we will need to adjust settings in `postgresql.conf` set `listen_add
 listen_addresses = '*'                  # what IP address(es) to listen on;
 ```
 
+We will setup user `postgres` for the database, and use `soroban` as the database name and you can change the user and the database if you want. Go to `pg_hba.conf` and add authentication record for database `soroban`:
+
 ```
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 ...
 host    soroban         postgres        all                     scram-sha-256
 ```
 
-Then, log in with user `postgres`:
+Then, log in with user `postgres` to setup the database `soroban`:
 ```bash
 su postgres
-```
-create databse `soroban`:
-```bash
 createdb soroban
-```	
-then coonect to the server: 
-```bash
 psql -d soroban
 ```
 
-change password:
-```
+Inside the database, you can change password of user `postgres` and create tables:
+```sql
 ALTER USER postgres WITH PASSWORD '<your-password>;'
 ```
- then run the sql commands:
-
 
 ```sql
 create table ledgers(
@@ -156,5 +149,7 @@ create index idx_contract_id on contracts(contract_id);
 
 Then we can check the data base connection:
 ```
-psql -h 65.109.112.144 -p 5432 -U postgres -d soroban
+psql -h <host-server> -p 5432 -U postgres -d soroban
 ```
+
+After successful postgres database setup, you can setup sorobook and connect to the database. Instructions are detailed in [sorobook.md](./sorobook.md).

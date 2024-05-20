@@ -90,14 +90,16 @@ func (as *Aggregation) ledgerProcessing() {
 			continue
 		}
 
+		if as.CurrLedgerSeq > 1042610 {
+			continue
+		}
+
 		select {
 		// Receive a new tx
 		case ledger := <-as.ledgerQueue:
-			as.Logger.Info("getting new ledgers")
 			as.handleReceiveNewLedger(ledger)
 
 			as.state = TX
-			as.Logger.Info(fmt.Sprintf("state transition state: %s", as.state))
 
 			as.CurrLedgerSeq = ledger.ledger.Seq
 		// Terminate process
@@ -112,10 +114,10 @@ func (as *Aggregation) ledgerProcessing() {
 // handleReceiveTx
 func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 	// Create Ledger
-	_, err := as.db.CreateLedger(&lw.ledger)
-	if err != nil {
-		as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", lw.ledger.Seq, err.Error()))
-	}
+	// _, err := as.db.CreateLedger(&lw.ledger)
+	// if err != nil {
+	// 	as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", lw.ledger.Seq, err.Error()))
+	// }
 
 	// Create Tx and Soroban events
 	for _, tw := range lw.txs {

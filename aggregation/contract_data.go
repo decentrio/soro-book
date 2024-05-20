@@ -1,7 +1,6 @@
 package aggregation
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/decentrio/soro-book/database/models"
@@ -19,7 +18,7 @@ func (as *Aggregation) contractDataEntryProcessing() {
 		select {
 		// Receive a new tx
 		case e := <-as.contractDataEntrysQueue:
-			as.Logger.Info("Getting new contract data entry")
+			as.Logger.Info("getting new contract data entry")
 			as.handleReceiveNewContractDataEntry(e)
 		// Terminate process
 		case <-as.BaseService.Terminate():
@@ -30,20 +29,21 @@ func (as *Aggregation) contractDataEntryProcessing() {
 	}
 }
 
-func (as *Aggregation) handleReceiveNewContractDataEntry(e models.Contract) {
-	_, err := as.db.CreateContractEntry(&e)
-	if err != nil {
-		as.Logger.Error(fmt.Sprintf("Error create contract data entry ledger %d tx %s: %s", e.Ledger, e.TxHash, err.Error()))
-	}
+func (as *Aggregation) handleReceiveNewContractDataEntry(e models.ContractData) {
+	// _, err := as.db.CreateContractEntry(&e)
+	// if err != nil {
+	// 	as.Logger.Error(fmt.Sprintf("Error create contract data entry ledger %d tx %s: %s", e.Ledger, e.TxHash, err.Error()))
+	// }
+
 }
 
-func (tw TransactionWrapper) GetModelsContractDataEntry() []models.Contract {
+func (tw TransactionWrapper) GetModelsContractDataEntry() []models.ContractData {
 	v3 := tw.Tx.UnsafeMeta.V3
 	if v3 == nil {
 		return nil
 	}
 
-	var entries []models.Contract
+	var entries []models.ContractData
 	for _, op := range v3.Operations {
 		for _, change := range op.Changes {
 			entry, entryType, found := ContractDataEntry(change)
@@ -75,7 +75,7 @@ func (tw TransactionWrapper) GetModelsContractDataEntry() []models.Contract {
 					}
 				}
 
-				entry := models.Contract{
+				entry := models.ContractData{
 					Id:         uuid.New().String(),
 					ContractId: contractId,
 					AccountId:  accountId,

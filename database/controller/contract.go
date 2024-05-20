@@ -10,7 +10,7 @@ import (
 
 func CreateContractEntry(h *handlers.DBHandler) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var dataItem models.Contract
+		var dataItem models.ContractData
 
 		if err := c.BindJSON(&dataItem); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

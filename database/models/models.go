@@ -27,12 +27,27 @@ type Transaction struct {
 	SourceAddress    string `json:"source_address,omitempty"`
 }
 
+type Contract struct {
+	CreatorAddress  string `json:"creator_address,omitempty"`
+	ContractAddress string `json:"contract_address,omitempty"`
+	ContractCode    string `json:"contract_code,omitempty"`
+	CreatedAt       uint32 `json:"created_at,omitempty"`
+}
+
+type IvokeHostFunctionTx struct {
+	Hash               string `json:"hash,omitempty"`
+	ContractAddress    string `json:"contract_address,omitempty"`
+	IvokeFunctionType  string `json:"ivoke_func_type,omitempty"`
+	FunctionName       string `json:"function_name,omitempty"`
+	InvokeContractArgs []byte `json:"invoke_contract_args,omitempty"`
+}
+
 type ScAddress struct {
 	AccountId  *string `json:"account_id,omitempty"`
 	ContractId *string `json:"contract_id,omitempty"`
 }
 
-type Contract struct {
+type ContractData struct {
 	Id         string `json:"id,omitempty"`
 	ContractId string `json:"contract_id,omitempty"`
 	AccountId  string `json:"account_id,omitempty"`

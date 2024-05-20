@@ -40,46 +40,46 @@ func (as *Aggregation) contractEventsProcessing() {
 
 		select {
 		// Receive a new tx
-		case event := <-as.assetContractEventsQueue:
-			as.Logger.Info("Getting new asset contract event")
-			eventType := event.GetType()
-			switch eventType {
-			case EventTypeTransfer:
-				// Create AssetContractTransferEvent
-				transferEvent := event.(*models.AssetContractTransferEvent)
-				_, err := as.db.CreateAssetContractTransferEvent(transferEvent)
-				if err != nil {
-					as.Logger.Error(fmt.Sprintf("Error create asset contract transfer event tx %s: %s", transferEvent.TxHash, err.Error()))
-				}
-			case EventTypeMint:
-				// Create AssetContractTransferEvent
-				mintEvent := event.(*models.AssetContractMintEvent)
-				_, err := as.db.CreateAssetContractMintEvent(mintEvent)
-				if err != nil {
-					as.Logger.Error(fmt.Sprintf("Error create asset contract mint event tx %s: %s", mintEvent.TxHash, err.Error()))
-				}
-			case EventTypeClawback:
-				// Create AssetContractTransferEvent
-				cbEvent := event.(*models.AssetContractClawbackEvent)
-				_, err := as.db.CreateAssetContractClawbackEvent(cbEvent)
-				if err != nil {
-					as.Logger.Error(fmt.Sprintf("Error create asset contract clawback event tx %s: %s", cbEvent.TxHash, err.Error()))
-				}
-			case EventTypeBurn:
-				// Create AssetContractTransferEvent
-				burnEvent := event.(*models.AssetContractBurnEvent)
-				_, err := as.db.CreateAssetContractBurnEvent(burnEvent)
-				if err != nil {
-					as.Logger.Error(fmt.Sprintf("Error create asset contract burn event tx %s: %s", burnEvent.TxHash, err.Error()))
-				}
-			}
-		case event := <-as.wasmContractEventsQueue:
-			// Create WasmContractEvents
-			as.Logger.Info("Getting new wasm contract event")
-			_, err := as.db.CreateWasmContractEvent(&event)
-			if err != nil {
-				as.Logger.Error(fmt.Sprintf("Error create wasm contract event tx %s: %s", event.TxHash, err.Error()))
-			}
+		// case event := <-as.assetContractEventsQueue:
+		// 	as.Logger.Info("getting new asset contract event")
+		// 	eventType := event.GetType()
+		// 	switch eventType {
+		// 	case EventTypeTransfer:
+		// 		// Create AssetContractTransferEvent
+		// 		transferEvent := event.(*models.AssetContractTransferEvent)
+		// 		_, err := as.db.CreateAssetContractTransferEvent(transferEvent)
+		// 		if err != nil {
+		// 			as.Logger.Error(fmt.Sprintf("Error create asset contract transfer event tx %s: %s", transferEvent.TxHash, err.Error()))
+		// 		}
+		// 	case EventTypeMint:
+		// 		// Create AssetContractTransferEvent
+		// 		mintEvent := event.(*models.AssetContractMintEvent)
+		// 		_, err := as.db.CreateAssetContractMintEvent(mintEvent)
+		// 		if err != nil {
+		// 			as.Logger.Error(fmt.Sprintf("Error create asset contract mint event tx %s: %s", mintEvent.TxHash, err.Error()))
+		// 		}
+		// 	case EventTypeClawback:
+		// 		// Create AssetContractTransferEvent
+		// 		cbEvent := event.(*models.AssetContractClawbackEvent)
+		// 		_, err := as.db.CreateAssetContractClawbackEvent(cbEvent)
+		// 		if err != nil {
+		// 			as.Logger.Error(fmt.Sprintf("Error create asset contract clawback event tx %s: %s", cbEvent.TxHash, err.Error()))
+		// 		}
+		// 	case EventTypeBurn:
+		// 		// Create AssetContractTransferEvent
+		// 		burnEvent := event.(*models.AssetContractBurnEvent)
+		// 		_, err := as.db.CreateAssetContractBurnEvent(burnEvent)
+		// 		if err != nil {
+		// 			as.Logger.Error(fmt.Sprintf("Error create asset contract burn event tx %s: %s", burnEvent.TxHash, err.Error()))
+		// 		}
+		// 	}
+		// case event := <-as.wasmContractEventsQueue:
+		// 	// Create WasmContractEvents
+		// 	as.Logger.Info("getting new wasm contract event")
+		// 	_, err := as.db.CreateWasmContractEvent(&event)
+		// 	if err != nil {
+		// 		as.Logger.Error(fmt.Sprintf("Error create wasm contract event tx %s: %s", event.TxHash, err.Error()))
+		// 	}
 		// Terminate process
 		case <-as.BaseService.Terminate():
 			return

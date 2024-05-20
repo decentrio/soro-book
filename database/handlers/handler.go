@@ -62,10 +62,10 @@ func (h *DBHandler) CreateAssetContractClawbackEvent(data *models.AssetContractC
 	return data.Id, nil
 }
 
-func (h *DBHandler) CreateContractEntry(data *models.Contract) (string, error) {
+func (h *DBHandler) CreateContractEntry(data *models.ContractData) (string, error) {
 	switch data.EntryType {
 	case "updated":
-		var oldData models.Contract
+		var oldData models.ContractData
 		if err := h.db.Table("contracts").
 			Where("contract_id = ?", data.ContractId).
 			Where("is_newest = ?", true).
@@ -80,7 +80,7 @@ func (h *DBHandler) CreateContractEntry(data *models.Contract) (string, error) {
 
 		break
 	case "removed":
-		var oldData models.Contract
+		var oldData models.ContractData
 		if err := h.db.Table("contracts").
 			Where("contract_id = ?", data.ContractId).
 			Where("is_newest = ?", true).

@@ -40,7 +40,7 @@ type Aggregation struct {
 	txQueue                  chan TransactionWrapper
 	assetContractEventsQueue chan models.StellarAssetContractEvent
 	wasmContractEventsQueue  chan models.WasmContractEvent
-	contractDataEntrysQueue  chan models.Contract
+	contractDataEntrysQueue  chan models.ContractData
 
 	// isReSync is flag represent if services is
 	// re-synchronize
@@ -68,7 +68,7 @@ func NewAggregation(
 		txQueue:                  make(chan TransactionWrapper, QueueSize),
 		assetContractEventsQueue: make(chan models.StellarAssetContractEvent, QueueSize),
 		wasmContractEventsQueue:  make(chan models.WasmContractEvent, QueueSize),
-		contractDataEntrysQueue:  make(chan models.Contract, QueueSize),
+		contractDataEntrysQueue:  make(chan models.ContractData, QueueSize),
 		state:                    LEDGER,
 		prepareStep:              DefaultPrepareStep,
 		isReSync:                 false,
@@ -81,7 +81,7 @@ func NewAggregation(
 
 	as.BaseService.SetLogger(logger.With("module", "aggregation"))
 
-	as.db = db.NewDBHandler()
+	// as.db = db.NewDBHandler()
 
 	as.ctx = context.Background()
 

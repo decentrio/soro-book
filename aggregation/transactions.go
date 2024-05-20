@@ -1,9 +1,11 @@
 package aggregation
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/decentrio/converter/converter"
 	"github.com/decentrio/soro-book/database/models"
 	"github.com/stellar/go/ingest"
 	"github.com/stellar/go/xdr"
@@ -19,7 +21,6 @@ func (as *Aggregation) transactionProcessing() {
 		if as.state == CONTRACT {
 			if len(as.assetContractEventsQueue) == 0 && len(as.wasmContractEventsQueue) == 0 && len(as.contractDataEntrysQueue) == 0 {
 				as.state = TX
-				as.Logger.Info(fmt.Sprintf("state transition state: %s", as.state))
 			}
 		}
 
@@ -29,17 +30,14 @@ func (as *Aggregation) transactionProcessing() {
 
 		if len(as.txQueue) == 0 {
 			as.state = LEDGER
-			as.Logger.Info(fmt.Sprintf("state transition state: %s", as.state))
 		}
 
 		select {
 		// Receive a new tx
 		case tx := <-as.txQueue:
-			as.Logger.Info("getting new Tx")
 			as.handleReceiveNewTransaction(tx)
 
 			as.state = CONTRACT
-			as.Logger.Info(fmt.Sprintf("state transition state: %s", as.state))
 		// Terminate process
 		case <-as.BaseService.Terminate():
 			return
@@ -50,16 +48,23 @@ func (as *Aggregation) transactionProcessing() {
 }
 
 func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
-	tx := tw.GetModelsTransaction()
-	_, err := as.db.CreateTransaction(tx)
-	if err != nil {
-		as.Logger.Error(fmt.Sprintf("Error create ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
-	}
+	// tx := tw.GetModelsTransaction()
+	// _, err := as.db.CreateTransaction(tx)
+	// if err != nil {
+	// 	as.Logger.Error(fmt.Sprintf("Error create ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
+	// }
+
+	evl, _ := converter.ConvertTransactionEnvelope(tw.Tx.Envelope)
+	bz, _ := json.Marshal(evl)
+
+	fmt.Printf("envelop: %s\n\n", bz)
 
 	// Contract entry
 	entries := tw.GetModelsContractDataEntry()
 	for _, entry := range entries {
-		as.contractDataEntrysQueue <- entry
+		// as.contractDataEntrysQueue <- entry
+		bz, _ := json.Marshal(entry)
+		fmt.Printf("entry: %s\n\n", bz)
 	}
 
 	wasmEvent, assetEvent, err := tw.GetContractEvents()
@@ -68,11 +73,15 @@ func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
 	}
 	// Soroban stellar asset events
 	for _, e := range assetEvent {
-		as.assetContractEventsQueue <- e
+		// as.assetContractEventsQueue <- e
+		bz, _ := json.Marshal(e)
+		fmt.Printf("assetEvent: %s\n\n", bz)
 	}
 	// Soroban wasm contract events
 	for _, e := range wasmEvent {
-		as.wasmContractEventsQueue <- e
+		// as.wasmContractEventsQueue <- e
+		bz, _ := json.Marshal(e)
+		fmt.Printf("wasmEvent: %s\n", bz)
 	}
 }
 

@@ -78,7 +78,7 @@ func DefaultAggregationConfig() AggregationConfig {
 		ArchiveURL:        "https://history.stellar.org/prd/core-live/core_live_001/",
 		NetworkPassphrase: "Public Global Stellar Network ; September 2015",
 		BinaryPath:        binaryPath,
-		LedgerHeight:      2,
+		LedgerHeight:      1042599,
 	}
 }
 

@@ -87,15 +87,18 @@ func (as *Aggregation) getNewLedger() {
 func (as *Aggregation) ledgerProcessing() {
 	for {
 		if as.state != LEDGER {
-			// fmt.Println(as.state)
 			continue
 		}
 
 		select {
 		// Receive a new tx
 		case ledger := <-as.ledgerQueue:
+			as.Logger.Info("getting new ledgers")
 			as.handleReceiveNewLedger(ledger)
+
 			as.state = TX
+			as.Logger.Info(fmt.Sprintf("state transition state: %s", as.state))
+
 			as.CurrLedgerSeq = ledger.ledger.Seq
 		// Terminate process
 		case <-as.BaseService.Terminate():

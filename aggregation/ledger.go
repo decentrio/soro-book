@@ -23,7 +23,7 @@ func (as *Aggregation) getNewLedger() {
 	err := as.backend.PrepareRange(as.ctx, ledgerRange)
 	if err != nil {
 		//"is greater than max available in history archives"
-		fmt.Println("Error Prepare")
+		as.Logger.Error(fmt.Sprintf("error prepare: %s", err.Error()))
 		if as.prepareStep > 1 {
 			as.prepareStep = as.prepareStep / 2
 		} else {
@@ -36,7 +36,7 @@ func (as *Aggregation) getNewLedger() {
 		// get ledger
 		ledgerCloseMeta, err := as.backend.GetLedger(as.ctx, seq)
 		if err != nil {
-			as.Logger.Error(fmt.Sprintf("Error GetLedger %s", err.Error()))
+			as.Logger.Error(fmt.Sprintf("error get ledger %s", err.Error()))
 			continue
 		}
 
@@ -61,7 +61,7 @@ func (as *Aggregation) getNewLedger() {
 			}
 
 			if err != nil {
-				as.Logger.Error(fmt.Sprintf("Error txReader %s", err.Error()))
+				as.Logger.Error(fmt.Sprintf("error txReader %s", err.Error()))
 			}
 
 			txWrapper := NewTransactionWrapper(tx, seq, ledger.CreatedAt)

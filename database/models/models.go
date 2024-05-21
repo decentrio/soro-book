@@ -25,6 +25,7 @@ type Transaction struct {
 	ResultXdr        []byte `json:"result_xdr,omitempty"`
 	ResultMetaXdr    []byte `json:"result_meta_xdr,omitempty"`
 	SourceAddress    string `json:"source_address,omitempty"`
+	ProcessedAt      uint64 `json:"processed_at,omitempty"`
 }
 
 type Contract struct {
@@ -34,12 +35,12 @@ type Contract struct {
 	CreatedAt       uint32 `json:"created_at,omitempty"`
 }
 
-type IvokeHostFunctionTx struct {
-	Hash               string `json:"hash,omitempty"`
-	ContractAddress    string `json:"contract_address,omitempty"`
-	IvokeFunctionType  string `json:"ivoke_func_type,omitempty"`
-	FunctionName       string `json:"function_name,omitempty"`
-	InvokeContractArgs []byte `json:"invoke_contract_args,omitempty"`
+type InvokeHostFunctionTx struct {
+	Hash            string `json:"hash,omitempty"`
+	ContractAddress string `json:"contract_address,omitempty"`
+	FunctionType    string `json:"func_type,omitempty"`
+	FunctionName    string `json:"function_name,omitempty"`
+	Args            []byte `json:"args,omitempty"`
 }
 
 type ScAddress struct {
@@ -48,16 +49,17 @@ type ScAddress struct {
 }
 
 type ContractData struct {
-	Id         string `json:"id,omitempty"`
-	ContractId string `json:"contract_id,omitempty"`
-	AccountId  string `json:"account_id,omitempty"`
-	TxHash     string `json:"tx_hash,omitempty"`
-	Ledger     uint32 `json:"ledger,omitempty"`
-	EntryType  string `json:"entry_type,omitempty"`
-	KeyXdr     []byte `json:"key_xdr,omitempty"`
-	ValueXdr   []byte `json:"value_xdr,omitempty"`
-	Durability int32  `json:"durability,omitempty"`
-	IsNewest   bool   `json:"is_newest,omitempty"`
+	Id            string `json:"id,omitempty"`
+	ContractId    string `json:"contract_id,omitempty"`
+	AccountId     string `json:"account_id,omitempty"`
+	TxHash        string `json:"tx_hash,omitempty"`
+	Ledger        uint32 `json:"ledger,omitempty"`
+	EntryType     string `json:"entry_type,omitempty"`
+	KeyXdr        []byte `json:"key_xdr,omitempty"`
+	ValueXdr      []byte `json:"value_xdr,omitempty"`
+	Durability    int32  `json:"durability,omitempty"`
+	IsNewest      bool   `json:"is_newest,omitempty"`
+	UpdatedLedger uint32 `json:"updated_ledger,omitempty"`
 }
 
 type Int128Parts struct {

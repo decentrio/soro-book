@@ -165,5 +165,6 @@ func (tw TransactionWrapper) GetModelsTransaction() *models.Transaction {
 		ResultXdr:        tw.GetResultXdr(),     // xdr.TransactionResultPair
 		ResultMetaXdr:    tw.GetResultMetaXdr(), //xdr.TransactionResultMeta
 		SourceAddress:    tw.Tx.Envelope.SourceAccount().ToAccountId().Address(),
+		ProcessedAt:      tw.ProcessedAt,
 	}
 }

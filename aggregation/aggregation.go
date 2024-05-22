@@ -81,7 +81,7 @@ func NewAggregation(
 
 	as.BaseService.SetLogger(logger.With("module", "aggregation"))
 
-	// as.db = db.NewDBHandler()
+	as.db = db.NewDBHandler()
 
 	as.ctx = context.Background()
 

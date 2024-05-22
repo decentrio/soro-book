@@ -13,7 +13,7 @@ type Ledger struct {
 	Seq          uint32 `json:"seq,omitempty"`
 	Transactions uint32 `json:"transaction,omitempty"`
 	Operations   uint32 `json:"operations,omitempty"`
-	CreatedAt    uint64 `json:"created_at,omitempty"`
+	LedgerTime   uint64 `json:"ledger_time,omitempty"`
 }
 
 type Transaction struct {
@@ -25,22 +25,22 @@ type Transaction struct {
 	ResultXdr        []byte `json:"result_xdr,omitempty"`
 	ResultMetaXdr    []byte `json:"result_meta_xdr,omitempty"`
 	SourceAddress    string `json:"source_address,omitempty"`
-	ProcessedAt      uint64 `json:"processed_at,omitempty"`
+	TransactionTime  uint64 `json:"transaction_time,omitempty"`
 }
 
 type Contract struct {
-	CreatorAddress  string `json:"creator_address,omitempty"`
-	ContractAddress string `json:"contract_address,omitempty"`
-	ContractCode    string `json:"contract_code,omitempty"`
-	CreatedAt       uint32 `json:"created_at,omitempty"`
+	CreatorAddress string `json:"creator_address,omitempty"`
+	ContractId     string `json:"contract_id,omitempty"`
+	ContractCode   string `json:"contract_code,omitempty"`
+	CreatedLedger  uint32 `json:"created_ledger,omitempty"`
 }
 
 type InvokeHostFunctionTx struct {
-	Hash            string `json:"hash,omitempty"`
-	ContractAddress string `json:"contract_address,omitempty"`
-	FunctionType    string `json:"func_type,omitempty"`
-	FunctionName    string `json:"function_name,omitempty"`
-	Args            []byte `json:"args,omitempty"`
+	Hash         string `json:"hash,omitempty"`
+	ContractId   string `json:"contract_id,omitempty"`
+	FunctionType string `json:"func_type,omitempty"`
+	FunctionName string `json:"function_name,omitempty"`
+	Args         []byte `json:"args,omitempty"`
 }
 
 type ScAddress struct {

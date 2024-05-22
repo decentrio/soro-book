@@ -22,6 +22,22 @@ func (h *DBHandler) CreateTransaction(data *models.Transaction) (string, error) 
 	return data.Hash, nil
 }
 
+func (h *DBHandler) CreateContractCreatedTransaction(data *models.Contract) (string, error) {
+	if err := h.db.Create(data).Error; err != nil {
+		return "", err
+	}
+
+	return data.ContractId, nil
+}
+
+func (h *DBHandler) CreateContractInvokedTransaction(data *models.InvokeHostFunctionTx) (string, error) {
+	if err := h.db.Create(data).Error; err != nil {
+		return "", err
+	}
+
+	return data.Hash, nil
+}
+
 func (h *DBHandler) CreateWasmContractEvent(data *models.WasmContractEvent) (string, error) {
 	if err := h.db.Create(data).Error; err != nil {
 		return "", err

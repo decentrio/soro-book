@@ -1,6 +1,7 @@
 package aggregation
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/decentrio/soro-book/database/models"
@@ -30,11 +31,10 @@ func (as *Aggregation) contractDataEntryProcessing() {
 }
 
 func (as *Aggregation) handleReceiveNewContractDataEntry(e models.ContractData) {
-	// _, err := as.db.CreateContractEntry(&e)
-	// if err != nil {
-	// 	as.Logger.Error(fmt.Sprintf("Error create contract data entry ledger %d tx %s: %s", e.Ledger, e.TxHash, err.Error()))
-	// }
-
+	_, err := as.db.CreateContractEntry(&e)
+	if err != nil {
+		as.Logger.Error(fmt.Sprintf("Error create contract data entry ledger %d tx %s: %s", e.Ledger, e.TxHash, err.Error()))
+	}
 }
 
 func (tw TransactionWrapper) GetModelsContractDataEntry() []models.ContractData {

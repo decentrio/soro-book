@@ -1,7 +1,6 @@
 package aggregation
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -48,23 +47,36 @@ func (as *Aggregation) transactionProcessing() {
 }
 
 func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
-	// tx := tw.GetModelsTransaction()
-	// _, err := as.db.CreateTransaction(tx)
-	// if err != nil {
-	// 	as.Logger.Error(fmt.Sprintf("Error create ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
-	// }
+	tx := tw.GetModelsTransaction()
+	_, err := as.db.CreateTransaction(tx)
+	if err != nil {
+		as.Logger.Error(fmt.Sprintf("error create ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
+	}
 
-	evl, _ := converter.ConvertTransactionEnvelope(tw.Tx.Envelope)
-	bz, _ := json.Marshal(evl)
+	// if this is invokeHostFuncTx, we should store the detail
+	invokeHostFuncTx, createContractTx, err := isInvokeHostFunctionTx(tw.Tx, tw.LedgerSequence)
+	if err != nil {
+		as.Logger.Error(fmt.Sprintf("error invoke host function %s", err.Error()))
+	}
 
-	fmt.Printf("envelop: %s\n\n", bz)
+	for _, ivhft := range invokeHostFuncTx {
+		_, err := as.db.CreateContractInvokedTransaction(&ivhft)
+		if err != nil {
+			as.Logger.Error(fmt.Sprintf("error create invoke host function %s", err.Error()))
+		}
+	}
+
+	for _, cct := range createContractTx {
+		_, err := as.db.CreateContractCreatedTransaction(&cct)
+		if err != nil {
+			as.Logger.Error(fmt.Sprintf("error create contract created function %s", err.Error()))
+		}
+	}
 
 	// Contract entry
 	entries := tw.GetModelsContractDataEntry()
 	for _, entry := range entries {
-		// as.contractDataEntrysQueue <- entry
-		bz, _ := json.Marshal(entry)
-		fmt.Printf("entry: %s\n\n", bz)
+		as.contractDataEntrysQueue <- entry
 	}
 
 	wasmEvent, assetEvent, err := tw.GetContractEvents()
@@ -73,15 +85,102 @@ func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
 	}
 	// Soroban stellar asset events
 	for _, e := range assetEvent {
-		// as.assetContractEventsQueue <- e
-		bz, _ := json.Marshal(e)
-		fmt.Printf("assetEvent: %s\n\n", bz)
+		as.assetContractEventsQueue <- e
 	}
 	// Soroban wasm contract events
 	for _, e := range wasmEvent {
-		// as.wasmContractEventsQueue <- e
-		bz, _ := json.Marshal(e)
-		fmt.Printf("wasmEvent: %s\n", bz)
+		as.wasmContractEventsQueue <- e
+	}
+}
+
+func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32) ([]models.InvokeHostFunctionTx, []models.Contract, error) {
+	var invokeFuncTxs []models.InvokeHostFunctionTx
+	var createdContracts []models.Contract
+
+	ops := tx.Envelope.Operations()
+	for _, op := range ops {
+		if op.Body.Type == xdr.OperationTypeInvokeHostFunction {
+			ihfOp := op.Body.MustInvokeHostFunctionOp()
+			switch ihfOp.HostFunction.Type {
+			case xdr.HostFunctionTypeHostFunctionTypeInvokeContract:
+
+				ic := ihfOp.HostFunction.MustInvokeContract()
+				ca, err := converter.ConvertScAddress(ic.ContractAddress)
+				if err != nil {
+					continue
+				}
+
+				fn := string(ic.FunctionName)
+
+				args, err := ic.MarshalBinary()
+				if err != nil {
+					continue
+				}
+
+				var invokeFuncTx models.InvokeHostFunctionTx
+				invokeFuncTx.Hash = tx.Result.TransactionHash.HexString()
+				invokeFuncTx.ContractId = *ca.ContractId
+				invokeFuncTx.FunctionType = "invoke_host_function"
+				invokeFuncTx.FunctionName = fn
+				invokeFuncTx.Args = args
+
+				invokeFuncTxs = append(invokeFuncTxs, invokeFuncTx)
+
+			case xdr.HostFunctionTypeHostFunctionTypeCreateContract:
+				ccop := ihfOp.HostFunction.MustCreateContract()
+
+				var createContractTx models.Contract
+				creator := tx.Envelope.SourceAccount().ToAccountId().Address()
+
+				contractId, found := getCreatedContractId(tx.Envelope)
+				if !found {
+					continue
+				}
+
+				contractCode := (*ccop.Executable.WasmHash).HexString()
+
+				createContractTx.CreatorAddress = creator
+				createContractTx.ContractId = contractId
+				createContractTx.ContractCode = contractCode
+				createContractTx.CreatedLedger = ledgerSeq
+
+				createdContracts = append(createdContracts, createContractTx)
+
+			case xdr.HostFunctionTypeHostFunctionTypeUploadContractWasm:
+				// we do not care about this type
+				continue
+			}
+
+		}
+	}
+
+	return invokeFuncTxs, createdContracts, nil
+}
+
+func getCreatedContractId(op xdr.TransactionEnvelope) (string, bool) {
+
+	switch op.Type {
+	case xdr.EnvelopeTypeEnvelopeTypeTxFeeBump:
+		return "", false
+	case xdr.EnvelopeTypeEnvelopeTypeTx:
+		v1 := op.MustV1()
+		ext := v1.Tx.Ext
+		sorobanData := ext.MustSorobanData()
+
+		footprints := sorobanData.Resources.Footprint.ReadWrite
+		for _, fp := range footprints {
+			if fp.Type == xdr.LedgerEntryTypeContractData {
+				contractData := fp.MustContractData()
+				contractId, _ := converter.ConvertScAddress(contractData.Contract)
+				return *contractId.ContractId, true
+			}
+		}
+
+		return "", false
+	case xdr.EnvelopeTypeEnvelopeTypeTxV0:
+		return "", false
+	default:
+		return "", false
 	}
 }
 
@@ -89,7 +188,7 @@ type TransactionWrapper struct {
 	LedgerSequence uint32
 	Tx             ingest.LedgerTransaction
 	Ops            []transactionOperationWrapper
-	ProcessedAt    uint64
+	Time           uint64
 }
 
 func NewTransactionWrapper(tx ingest.LedgerTransaction, ledgerSeq uint32, processedUnixTime uint64) TransactionWrapper {
@@ -109,7 +208,7 @@ func NewTransactionWrapper(tx ingest.LedgerTransaction, ledgerSeq uint32, proces
 		LedgerSequence: ledgerSeq,
 		Tx:             tx,
 		Ops:            ops,
-		ProcessedAt:    processedUnixTime,
+		Time:           processedUnixTime,
 	}
 }
 
@@ -165,6 +264,6 @@ func (tw TransactionWrapper) GetModelsTransaction() *models.Transaction {
 		ResultXdr:        tw.GetResultXdr(),     // xdr.TransactionResultPair
 		ResultMetaXdr:    tw.GetResultMetaXdr(), //xdr.TransactionResultMeta
 		SourceAddress:    tw.Tx.Envelope.SourceAccount().ToAccountId().Address(),
-		ProcessedAt:      tw.ProcessedAt,
+		TransactionTime:  tw.Time,
 	}
 }

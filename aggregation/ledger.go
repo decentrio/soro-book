@@ -64,7 +64,7 @@ func (as *Aggregation) getNewLedger() {
 				as.Logger.Error(fmt.Sprintf("error txReader %s", err.Error()))
 			}
 
-			txWrapper := NewTransactionWrapper(tx, seq, ledger.CreatedAt)
+			txWrapper := NewTransactionWrapper(tx, seq, ledger.LedgerTime)
 			txWrappers = append(txWrappers, txWrapper)
 
 			operations += uint32(len(tx.Envelope.Operations()))
@@ -139,9 +139,9 @@ func getLedgerFromCloseMeta(ledgerCloseMeta xdr.LedgerCloseMeta) models.Ledger {
 	timeStamp := uint64(ledgerHeader.Header.ScpValue.CloseTime)
 
 	return models.Ledger{
-		Hash:      ledgerCloseMeta.LedgerHash().HexString(),
-		PrevHash:  ledgerCloseMeta.PreviousLedgerHash().HexString(),
-		Seq:       ledgerCloseMeta.LedgerSequence(),
-		CreatedAt: timeStamp,
+		Hash:       ledgerCloseMeta.LedgerHash().HexString(),
+		PrevHash:   ledgerCloseMeta.PreviousLedgerHash().HexString(),
+		Seq:        ledgerCloseMeta.LedgerSequence(),
+		LedgerTime: timeStamp,
 	}
 }

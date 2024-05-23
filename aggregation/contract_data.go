@@ -30,20 +30,20 @@ func (as *Aggregation) contractDataEntryProcessing() {
 	}
 }
 
-func (as *Aggregation) handleReceiveNewContractDataEntry(e models.ContractData) {
+func (as *Aggregation) handleReceiveNewContractDataEntry(e models.ContractsData) {
 	_, err := as.db.CreateContractEntry(&e)
 	if err != nil {
 		as.Logger.Error(fmt.Sprintf("Error create contract data entry ledger %d tx %s: %s", e.Ledger, e.TxHash, err.Error()))
 	}
 }
 
-func (tw TransactionWrapper) GetModelsContractDataEntry() []models.ContractData {
+func (tw TransactionWrapper) GetModelsContractDataEntry() []models.ContractsData {
 	v3 := tw.Tx.UnsafeMeta.V3
 	if v3 == nil {
 		return nil
 	}
 
-	var entries []models.ContractData
+	var entries []models.ContractsData
 	for _, op := range v3.Operations {
 		for _, change := range op.Changes {
 			entry, entryType, found := ContractDataEntry(change)
@@ -75,7 +75,7 @@ func (tw TransactionWrapper) GetModelsContractDataEntry() []models.ContractData 
 					}
 				}
 
-				entry := models.ContractData{
+				entry := models.ContractsData{
 					Id:         uuid.New().String(),
 					ContractId: contractId,
 					AccountId:  accountId,

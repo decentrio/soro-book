@@ -28,7 +28,7 @@ type Transaction struct {
 	TransactionTime  uint64 `json:"transaction_time,omitempty"`
 }
 
-type Contract struct {
+type ContractsCode struct {
 	CreatorAddress string `json:"creator_address,omitempty"`
 	ContractId     string `json:"contract_id,omitempty"`
 	ContractCode   string `json:"contract_code,omitempty"`
@@ -48,7 +48,7 @@ type ScAddress struct {
 	ContractId *string `json:"contract_id,omitempty"`
 }
 
-type ContractData struct {
+type ContractsData struct {
 	Id            string `json:"id,omitempty"`
 	ContractId    string `json:"contract_id,omitempty"`
 	AccountId     string `json:"account_id,omitempty"`
@@ -59,7 +59,7 @@ type ContractData struct {
 	ValueXdr      []byte `json:"value_xdr,omitempty"`
 	Durability    int32  `json:"durability,omitempty"`
 	IsNewest      bool   `json:"is_newest,omitempty"`
-	UpdatedLedger uint32 `json:"updated_ledger,omitempty"`
+	UpdatedLedger uint32 `json:"updated_ledger,omitempty"` // previous updated ledger (TODO: we should correct the name here)
 }
 
 type Int128Parts struct {

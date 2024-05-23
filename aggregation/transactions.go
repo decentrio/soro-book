@@ -93,9 +93,9 @@ func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
 	}
 }
 
-func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32) ([]models.InvokeHostFunctionTx, []models.Contract, error) {
+func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32) ([]models.InvokeHostFunctionTx, []models.ContractsCode, error) {
 	var invokeFuncTxs []models.InvokeHostFunctionTx
-	var createdContracts []models.Contract
+	var createdContracts []models.ContractsCode
 
 	ops := tx.Envelope.Operations()
 	for _, op := range ops {
@@ -129,7 +129,7 @@ func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32) ([]mo
 			case xdr.HostFunctionTypeHostFunctionTypeCreateContract:
 				ccop := ihfOp.HostFunction.MustCreateContract()
 
-				var createContractTx models.Contract
+				var createContractTx models.ContractsCode
 				creator := tx.Envelope.SourceAccount().ToAccountId().Address()
 
 				contractId, found := getCreatedContractId(tx.Envelope)

@@ -87,7 +87,7 @@ func (tw TransactionWrapper) GetModelsContractDataEntry() []models.ContractsData
 					ValueXdr:      valBz,
 					Durability:    int32(entry.Durability),
 					IsNewest:      true,
-					UpdatedLedger: math.MaxUint32,
+					UpdatedLedger: uint32(math.MaxInt32),
 				}
 				entries = append(entries, entry)
 			}

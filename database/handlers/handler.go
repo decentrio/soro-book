@@ -82,7 +82,7 @@ func (h *DBHandler) CreateContractEntry(data *models.ContractsData) (string, err
 	switch data.EntryType {
 	case "updated":
 		var oldData models.ContractsData
-		if err := h.db.Table("contracts").
+		if err := h.db.Table("contracts_data").
 			Where("contract_id = ?", data.ContractId).
 			Where("is_newest = ?", true).
 			Where("key_xdr = ?", data.KeyXdr).
@@ -98,7 +98,7 @@ func (h *DBHandler) CreateContractEntry(data *models.ContractsData) (string, err
 		break
 	case "removed":
 		var oldData models.ContractsData
-		if err := h.db.Table("contracts").
+		if err := h.db.Table("contracts_data").
 			Where("contract_id = ?", data.ContractId).
 			Where("is_newest = ?", true).
 			Where("key_xdr = ?", data.KeyXdr).

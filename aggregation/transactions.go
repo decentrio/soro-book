@@ -93,8 +93,8 @@ func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
 	}
 }
 
-func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32) ([]models.InvokeHostFunctionTx, []models.ContractsCode, error) {
-	var invokeFuncTxs []models.InvokeHostFunctionTx
+func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32) ([]models.InvokeTransaction, []models.ContractsCode, error) {
+	var invokeFuncTxs []models.InvokeTransaction
 	var createdContracts []models.ContractsCode
 
 	ops := tx.Envelope.Operations()
@@ -117,7 +117,7 @@ func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32) ([]mo
 					continue
 				}
 
-				var invokeFuncTx models.InvokeHostFunctionTx
+				var invokeFuncTx models.InvokeTransaction
 				invokeFuncTx.Hash = tx.Result.TransactionHash.HexString()
 				invokeFuncTx.ContractId = *ca.ContractId
 				invokeFuncTx.FunctionType = "invoke_host_function"

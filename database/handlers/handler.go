@@ -30,7 +30,7 @@ func (h *DBHandler) CreateContractCreatedTransaction(data *models.ContractsCode)
 	return data.ContractId, nil
 }
 
-func (h *DBHandler) CreateContractInvokedTransaction(data *models.InvokeHostFunctionTx) (string, error) {
+func (h *DBHandler) CreateContractInvokedTransaction(data *models.InvokeTransaction) (string, error) {
 	if err := h.db.Create(data).Error; err != nil {
 		return "", err
 	}
@@ -80,9 +80,6 @@ func (h *DBHandler) CreateAssetContractClawbackEvent(data *models.AssetContractC
 
 func (h *DBHandler) CreateContractEntry(data *models.ContractsData) (string, error) {
 	switch data.EntryType {
-	case "created":
-		data.UpdatedLedger = data.Ledger
-		break
 	case "updated":
 		var oldData models.ContractsData
 		if err := h.db.Table("contracts").
@@ -92,11 +89,10 @@ func (h *DBHandler) CreateContractEntry(data *models.ContractsData) (string, err
 			First(&oldData).Error; err == nil {
 			fmt.Println("CreateContractEntry Updated")
 			oldData.IsNewest = false
+			oldData.UpdatedLedger = data.Ledger - 1
 			if err := h.db.Table("contracts").Save(oldData).Error; err != nil {
 				return "ERROR: update old contract data entry", err
 			}
-
-			data.UpdatedLedger = oldData.Ledger
 		}
 
 		break
@@ -109,11 +105,10 @@ func (h *DBHandler) CreateContractEntry(data *models.ContractsData) (string, err
 			First(&oldData).Error; err == nil {
 			fmt.Println("CreateContractEntry Removed")
 			oldData.IsNewest = false
+			oldData.UpdatedLedger = data.Ledger - 1
 			if err := h.db.Table("contracts").Save(oldData).Error; err != nil {
 				return "ERROR: update old contract data entry", err
 			}
-
-			data.UpdatedLedger = oldData.Ledger
 		}
 
 		break

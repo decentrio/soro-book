@@ -35,7 +35,7 @@ type ContractsCode struct {
 	CreatedLedger  uint32 `json:"created_ledger,omitempty"`
 }
 
-type InvokeHostFunctionTx struct {
+type InvokeTransaction struct {
 	Hash         string `json:"hash,omitempty"`
 	ContractId   string `json:"contract_id,omitempty"`
 	FunctionType string `json:"func_type,omitempty"`

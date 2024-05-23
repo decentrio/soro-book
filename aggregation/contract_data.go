@@ -2,6 +2,7 @@ package aggregation
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/decentrio/soro-book/database/models"
@@ -76,16 +77,17 @@ func (tw TransactionWrapper) GetModelsContractDataEntry() []models.ContractsData
 				}
 
 				entry := models.ContractsData{
-					Id:         uuid.New().String(),
-					ContractId: contractId,
-					AccountId:  accountId,
-					TxHash:     tw.GetTransactionHash(),
-					Ledger:     tw.GetLedgerSequence(),
-					EntryType:  entryType,
-					KeyXdr:     keyBz,
-					ValueXdr:   valBz,
-					Durability: int32(entry.Durability),
-					IsNewest:   true,
+					Id:            uuid.New().String(),
+					ContractId:    contractId,
+					AccountId:     accountId,
+					TxHash:        tw.GetTransactionHash(),
+					Ledger:        tw.GetLedgerSequence(),
+					EntryType:     entryType,
+					KeyXdr:        keyBz,
+					ValueXdr:      valBz,
+					Durability:    int32(entry.Durability),
+					IsNewest:      true,
+					UpdatedLedger: math.MaxUint32,
 				}
 				entries = append(entries, entry)
 			}

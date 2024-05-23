@@ -137,7 +137,10 @@ func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32) ([]mo
 					continue
 				}
 
-				contractCode := (*ccop.Executable.WasmHash).HexString()
+				var contractCode string
+				if ccop.Executable.WasmHash != nil {
+					contractCode = (*ccop.Executable.WasmHash).HexString()
+				}
 
 				createContractTx.CreatorAddress = creator
 				createContractTx.ContractId = contractId

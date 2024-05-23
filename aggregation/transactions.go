@@ -175,6 +175,9 @@ func getCreatedContractId(op xdr.TransactionEnvelope) (string, bool) {
 			if fp.Type == xdr.LedgerEntryTypeContractData {
 				contractData := fp.MustContractData()
 				contractId, _ := converter.ConvertScAddress(contractData.Contract)
+				if contractId.ContractId == nil {
+					return "", false
+				}
 				return *contractId.ContractId, true
 			}
 		}

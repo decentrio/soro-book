@@ -7,7 +7,6 @@ import (
 
 	"github.com/decentrio/soro-book/database/models"
 	"github.com/stellar/go/ingest"
-	backends "github.com/stellar/go/ingest/ledgerbackend"
 	"github.com/stellar/go/xdr"
 )
 
@@ -17,22 +16,7 @@ type LedgerWrapper struct {
 }
 
 func (as *Aggregation) getNewLedger() {
-	from := as.startLedgerSeq
-	to := as.startLedgerSeq + as.prepareStep
-	ledgerRange := backends.BoundedRange(from, to)
-	err := as.backend.PrepareRange(as.ctx, ledgerRange)
-	if err != nil {
-		//"is greater than max available in history archives"
-		as.Logger.Error(fmt.Sprintf("error prepare: %s", err.Error()))
-		if as.prepareStep > 1 {
-			as.prepareStep = as.prepareStep / 2
-		} else {
-			as.prepareStep = 1
-		}
-		time.Sleep(time.Millisecond)
-		return
-	}
-	for seq := from; seq < to; seq++ {
+	for seq := as.startLedgerSeq; ; seq++ {
 		// get ledger
 		ledgerCloseMeta, err := as.backend.GetLedger(as.ctx, seq)
 		if err != nil {
@@ -80,7 +64,6 @@ func (as *Aggregation) getNewLedger() {
 		}
 		as.ledgerQueue <- lw
 	}
-	as.startLedgerSeq = to
 }
 
 // aggregation process
@@ -110,14 +93,15 @@ func (as *Aggregation) ledgerProcessing() {
 // handleReceiveTx
 func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 	// Create Ledger
-	_, err := as.db.CreateLedger(&lw.ledger)
-	if err != nil {
-		as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", lw.ledger.Seq, err.Error()))
-	}
+	// _, err := as.db.CreateLedger(&lw.ledger)
+	// if err != nil {
+	// 	as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", lw.ledger.Seq, err.Error()))
+	// }
 
 	// Create Tx and Soroban events
 	for _, tw := range lw.txs {
-		as.txQueue <- tw
+		_ = tw
+		// as.txQueue <- tw
 	}
 }
 

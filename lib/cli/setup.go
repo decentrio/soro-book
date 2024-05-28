@@ -12,10 +12,13 @@ import (
 )
 
 const (
-	HomeFlag     = "home"
-	TraceFlag    = "trace"
-	OutputFlag   = "output"
-	EncodingFlag = "encoding"
+	HomeFlag    = "home"
+	TraceFlag   = "trace"
+	OutputFlag  = "output"
+	StartLedger = "start"
+	EndLedger   = "end"
+	Mode        = "mode"
+	NetWork     = "network"
 )
 
 // Executable is the minimal interface to *corba.Command, so we can
@@ -24,11 +27,13 @@ type Executable interface {
 	Execute() error
 }
 
-// PrepareBaseCmd is meant for CometBFT and other servers
 func PrepareBaseCmd(cmd *cobra.Command, envPrefix, defaultHome string) Executor {
 	cobra.OnInitialize(func() { initEnv(envPrefix) })
 	cmd.PersistentFlags().StringP(HomeFlag, "", defaultHome, "directory for config and data")
-	cmd.PersistentFlags().Bool(TraceFlag, false, "print out full stack trace on errors")
+	cmd.PersistentFlags().Bool(TraceFlag, true, "print out full stack trace on errors")
+	cmd.PersistentFlags().Uint32(StartLedger, 0, "starting ledger")
+	cmd.PersistentFlags().Uint32(EndLedger, 0, "end ledger")
+	cmd.PersistentFlags().String(NetWork, "pubnet", "running network pubnet/testnet")
 	cmd.PersistentPreRunE = concatCobraCmdFuncs(bindFlagsLoadViper, cmd.PersistentPreRunE)
 	return Executor{cmd, os.Exit}
 }
@@ -38,7 +43,6 @@ func PrepareBaseCmd(cmd *cobra.Command, envPrefix, defaultHome string) Executor 
 // This adds --encoding (hex, btc, base64) and --output (text, json) to
 // the command.  These only really make sense in interactive commands.
 func PrepareMainCmd(cmd *cobra.Command, envPrefix, defaultHome string) Executor {
-	cmd.PersistentFlags().StringP(EncodingFlag, "e", "hex", "Binary encoding (hex|b64|btc)")
 	cmd.PersistentFlags().StringP(OutputFlag, "o", "text", "Output format (text|json)")
 	cmd.PersistentPreRunE = concatCobraCmdFuncs(validateOutput, cmd.PersistentPreRunE)
 	return PrepareBaseCmd(cmd, envPrefix, defaultHome)

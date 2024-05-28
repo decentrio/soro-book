@@ -3,7 +3,8 @@ package service
 import (
 	"errors"
 
-	"github.com/decentrio/soro-book/lib/log"
+	// "github.com/decentrio/soro-book/lib/log"
+	"github.com/stellar/go/support/log"
 )
 
 var (
@@ -32,7 +33,7 @@ type Service interface {
 }
 
 type BaseService struct {
-	Logger    log.Logger
+	Logger    *log.Entry
 	name      string
 	isStarted bool
 	terminate chan struct{}
@@ -51,7 +52,7 @@ func NewBaseService(name string, impl Service) *BaseService {
 }
 
 // SetLogger implements Service by setting a logger.
-func (bs *BaseService) SetLogger(l log.Logger) {
+func (bs *BaseService) SetLogger(l *log.Entry) {
 	bs.Logger = l
 }
 

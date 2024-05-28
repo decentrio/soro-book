@@ -3,19 +3,18 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"syscall"
 
 	cfg "github.com/decentrio/soro-book/config"
 	"github.com/decentrio/soro-book/lib/cli"
-	"github.com/decentrio/soro-book/lib/log"
 	"github.com/decentrio/soro-book/manager"
 	"github.com/spf13/cobra"
 )
 
 var (
 	DefaultCometDir = ".soro-book"
-	logger          = log.NewSRLogger(log.NewSyncWriter(os.Stdout))
 )
 
 var rootCmd = &cobra.Command{
@@ -36,7 +35,7 @@ func NewRunNodeCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			m := manager.DefaultNewManager(config, logger)
+			m := manager.DefaultNewManager(config)
 
 			if err := m.Start(); err != nil {
 				return fmt.Errorf("failed to start node: %w", err)
@@ -73,7 +72,6 @@ func ParseConfig(cmd *cobra.Command) (*cfg.ManagerConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	conf.RootDir = home
 	conf.SetRoot(conf.RootDir)
 
@@ -83,12 +81,32 @@ func ParseConfig(cmd *cobra.Command) (*cfg.ManagerConfig, error) {
 	}
 
 	var aggregationConfig cfg.AggregationConfig
-	aggregationConfigFile := conf.AggregationConfigFile()
-	if cfg.FileExists(aggregationConfigFile) {
-		aggregationConfig = cfg.LoadAggregationConfig(aggregationConfigFile)
-	} else {
-		aggregationConfig = cfg.DefaultAggregationConfig()
+	startLedger, err := cmd.Flags().GetUint32(cli.StartLedger)
+	if err != nil {
+		return nil, err
 	}
+	if startLedger != 0 {
+		aggregationConfig.StartLedgerHeight = startLedger
+	}
+
+	endLedger, err := cmd.Flags().GetUint32(cli.EndLedger)
+	if err != nil {
+		return nil, err
+	}
+	aggregationConfig.EndLedgerHeight = endLedger
+
+	network, err := cmd.Flags().GetString(cli.NetWork)
+	if err != nil {
+		return nil, err
+	}
+	aggregationConfig.Network = network
+
+	stellarCoreBinaryPath, err := exec.LookPath("stellar-core")
+	if err != nil {
+		return nil, err
+	}
+	aggregationConfig.BinaryPath = stellarCoreBinaryPath
+
 	conf.AggregationCfg = &aggregationConfig
 
 	return conf, nil

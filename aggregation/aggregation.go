@@ -4,10 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/decentrio/soro-book/lib/log"
-	"github.com/sirupsen/logrus"
 	backends "github.com/stellar/go/ingest/ledgerbackend"
-	stellar_log "github.com/stellar/go/support/log"
+	"github.com/stellar/go/support/log"
 
 	"github.com/decentrio/soro-book/config"
 	db "github.com/decentrio/soro-book/database/handlers"
@@ -32,8 +30,8 @@ type Aggregation struct {
 	service.BaseService
 
 	ctx     context.Context
-	Cfg     *config.AggregationConfig
-	backend *backends.CaptiveStellarCore
+	Cfg     backends.CaptiveCoreConfig
+	backend backends.LedgerBackend
 
 	// txQueue channel for trigger new tx
 	ledgerQueue              chan LedgerWrapper
@@ -59,11 +57,9 @@ type AggregationOption func(*Aggregation)
 
 func NewAggregation(
 	cfg *config.AggregationConfig,
-	logger log.Logger,
 	options ...AggregationOption,
 ) *Aggregation {
 	as := &Aggregation{
-		Cfg:                      cfg,
 		ledgerQueue:              make(chan LedgerWrapper, QueueSize),
 		txQueue:                  make(chan TransactionWrapper, QueueSize),
 		assetContractEventsQueue: make(chan models.StellarAssetContractEvent, QueueSize),
@@ -79,23 +75,17 @@ func NewAggregation(
 		opt(as)
 	}
 
-	as.BaseService.SetLogger(logger.With("module", "aggregation"))
+	logger := log.New().WithField("module", "aggregation")
+	logger.SetLevel(log.DebugLevel)
+	as.BaseService.SetLogger(logger)
+
+	as.startLedgerSeq = cfg.StartLedgerHeight
+	as.CurrLedgerSeq = cfg.StartLedgerHeight
 
 	as.db = db.NewDBHandler()
 
 	as.ctx = context.Background()
-
-	Config := CaptiveCoreConfig([]string{as.Cfg.ArchiveURL}, as.Cfg.NetworkPassphrase, as.Cfg.BinaryPath)
-	log := stellar_log.New()
-	log.SetLevel(logrus.ErrorLevel)
-	Config.Log = log
-
-	as.startLedgerSeq = uint32(as.Cfg.LedgerHeight)
-
-	var err error
-	as.backend, err = backends.NewCaptive(Config)
-	panicIf(err)
-
+	as.backend, as.Cfg = newLedgerBackend(as.ctx, *cfg, as.Logger)
 	return as
 }
 

@@ -2,10 +2,8 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 )
 
 const (
@@ -56,30 +54,10 @@ func (c *ManagerConfig) LoadManagerConfig(path string) {
 }
 
 type AggregationConfig struct {
-	ArchiveURL        string `json:"url,omitempty"`
-	NetworkPassphrase string `json:"network_passphrase,omitempty"`
+	Network           string `json:"network,omitempty"`
 	BinaryPath        string `json:"binary_path,omitempty"`
-	LedgerHeight      uint32 `json:"ledger_height,omitempty"`
-}
-
-func DefaultAggregationConfig() AggregationConfig {
-	var binaryPath string
-	os := runtime.GOOS
-	switch os {
-	case "darwin":
-		binaryPath = "../bin/stellar-core-mac"
-	case "linux":
-		binaryPath = "../bin/stellar-core-linux"
-	default:
-		fmt.Printf("%s.\n", os)
-	}
-
-	return AggregationConfig{
-		ArchiveURL:        "https://history.stellar.org/prd/core-testnet/core_testnet_001",
-		NetworkPassphrase: "Test SDF Network ; September 2015",
-		BinaryPath:        binaryPath,
-		LedgerHeight:      2, // 1042599, 1042610, 1042613
-	}
+	StartLedgerHeight uint32 `json:"start_ledger_height,omitempty"`
+	EndLedgerHeight   uint32 `json:"end_ledger_height,omitempty"`
 }
 
 func LoadAggregationConfig(path string) AggregationConfig {

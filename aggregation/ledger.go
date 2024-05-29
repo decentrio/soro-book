@@ -16,54 +16,54 @@ type LedgerWrapper struct {
 }
 
 func (as *Aggregation) getNewLedger() {
-	for seq := as.startLedgerSeq; ; seq++ {
-		// get ledger
-		ledgerCloseMeta, err := as.backend.GetLedger(as.ctx, seq)
-		if err != nil {
-			as.Logger.Error(fmt.Sprintf("error get ledger %s", err.Error()))
-			continue
-		}
-
-		ledger := getLedgerFromCloseMeta(ledgerCloseMeta)
-
-		var txWrappers []TransactionWrapper
-		var transactions = uint32(0)
-		var operations = uint32(0)
-		// get tx
-		txReader, err := ingest.NewLedgerTransactionReader(
-			as.ctx, as.backend, as.Cfg.NetworkPassphrase, seq,
-		)
-		panicIf(err)
-		defer txReader.Close()
-
-		// Read each transaction within the ledger, extract its operations, and
-		// accumulate the statistics we're interested in.
-		for {
-			tx, err := txReader.Read()
-			if err == io.EOF {
-				break
-			}
-
-			if err != nil {
-				as.Logger.Error(fmt.Sprintf("error txReader %s", err.Error()))
-			}
-
-			txWrapper := NewTransactionWrapper(tx, seq, ledger.LedgerTime)
-			txWrappers = append(txWrappers, txWrapper)
-
-			operations += uint32(len(tx.Envelope.Operations()))
-			transactions++
-		}
-
-		ledger.Transactions = transactions
-		ledger.Operations = operations
-
-		lw := LedgerWrapper{
-			ledger: ledger,
-			txs:    txWrappers,
-		}
-		as.ledgerQueue <- lw
+	// get ledger
+	seq := as.startLedgerSeq
+	ledgerCloseMeta, err := as.backend.GetLedger(as.ctx, seq)
+	if err != nil {
+		as.Logger.Error(fmt.Sprintf("error get ledger %s", err.Error()))
+		return
 	}
+
+	ledger := getLedgerFromCloseMeta(ledgerCloseMeta)
+
+	var txWrappers []TransactionWrapper
+	var transactions = uint32(0)
+	var operations = uint32(0)
+	// get tx
+	txReader, err := ingest.NewLedgerTransactionReader(
+		as.ctx, as.backend, as.Cfg.NetworkPassphrase, seq,
+	)
+	panicIf(err)
+	defer txReader.Close()
+
+	// Read each transaction within the ledger, extract its operations, and
+	// accumulate the statistics we're interested in.
+	for {
+		tx, err := txReader.Read()
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			as.Logger.Error(fmt.Sprintf("error txReader %s", err.Error()))
+		}
+
+		txWrapper := NewTransactionWrapper(tx, seq, ledger.LedgerTime)
+		txWrappers = append(txWrappers, txWrapper)
+
+		operations += uint32(len(tx.Envelope.Operations()))
+		transactions++
+	}
+
+	ledger.Transactions = transactions
+	ledger.Operations = operations
+
+	lw := LedgerWrapper{
+		ledger: ledger,
+		txs:    txWrappers,
+	}
+	as.ledgerQueue <- lw
+	as.startLedgerSeq++
 }
 
 // aggregation process

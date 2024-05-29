@@ -93,15 +93,14 @@ func (as *Aggregation) ledgerProcessing() {
 // handleReceiveTx
 func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 	// Create Ledger
-	// _, err := as.db.CreateLedger(&lw.ledger)
-	// if err != nil {
-	// 	as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", lw.ledger.Seq, err.Error()))
-	// }
+	_, err := as.db.CreateLedger(&lw.ledger)
+	if err != nil {
+		as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", lw.ledger.Seq, err.Error()))
+	}
 
 	// Create Tx and Soroban events
 	for _, tw := range lw.txs {
-		_ = tw
-		// as.txQueue <- tw
+		as.txQueue <- tw
 	}
 }
 

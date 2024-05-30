@@ -20,7 +20,7 @@ func (as *Aggregation) getNewLedger() {
 	seq := as.startLedgerSeq
 	ledgerCloseMeta, err := as.backend.GetLedger(as.ctx, seq)
 	if err != nil {
-		as.Logger.Error(fmt.Sprintf("error get ledger %s", err.Error()))
+		// as.Logger.Error(fmt.Sprintf("error get ledger %s", err.Error()))
 		return
 	}
 

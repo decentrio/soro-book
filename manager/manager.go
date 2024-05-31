@@ -54,20 +54,6 @@ func (m *Manager) OnStop() error {
 	m.Logger.Info("Stop")
 	m.as.Stop()
 
-	// asConfig := *m.as.Cfg
-	// asConfig.StartLedgerHeight = m.as.CurrLedgerSeq
-
-	// bz, err := json.Marshal(asConfig)
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// }
-
-	// fmt.Println(m.cfg.AggregationConfigFile())
-	// err = config.WriteState(m.cfg.AggregationConfigFile(), bz, 0777)
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// }
-
 	time.Sleep(time.Second)
 	return nil
 }

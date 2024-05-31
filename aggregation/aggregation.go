@@ -6,6 +6,7 @@ import (
 
 	backends "github.com/stellar/go/ingest/ledgerbackend"
 	"github.com/stellar/go/support/log"
+	"github.com/stellar/go/xdr"
 
 	"github.com/decentrio/soro-book/config"
 	db "github.com/decentrio/soro-book/database/handlers"
@@ -15,15 +16,7 @@ import (
 
 const (
 	QueueSize          = 10000
-	DefaultPrepareStep = 64
-)
-
-type State int32
-
-const (
-	LEDGER State = iota
-	TX
-	CONTRACT
+	DefaultPrepareStep = 1280
 )
 
 type Aggregation struct {
@@ -34,18 +27,17 @@ type Aggregation struct {
 	backend backends.LedgerBackend
 
 	// txQueue channel for trigger new tx
-	ledgerQueue              chan LedgerWrapper
+	ledgerQueue              chan xdr.LedgerCloseMeta
 	txQueue                  chan TransactionWrapper
 	assetContractEventsQueue chan models.StellarAssetContractEvent
 	wasmContractEventsQueue  chan models.WasmContractEvent
 	contractDataEntrysQueue  chan models.ContractsData
 
-	// isReSync is flag represent if services is
+	// isSync is flag represent if services is
 	// re-synchronize
-	isReSync    bool
+	isSync      bool
 	prepareStep uint32
 
-	state          State
 	startLedgerSeq uint32
 	CurrLedgerSeq  uint32
 
@@ -60,14 +52,13 @@ func NewAggregation(
 	options ...AggregationOption,
 ) *Aggregation {
 	as := &Aggregation{
-		ledgerQueue:              make(chan LedgerWrapper, QueueSize),
+		ledgerQueue:              make(chan xdr.LedgerCloseMeta, QueueSize),
 		txQueue:                  make(chan TransactionWrapper, QueueSize),
 		assetContractEventsQueue: make(chan models.StellarAssetContractEvent, QueueSize),
 		wasmContractEventsQueue:  make(chan models.WasmContractEvent, QueueSize),
 		contractDataEntrysQueue:  make(chan models.ContractsData, QueueSize),
-		state:                    LEDGER,
 		prepareStep:              DefaultPrepareStep,
-		isReSync:                 false,
+		isSync:                   false,
 	}
 
 	as.BaseService = *service.NewBaseService("Aggregation", as)
@@ -80,7 +71,7 @@ func NewAggregation(
 	as.BaseService.SetLogger(logger)
 
 	as.startLedgerSeq = cfg.StartLedgerHeight
-	as.CurrLedgerSeq = cfg.StartLedgerHeight
+	as.CurrLedgerSeq = cfg.CurrLedgerHeight
 
 	as.db = db.NewDBHandler()
 
@@ -119,9 +110,4 @@ func (as *Aggregation) aggregation() {
 		}
 		time.Sleep(time.Millisecond)
 	}
-}
-
-// Method allow trigger for resync
-func (as *Aggregation) ReSync(block uint64) {
-	as.isReSync = true
 }

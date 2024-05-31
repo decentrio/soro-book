@@ -7,6 +7,7 @@ import (
 
 	"github.com/decentrio/soro-book/database/models"
 	"github.com/stellar/go/ingest"
+	backends "github.com/stellar/go/ingest/ledgerbackend"
 	"github.com/stellar/go/xdr"
 )
 
@@ -16,23 +17,61 @@ type LedgerWrapper struct {
 }
 
 func (as *Aggregation) getNewLedger() {
+	// prepare range
+	from, to := as.prepare()
 	// get ledger
-	seq := as.startLedgerSeq
-	ledgerCloseMeta, err := as.backend.GetLedger(as.ctx, seq)
-	if err != nil {
-		// as.Logger.Error(fmt.Sprintf("error get ledger %s", err.Error()))
-		return
-	}
+	if !as.isSync {
+		for seq := from; seq < to; seq++ {
+			ledgerCloseMeta, err := as.backend.GetLedger(as.ctx, seq)
+			if err != nil {
+				as.Logger.Error(fmt.Sprintf("error get ledger %s", err.Error()))
+				return
+			}
 
-	ledger := getLedgerFromCloseMeta(ledgerCloseMeta)
+			go func(l xdr.LedgerCloseMeta) {
+				as.ledgerQueue <- l
+			}(ledgerCloseMeta)
+		}
+	} else {
+		seq := as.startLedgerSeq
+		ledgerCloseMeta, err := as.backend.GetLedger(as.ctx, seq)
+		if err != nil {
+			as.Logger.Error(fmt.Sprintf("error get ledger %s", err.Error()))
+			return
+		}
+
+		go func(l xdr.LedgerCloseMeta) {
+			as.ledgerQueue <- l
+		}(ledgerCloseMeta)
+		as.startLedgerSeq++
+	}
+}
+
+// aggregation process
+func (as *Aggregation) ledgerProcessing() {
+	for {
+		select {
+		// Receive a new tx
+		case ledger := <-as.ledgerQueue:
+			as.handleReceiveNewLedger(ledger)
+		// Terminate process
+		case <-as.BaseService.Terminate():
+			return
+		default:
+		}
+		time.Sleep(time.Millisecond)
+	}
+}
+
+// handleReceiveTx
+func (as *Aggregation) handleReceiveNewLedger(l xdr.LedgerCloseMeta) {
+	ledger := getLedgerFromCloseMeta(l)
 
 	var txWrappers []TransactionWrapper
 	var transactions = uint32(0)
 	var operations = uint32(0)
 	// get tx
-	txReader, err := ingest.NewLedgerTransactionReader(
-		as.ctx, as.backend, as.Cfg.NetworkPassphrase, seq,
-	)
+	txReader, err := ingest.NewLedgerTransactionReaderFromLedgerCloseMeta(as.Cfg.NetworkPassphrase, l)
 	panicIf(err)
 	defer txReader.Close()
 
@@ -48,7 +87,7 @@ func (as *Aggregation) getNewLedger() {
 			as.Logger.Error(fmt.Sprintf("error txReader %s", err.Error()))
 		}
 
-		txWrapper := NewTransactionWrapper(tx, seq, ledger.LedgerTime)
+		txWrapper := NewTransactionWrapper(tx, ledger.Seq, ledger.LedgerTime)
 		txWrappers = append(txWrappers, txWrapper)
 
 		operations += uint32(len(tx.Envelope.Operations()))
@@ -58,50 +97,46 @@ func (as *Aggregation) getNewLedger() {
 	ledger.Transactions = transactions
 	ledger.Operations = operations
 
-	lw := LedgerWrapper{
-		ledger: ledger,
-		txs:    txWrappers,
-	}
-	as.ledgerQueue <- lw
-	as.startLedgerSeq++
-}
-
-// aggregation process
-func (as *Aggregation) ledgerProcessing() {
-	for {
-		if as.state != LEDGER {
-			continue
-		}
-
-		select {
-		// Receive a new tx
-		case ledger := <-as.ledgerQueue:
-			as.handleReceiveNewLedger(ledger)
-
-			as.state = TX
-
-			as.CurrLedgerSeq = ledger.ledger.Seq
-		// Terminate process
-		case <-as.BaseService.Terminate():
-			return
-		default:
-		}
-		time.Sleep(time.Millisecond)
-	}
-}
-
-// handleReceiveTx
-func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
 	// Create Ledger
-	_, err := as.db.CreateLedger(&lw.ledger)
+	_, err = as.db.CreateLedger(&ledger)
 	if err != nil {
-		as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", lw.ledger.Seq, err.Error()))
+		as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", ledger.Seq, err.Error()))
 	}
 
 	// Create Tx and Soroban events
-	for _, tw := range lw.txs {
-		as.txQueue <- tw
+	for _, tw := range txWrappers {
+		go func(twi TransactionWrapper) {
+			as.txQueue <- twi
+		}(tw)
 	}
+}
+
+func (as *Aggregation) prepare() (uint32, uint32) {
+	if !as.isSync {
+		from := as.startLedgerSeq
+		to := from + DefaultPrepareStep
+
+		var ledgerRange backends.Range
+		if to > as.CurrLedgerSeq {
+			ledgerRange = backends.UnboundedRange(from)
+		} else {
+			ledgerRange = backends.BoundedRange(from, to)
+		}
+
+		fmt.Println("range: ", ledgerRange)
+		err := as.backend.PrepareRange(as.ctx, ledgerRange)
+		if err != nil {
+			as.Logger.Errorf("error prepare %s", err.Error())
+		} else {
+			if to > as.CurrLedgerSeq {
+				as.isSync = true
+			}
+		}
+		as.startLedgerSeq += DefaultPrepareStep
+		return from, to
+	}
+
+	return 0, 0
 }
 
 func getLedgerFromCloseMeta(ledgerCloseMeta xdr.LedgerCloseMeta) models.Ledger {

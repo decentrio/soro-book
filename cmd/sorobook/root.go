@@ -89,11 +89,11 @@ func ParseConfig(cmd *cobra.Command) (*cfg.ManagerConfig, error) {
 		aggregationConfig.StartLedgerHeight = startLedger
 	}
 
-	endLedger, err := cmd.Flags().GetUint32(cli.EndLedger)
+	currLedger, err := cmd.Flags().GetUint32(cli.CurrentLedger)
 	if err != nil {
 		return nil, err
 	}
-	aggregationConfig.EndLedgerHeight = endLedger
+	aggregationConfig.CurrLedgerHeight = currLedger
 
 	network, err := cmd.Flags().GetString(cli.NetWork)
 	if err != nil {

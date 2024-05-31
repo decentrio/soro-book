@@ -91,16 +91,16 @@ func newLedgerBackend(ctx context.Context, config config.AggregationConfig, log 
 		log.WithError(err)
 	}
 
-	var ledgerRange ledgerbackend.Range
-	if config.EndLedgerHeight == 0 {
-		ledgerRange = ledgerbackend.UnboundedRange(config.StartLedgerHeight)
-		log.Info("running in online mode")
-	} else {
-		ledgerRange = ledgerbackend.BoundedRange(config.StartLedgerHeight, config.EndLedgerHeight)
-		log.Info("running in offline mode")
-	}
+	// var ledgerRange ledgerbackend.Range
+	// if config.EndLedgerHeight == 0 {
+	// 	ledgerRange = ledgerbackend.UnboundedRange(config.StartLedgerHeight)
+	// 	log.Info("running in online mode")
+	// } else {
+	// 	ledgerRange = ledgerbackend.BoundedRange(config.StartLedgerHeight, config.EndLedgerHeight)
+	// 	log.Info("running in offline mode")
+	// }
 
-	err = backend.PrepareRange(ctx, ledgerRange)
+	// err = backend.PrepareRange(ctx, ledgerRange)
 
 	return backend, captiveConfig
 }

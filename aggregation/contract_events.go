@@ -34,10 +34,6 @@ var (
 // aggregation process
 func (as *Aggregation) contractEventsProcessing() {
 	for {
-		if as.state != CONTRACT {
-			continue
-		}
-
 		select {
 		// Receive a new tx
 		case event := <-as.assetContractEventsQueue:

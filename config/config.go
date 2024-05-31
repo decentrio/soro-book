@@ -57,7 +57,7 @@ type AggregationConfig struct {
 	Network           string `json:"network,omitempty"`
 	BinaryPath        string `json:"binary_path,omitempty"`
 	StartLedgerHeight uint32 `json:"start_ledger_height,omitempty"`
-	EndLedgerHeight   uint32 `json:"end_ledger_height,omitempty"`
+	CurrLedgerHeight  uint32 `json:"curr_ledger_height,omitempty"`
 }
 
 func LoadAggregationConfig(path string) AggregationConfig {

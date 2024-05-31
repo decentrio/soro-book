@@ -13,10 +13,6 @@ import (
 
 func (as *Aggregation) contractDataEntryProcessing() {
 	for {
-		if as.state != CONTRACT {
-			continue
-		}
-
 		select {
 		// Receive a new tx
 		case e := <-as.contractDataEntrysQueue:

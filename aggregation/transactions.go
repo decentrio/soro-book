@@ -17,26 +17,10 @@ const (
 
 func (as *Aggregation) transactionProcessing() {
 	for {
-		if as.state == CONTRACT {
-			if len(as.assetContractEventsQueue) == 0 && len(as.wasmContractEventsQueue) == 0 && len(as.contractDataEntrysQueue) == 0 {
-				as.state = TX
-			}
-		}
-
-		if as.state != TX {
-			continue
-		}
-
-		if len(as.txQueue) == 0 {
-			as.state = LEDGER
-		}
-
 		select {
 		// Receive a new tx
 		case tx := <-as.txQueue:
 			as.handleReceiveNewTransaction(tx)
-
-			as.state = CONTRACT
 		// Terminate process
 		case <-as.BaseService.Terminate():
 			return

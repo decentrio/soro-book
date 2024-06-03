@@ -123,7 +123,6 @@ func (as *Aggregation) prepare() (uint32, uint32) {
 			ledgerRange = backends.BoundedRange(from, to)
 		}
 
-		fmt.Println("range: ", ledgerRange)
 		err := as.backend.PrepareRange(as.ctx, ledgerRange)
 		if err != nil {
 			as.Logger.Errorf("error prepare %s", err.Error())

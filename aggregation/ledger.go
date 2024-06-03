@@ -127,6 +127,7 @@ func (as *Aggregation) prepare() (uint32, uint32) {
 		err := as.backend.PrepareRange(as.ctx, ledgerRange)
 		if err != nil {
 			as.Logger.Errorf("error prepare %s", err.Error())
+			return 0, 0 // if prepare error, we should skip here
 		} else {
 			if to > as.CurrLedgerSeq {
 				as.isSync = true

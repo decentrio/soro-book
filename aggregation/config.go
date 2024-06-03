@@ -27,7 +27,17 @@ var (
 	// PublicNetworkhistoryArchiveURLs is a list of history archive URLs for stellar 'pubnet'
 	PublicNetworkhistoryArchiveURLs = []string{"https://history.stellar.org/prd/core-live/core_live_001/",
 		"https://history.stellar.org/prd/core-live/core_live_002/",
-		"https://history.stellar.org/prd/core-live/core_live_003/"}
+		"https://history.stellar.org/prd/core-live/core_live_003/",
+		"https://stellar-history-sg-sin.satoshipay.io/",
+		"https://stellar-history-us-iowa.satoshipay.io/",
+		"https://archive.v4.stellar.lobstr.co/",
+		"https://hongkong.stellar.whalestack.com/history/",
+		"https://hercules-history.publicnode.org/",
+		"https://lyra-history.publicnode.org/",
+		"https://stellar-full-history3.bdnodes.net/",
+		"https://archive.v5.stellar.lobstr.co/",
+		"https://stellar-history-ins.franklintempleton.com/azinsshf401/",
+	}
 
 	// TestNetworkhistoryArchiveURLs is a list of history archive URLs for stellar 'testnet'
 	TestNetworkhistoryArchiveURLs = []string{"https://history.stellar.org/prd/core-testnet/core_testnet_001/",

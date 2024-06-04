@@ -2,6 +2,7 @@ package aggregation
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	backends "github.com/stellar/go/ingest/ledgerbackend"
@@ -22,6 +23,8 @@ const (
 type Aggregation struct {
 	service.BaseService
 
+	ACfg *config.AggregationConfig
+
 	ctx     context.Context
 	Cfg     backends.CaptiveCoreConfig
 	backend backends.LedgerBackend
@@ -38,7 +41,7 @@ type Aggregation struct {
 	isSync      bool
 	prepareStep uint32
 
-	startLedgerSeq uint32
+	StartLedgerSeq uint32
 	CurrLedgerSeq  uint32
 
 	db *db.DBHandler
@@ -59,6 +62,7 @@ func NewAggregation(
 		contractDataEntrysQueue:  make(chan models.ContractsData, QueueSize),
 		prepareStep:              DefaultPrepareStep,
 		isSync:                   false,
+		ACfg:                     cfg,
 	}
 
 	as.BaseService = *service.NewBaseService("Aggregation", as)
@@ -70,13 +74,15 @@ func NewAggregation(
 	logger.SetLevel(log.DebugLevel)
 	as.BaseService.SetLogger(logger)
 
-	as.startLedgerSeq = cfg.StartLedgerHeight
-	as.CurrLedgerSeq = cfg.CurrLedgerHeight
+	as.StartLedgerSeq = as.ACfg.StartLedgerHeight
+	as.CurrLedgerSeq = as.ACfg.CurrLedgerHeight
+
+	fmt.Println(as.StartLedgerSeq, as.CurrLedgerSeq)
 
 	as.db = db.NewDBHandler()
 
 	as.ctx = context.Background()
-	as.backend, as.Cfg = newLedgerBackend(as.ctx, *cfg, as.Logger)
+	as.backend, as.Cfg = newLedgerBackend(as.ctx, *as.ACfg, as.Logger)
 	return as
 }
 

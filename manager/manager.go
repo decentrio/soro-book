@@ -1,6 +1,8 @@
 package manager
 
 import (
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/decentrio/soro-book/aggregation"
@@ -19,6 +21,10 @@ type Manager struct {
 	// aggregation services
 	as *aggregation.Aggregation
 }
+
+const (
+	PaddingLedger = 2560
+)
 
 // StateOption sets an optional parameter on the State.
 type ManagerOption func(*Manager)
@@ -53,6 +59,20 @@ func (m *Manager) OnStart() error {
 func (m *Manager) OnStop() error {
 	m.Logger.Info("Stop")
 	m.as.Stop()
+
+	asConfig := *m.as.ACfg
+	asConfig.StartLedgerHeight = m.as.StartLedgerSeq - PaddingLedger
+
+	bz, err := json.Marshal(asConfig)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	fmt.Println(m.cfg.AggregationConfigFile())
+	err = config.WriteState(m.cfg.AggregationConfigFile(), bz, 0777)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
 	time.Sleep(time.Second)
 	return nil

@@ -33,7 +33,7 @@ func (as *Aggregation) getNewLedger() {
 			}(ledgerCloseMeta)
 		}
 	} else {
-		seq := as.startLedgerSeq
+		seq := as.StartLedgerSeq
 		ledgerCloseMeta, err := as.backend.GetLedger(as.ctx, seq)
 		if err != nil {
 			as.Logger.Error(fmt.Sprintf("error get ledger %s", err.Error()))
@@ -43,7 +43,7 @@ func (as *Aggregation) getNewLedger() {
 		go func(l xdr.LedgerCloseMeta) {
 			as.ledgerQueue <- l
 		}(ledgerCloseMeta)
-		as.startLedgerSeq++
+		as.StartLedgerSeq++
 	}
 }
 
@@ -98,22 +98,22 @@ func (as *Aggregation) handleReceiveNewLedger(l xdr.LedgerCloseMeta) {
 	ledger.Operations = operations
 
 	// Create Ledger
-	_, err = as.db.CreateLedger(&ledger)
-	if err != nil {
-		as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", ledger.Seq, err.Error()))
-	}
+	// _, err = as.db.CreateLedger(&ledger)
+	// if err != nil {
+	// 	as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", ledger.Seq, err.Error()))
+	// }
 
 	// Create Tx and Soroban events
-	for _, tw := range txWrappers {
-		go func(twi TransactionWrapper) {
-			as.txQueue <- twi
-		}(tw)
-	}
+	// for _, tw := range txWrappers {
+	// 	go func(twi TransactionWrapper) {
+	// 		as.txQueue <- twi
+	// 	}(tw)
+	// }
 }
 
 func (as *Aggregation) prepare() (uint32, uint32) {
 	if !as.isSync {
-		from := as.startLedgerSeq
+		from := as.StartLedgerSeq
 		to := from + DefaultPrepareStep
 
 		var ledgerRange backends.Range
@@ -123,6 +123,7 @@ func (as *Aggregation) prepare() (uint32, uint32) {
 			ledgerRange = backends.BoundedRange(from, to)
 		}
 
+		fmt.Println(ledgerRange)
 		err := as.backend.PrepareRange(as.ctx, ledgerRange)
 		if err != nil {
 			as.Logger.Errorf("error prepare %s", err.Error())
@@ -132,7 +133,7 @@ func (as *Aggregation) prepare() (uint32, uint32) {
 				as.isSync = true
 			}
 		}
-		as.startLedgerSeq += DefaultPrepareStep
+		as.StartLedgerSeq += DefaultPrepareStep
 		return from, to
 	}
 

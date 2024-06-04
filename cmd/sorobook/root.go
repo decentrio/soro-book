@@ -81,31 +81,36 @@ func ParseConfig(cmd *cobra.Command) (*cfg.ManagerConfig, error) {
 	}
 
 	var aggregationConfig cfg.AggregationConfig
-	startLedger, err := cmd.Flags().GetUint32(cli.StartLedger)
-	if err != nil {
-		return nil, err
-	}
-	if startLedger != 0 {
-		aggregationConfig.StartLedgerHeight = startLedger
-	}
+	aggregationConfigFile := conf.AggregationConfigFile()
+	if cfg.FileExists(aggregationConfigFile) {
+		aggregationConfig = cfg.LoadAggregationConfig(aggregationConfigFile)
+	} else {
+		startLedger, err := cmd.Flags().GetUint32(cli.StartLedger)
+		if err != nil {
+			return nil, err
+		}
+		if startLedger != 0 {
+			aggregationConfig.StartLedgerHeight = startLedger
+		}
 
-	currLedger, err := cmd.Flags().GetUint32(cli.CurrentLedger)
-	if err != nil {
-		return nil, err
-	}
-	aggregationConfig.CurrLedgerHeight = currLedger
+		currLedger, err := cmd.Flags().GetUint32(cli.CurrentLedger)
+		if err != nil {
+			return nil, err
+		}
+		aggregationConfig.CurrLedgerHeight = currLedger
 
-	network, err := cmd.Flags().GetString(cli.NetWork)
-	if err != nil {
-		return nil, err
-	}
-	aggregationConfig.Network = network
+		network, err := cmd.Flags().GetString(cli.NetWork)
+		if err != nil {
+			return nil, err
+		}
+		aggregationConfig.Network = network
 
-	stellarCoreBinaryPath, err := exec.LookPath("stellar-core")
-	if err != nil {
-		return nil, err
+		stellarCoreBinaryPath, err := exec.LookPath("stellar-core")
+		if err != nil {
+			return nil, err
+		}
+		aggregationConfig.BinaryPath = stellarCoreBinaryPath
 	}
-	aggregationConfig.BinaryPath = stellarCoreBinaryPath
 
 	conf.AggregationCfg = &aggregationConfig
 

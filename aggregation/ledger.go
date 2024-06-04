@@ -17,89 +17,43 @@ type LedgerWrapper struct {
 }
 
 func (as *Aggregation) getNewLedger() {
-	from := as.startLedgerSeq
-	to := as.startLedgerSeq + as.prepareStep
-	ledgerRange := backends.BoundedRange(from, to)
-	err := as.backend.PrepareRange(as.ctx, ledgerRange)
-	if err != nil {
-		//"is greater than max available in history archives"
-		fmt.Println("Error Prepare")
-		if as.prepareStep > 1 {
-			as.prepareStep = as.prepareStep / 2
-		} else {
-			as.prepareStep = 1
+	// prepare range
+	from, to := as.prepare()
+	// get ledger
+	if !as.isSync {
+		for seq := from; seq < to; seq++ {
+			ledgerCloseMeta, err := as.backend.GetLedger(as.ctx, seq)
+			if err != nil {
+				as.Logger.Error(fmt.Sprintf("error get ledger %s", err.Error()))
+				return
+			}
+
+			go func(l xdr.LedgerCloseMeta) {
+				as.ledgerQueue <- l
+			}(ledgerCloseMeta)
 		}
-		time.Sleep(time.Millisecond)
-		return
-	}
-	for seq := from; seq < to; seq++ {
-		// get ledger
+	} else {
+		seq := as.StartLedgerSeq
 		ledgerCloseMeta, err := as.backend.GetLedger(as.ctx, seq)
 		if err != nil {
-			as.Logger.Error(fmt.Sprintf("Error GetLedger %s", err.Error()))
-			continue
+			as.Logger.Error(fmt.Sprintf("error get ledger %s", err.Error()))
+			return
 		}
 
-		ledger := getLedgerFromCloseMeta(ledgerCloseMeta)
-
-		var txWrappers []TransactionWrapper
-		var transactions = uint32(0)
-		var operations = uint32(0)
-		// get tx
-		txReader, err := ingest.NewLedgerTransactionReader(
-			as.ctx, as.backend, as.Cfg.NetworkPassphrase, seq,
-		)
-		panicIf(err)
-		defer txReader.Close()
-
-		// Read each transaction within the ledger, extract its operations, and
-		// accumulate the statistics we're interested in.
-		for {
-			tx, err := txReader.Read()
-			if err == io.EOF {
-				break
-			}
-
-			if err != nil {
-				as.Logger.Error(fmt.Sprintf("Error txReader %s", err.Error()))
-			}
-
-			txWrapper := NewTransactionWrapper(tx, seq)
-			txWrappers = append(txWrappers, txWrapper)
-
-			operations += uint32(len(tx.Envelope.Operations()))
-			transactions++
-		}
-
-		ledger.Transactions = transactions
-		ledger.Operations = operations
-
-		lw := LedgerWrapper{
-			ledger: ledger,
-			txs:    txWrappers,
-		}
-		as.ledgerQueue <- lw
+		go func(l xdr.LedgerCloseMeta) {
+			as.ledgerQueue <- l
+		}(ledgerCloseMeta)
+		as.StartLedgerSeq++
 	}
-	as.startLedgerSeq = to
 }
 
 // aggregation process
 func (as *Aggregation) ledgerProcessing() {
 	for {
-		if as.state != LEDGER {
-			continue
-		}
-
 		select {
 		// Receive a new tx
 		case ledger := <-as.ledgerQueue:
-			as.Logger.Info("getting new ledgers")
 			as.handleReceiveNewLedger(ledger)
-
-			as.state = TX
-			as.Logger.Info(fmt.Sprintf("state transition state: %s", as.state))
-
-			as.CurrLedgerSeq = ledger.ledger.Seq
 		// Terminate process
 		case <-as.BaseService.Terminate():
 			return
@@ -110,23 +64,99 @@ func (as *Aggregation) ledgerProcessing() {
 }
 
 // handleReceiveTx
-func (as *Aggregation) handleReceiveNewLedger(lw LedgerWrapper) {
+func (as *Aggregation) handleReceiveNewLedger(l xdr.LedgerCloseMeta) {
+	ledger := getLedgerFromCloseMeta(l)
+
+	var txWrappers []TransactionWrapper
+	var transactions = uint32(0)
+	var operations = uint32(0)
+	// get tx
+	txReader, err := ingest.NewLedgerTransactionReaderFromLedgerCloseMeta(as.Cfg.NetworkPassphrase, l)
+	panicIf(err)
+	defer txReader.Close()
+
+	// Read each transaction within the ledger, extract its operations, and
+	// accumulate the statistics we're interested in.
+	for {
+		tx, err := txReader.Read()
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			as.Logger.Error(fmt.Sprintf("error txReader %s", err.Error()))
+		}
+
+		txWrapper := NewTransactionWrapper(tx, ledger.Seq, ledger.LedgerTime)
+		txWrappers = append(txWrappers, txWrapper)
+
+		operations += uint32(len(tx.Envelope.Operations()))
+		transactions++
+	}
+
+	ledger.Transactions = transactions
+	ledger.Operations = operations
+
 	// Create Ledger
-	_, err := as.db.CreateLedger(&lw.ledger)
+	_, err = as.db.CreateLedger(&ledger)
 	if err != nil {
-		as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", lw.ledger.Seq, err.Error()))
+		as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", ledger.Seq, err.Error()))
 	}
 
 	// Create Tx and Soroban events
-	for _, tw := range lw.txs {
-		as.txQueue <- tw
+	for _, tw := range txWrappers {
+		go func(twi TransactionWrapper) {
+			as.txQueue <- twi
+		}(tw)
 	}
 }
 
+func (as *Aggregation) prepare() (uint32, uint32) {
+	if !as.isSync {
+		from := as.StartLedgerSeq
+		to := from + DefaultPrepareStep
+
+		var ledgerRange backends.Range
+		if to > as.CurrLedgerSeq {
+			ledgerRange = backends.UnboundedRange(from)
+		} else {
+			ledgerRange = backends.BoundedRange(from, to)
+		}
+
+		fmt.Println(ledgerRange)
+		err := as.backend.PrepareRange(as.ctx, ledgerRange)
+		if err != nil {
+			as.Logger.Errorf("error prepare %s", err.Error())
+			return 0, 0 // if prepare error, we should skip here
+		} else {
+			if to > as.CurrLedgerSeq {
+				as.isSync = true
+			}
+		}
+		as.StartLedgerSeq += DefaultPrepareStep
+		return from, to
+	}
+
+	return 0, 0
+}
+
 func getLedgerFromCloseMeta(ledgerCloseMeta xdr.LedgerCloseMeta) models.Ledger {
+	var ledgerHeader xdr.LedgerHeaderHistoryEntry
+	switch ledgerCloseMeta.V {
+	case 0:
+		ledgerHeader = ledgerCloseMeta.MustV0().LedgerHeader
+	case 1:
+		ledgerHeader = ledgerCloseMeta.MustV1().LedgerHeader
+	default:
+		panic(fmt.Sprintf("Unsupported LedgerCloseMeta.V: %d", ledgerCloseMeta.V))
+	}
+
+	timeStamp := uint64(ledgerHeader.Header.ScpValue.CloseTime)
+
 	return models.Ledger{
-		Hash:     ledgerCloseMeta.LedgerHash().HexString(),
-		PrevHash: ledgerCloseMeta.PreviousLedgerHash().HexString(),
-		Seq:      ledgerCloseMeta.LedgerSequence(),
+		Hash:       ledgerCloseMeta.LedgerHash().HexString(),
+		PrevHash:   ledgerCloseMeta.PreviousLedgerHash().HexString(),
+		Seq:        ledgerCloseMeta.LedgerSequence(),
+		LedgerTime: timeStamp,
 	}
 }

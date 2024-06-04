@@ -22,6 +22,22 @@ func (h *DBHandler) CreateTransaction(data *models.Transaction) (string, error) 
 	return data.Hash, nil
 }
 
+func (h *DBHandler) CreateContractCreatedTransaction(data *models.ContractsCode) (string, error) {
+	if err := h.db.Create(data).Error; err != nil {
+		return "", err
+	}
+
+	return data.ContractId, nil
+}
+
+func (h *DBHandler) CreateContractInvokedTransaction(data *models.InvokeTransaction) (string, error) {
+	if err := h.db.Create(data).Error; err != nil {
+		return "", err
+	}
+
+	return data.Hash, nil
+}
+
 func (h *DBHandler) CreateWasmContractEvent(data *models.WasmContractEvent) (string, error) {
 	if err := h.db.Create(data).Error; err != nil {
 		return "", err
@@ -62,33 +78,35 @@ func (h *DBHandler) CreateAssetContractClawbackEvent(data *models.AssetContractC
 	return data.Id, nil
 }
 
-func (h *DBHandler) CreateContractEntry(data *models.Contract) (string, error) {
+func (h *DBHandler) CreateContractEntry(data *models.ContractsData) (string, error) {
 	switch data.EntryType {
 	case "updated":
-		var oldData models.Contract
-		if err := h.db.Table("contracts").
+		var oldData models.ContractsData
+		if err := h.db.Table("contracts_data").
 			Where("contract_id = ?", data.ContractId).
 			Where("is_newest = ?", true).
 			Where("key_xdr = ?", data.KeyXdr).
 			First(&oldData).Error; err == nil {
 			fmt.Println("CreateContractEntry Updated")
 			oldData.IsNewest = false
-			if err := h.db.Table("contracts").Save(oldData).Error; err != nil {
+			oldData.UpdatedLedger = data.Ledger - 1
+			if err := h.db.Table("contracts_data").Save(oldData).Error; err != nil {
 				return "ERROR: update old contract data entry", err
 			}
 		}
 
 		break
 	case "removed":
-		var oldData models.Contract
-		if err := h.db.Table("contracts").
+		var oldData models.ContractsData
+		if err := h.db.Table("contracts_data").
 			Where("contract_id = ?", data.ContractId).
 			Where("is_newest = ?", true).
 			Where("key_xdr = ?", data.KeyXdr).
 			First(&oldData).Error; err == nil {
 			fmt.Println("CreateContractEntry Removed")
 			oldData.IsNewest = false
-			if err := h.db.Table("contracts").Save(oldData).Error; err != nil {
+			oldData.UpdatedLedger = data.Ledger - 1
+			if err := h.db.Table("contracts_data").Save(oldData).Error; err != nil {
 				return "ERROR: update old contract data entry", err
 			}
 		}

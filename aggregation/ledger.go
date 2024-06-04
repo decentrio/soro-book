@@ -98,17 +98,17 @@ func (as *Aggregation) handleReceiveNewLedger(l xdr.LedgerCloseMeta) {
 	ledger.Operations = operations
 
 	// Create Ledger
-	// _, err = as.db.CreateLedger(&ledger)
-	// if err != nil {
-	// 	as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", ledger.Seq, err.Error()))
-	// }
+	_, err = as.db.CreateLedger(&ledger)
+	if err != nil {
+		as.Logger.Error(fmt.Sprintf("Error create ledger %d: %s", ledger.Seq, err.Error()))
+	}
 
 	// Create Tx and Soroban events
-	// for _, tw := range txWrappers {
-	// 	go func(twi TransactionWrapper) {
-	// 		as.txQueue <- twi
-	// 	}(tw)
-	// }
+	for _, tw := range txWrappers {
+		go func(twi TransactionWrapper) {
+			as.txQueue <- twi
+		}(tw)
+	}
 }
 
 func (as *Aggregation) prepare() (uint32, uint32) {

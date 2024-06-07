@@ -2,7 +2,6 @@ package aggregation
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	backends "github.com/stellar/go/ingest/ledgerbackend"
@@ -11,13 +10,12 @@ import (
 
 	"github.com/decentrio/soro-book/config"
 	db "github.com/decentrio/soro-book/database/handlers"
-	"github.com/decentrio/soro-book/database/models"
 	"github.com/decentrio/soro-book/lib/service"
 )
 
 const (
 	QueueSize          = 10000
-	DefaultPrepareStep = 1280
+	DefaultPrepareStep = 64
 )
 
 type Aggregation struct {
@@ -29,12 +27,8 @@ type Aggregation struct {
 	Cfg     backends.CaptiveCoreConfig
 	backend backends.LedgerBackend
 
-	// txQueue channel for trigger new tx
-	ledgerQueue              chan xdr.LedgerCloseMeta
-	txQueue                  chan TransactionWrapper
-	assetContractEventsQueue chan models.StellarAssetContractEvent
-	wasmContractEventsQueue  chan models.WasmContractEvent
-	contractDataEntrysQueue  chan models.ContractsData
+	// ledgerQueue channel for trigger new ledger
+	ledgerQueue chan xdr.LedgerCloseMeta
 
 	// isSync is flag represent if services is
 	// re-synchronize
@@ -45,6 +39,8 @@ type Aggregation struct {
 	CurrLedgerSeq  uint32
 
 	db *db.DBHandler
+
+	current_ticker Tickers
 }
 
 // AggregationOption sets an optional parameter on the State.
@@ -55,14 +51,10 @@ func NewAggregation(
 	options ...AggregationOption,
 ) *Aggregation {
 	as := &Aggregation{
-		ledgerQueue:              make(chan xdr.LedgerCloseMeta, QueueSize),
-		txQueue:                  make(chan TransactionWrapper, QueueSize),
-		assetContractEventsQueue: make(chan models.StellarAssetContractEvent, QueueSize),
-		wasmContractEventsQueue:  make(chan models.WasmContractEvent, QueueSize),
-		contractDataEntrysQueue:  make(chan models.ContractsData, QueueSize),
-		prepareStep:              DefaultPrepareStep,
-		isSync:                   false,
-		ACfg:                     cfg,
+		ledgerQueue: make(chan xdr.LedgerCloseMeta, QueueSize),
+		prepareStep: DefaultPrepareStep,
+		isSync:      false,
+		ACfg:        cfg,
 	}
 
 	as.BaseService = *service.NewBaseService("Aggregation", as)
@@ -71,13 +63,11 @@ func NewAggregation(
 	}
 
 	logger := log.New().WithField("module", "aggregation")
-	logger.SetLevel(log.DebugLevel)
+	logger.SetLevel(log.ErrorLevel)
 	as.BaseService.SetLogger(logger)
 
 	as.StartLedgerSeq = as.ACfg.StartLedgerHeight
 	as.CurrLedgerSeq = as.ACfg.CurrLedgerHeight
-
-	fmt.Println(as.StartLedgerSeq, as.CurrLedgerSeq)
 
 	as.db = db.NewDBHandler()
 
@@ -89,9 +79,6 @@ func NewAggregation(
 func (as *Aggregation) OnStart() error {
 	as.Logger.Info("Start")
 	go as.ledgerProcessing()
-	go as.transactionProcessing()
-	go as.contractDataEntryProcessing()
-	go as.contractEventsProcessing()
 	// Note that when using goroutines, you need to be careful to ensure that no
 	// race conditions occur when accessing the txQueue.
 	go as.aggregation()

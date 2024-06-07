@@ -1,9 +1,6 @@
 package aggregation
 
 import (
-	"fmt"
-	"time"
-
 	"github.com/decentrio/converter/converter"
 	"github.com/decentrio/soro-book/database/models"
 	"github.com/stellar/go/ingest"
@@ -14,68 +11,6 @@ const (
 	SUCCESS = "success"
 	FAILED  = "failed"
 )
-
-func (as *Aggregation) transactionProcessing() {
-	for {
-		select {
-		// Receive a new tx
-		case tx := <-as.txQueue:
-			as.handleReceiveNewTransaction(tx)
-		// Terminate process
-		case <-as.BaseService.Terminate():
-			return
-		default:
-		}
-		time.Sleep(time.Millisecond)
-	}
-}
-
-func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
-	tx := tw.GetModelsTransaction()
-	_, err := as.db.CreateTransaction(tx)
-	if err != nil {
-		as.Logger.Error(fmt.Sprintf("error create ledger %d tx %s: %s", tw.GetLedgerSequence(), tw.GetTransactionHash(), err.Error()))
-	}
-
-	// if this is invokeHostFuncTx, we should store the detail
-	invokeHostFuncTx, createContractTx, err := isInvokeHostFunctionTx(tw.Tx, tw.LedgerSequence)
-	if err != nil {
-		as.Logger.Error(fmt.Sprintf("error invoke host function %s", err.Error()))
-	}
-
-	for _, ivhft := range invokeHostFuncTx {
-		_, err := as.db.CreateContractInvokedTransaction(&ivhft)
-		if err != nil {
-			as.Logger.Error(fmt.Sprintf("error create invoke host function %s", err.Error()))
-		}
-	}
-
-	for _, cct := range createContractTx {
-		_, err := as.db.CreateContractCreatedTransaction(&cct)
-		if err != nil {
-			as.Logger.Error(fmt.Sprintf("error create contract created function %s", err.Error()))
-		}
-	}
-
-	// Contract entry
-	entries := tw.GetModelsContractDataEntry()
-	for _, entry := range entries {
-		as.contractDataEntrysQueue <- entry
-	}
-
-	wasmEvent, assetEvent, err := tw.GetContractEvents()
-	if err != nil {
-		return
-	}
-	// Soroban stellar asset events
-	for _, e := range assetEvent {
-		as.assetContractEventsQueue <- e
-	}
-	// Soroban wasm contract events
-	for _, e := range wasmEvent {
-		as.wasmContractEventsQueue <- e
-	}
-}
 
 func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32) ([]models.InvokeTransaction, []models.ContractsCode, error) {
 	var invokeFuncTxs []models.InvokeTransaction

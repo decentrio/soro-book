@@ -231,6 +231,9 @@ func (as *Aggregation) handleReceiveNewLedger(l xdr.LedgerCloseMeta) {
 			liquidityInUsd := float64(usdcLiquidity) + float64(phoLiquidity)*price
 
 			tickers.TickerId = "PHO_USDC"
+			tickers.BaseCurrency = "PHO"
+			tickers.TargetCurrency = "USDC"
+			tickers.PoolId = "CAZ6W4WHVGQBGURYTUOLCUOOHW6VQGAAPSPCD72VEDZMBBPY7H43AYEC"
 			tickers.LastPrice = historicalTrade.Price
 			tickers.LiquidityInUsd = strconv.FormatFloat(liquidityInUsd, 'f', 6, 64)
 			tickers.UpdatedLedger = ledger.Seq

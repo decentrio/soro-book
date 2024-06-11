@@ -27,11 +27,11 @@ type HistoricalTrades struct {
 }
 
 type Tickers struct {
-	TickerId string `json:"ticker_id,omitempty"` // PHO_USDC
-	// BaseCurrency   string // PHO
-	// TargetCurrency string // USDC
-	// PoolId         string // "CAZ6W4WHVGQBGURYTUOLCUOOHW6VQGAAPSPCD72VEDZMBBPY7H43AYEC"
-	LastPrice string `json:"last_price,omitempty"` // Last price trade
+	TickerId       string `json:"ticker_id,omitempty"` // PHO_USDC
+	BaseCurrency   string // PHO
+	TargetCurrency string // USDC
+	PoolId         string // "CAZ6W4WHVGQBGURYTUOLCUOOHW6VQGAAPSPCD72VEDZMBBPY7H43AYEC"
+	LastPrice      string `json:"last_price,omitempty"` // Last price trade
 	// BaseVolume     string // base currency trade volume (24h)
 	// TargetVolume   string // target currency trade volume (24h)
 	LiquidityInUsd string `json:"liquidity_in_usd,omitempty"` // liquidity in usd

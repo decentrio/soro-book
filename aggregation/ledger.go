@@ -200,6 +200,7 @@ func (as *Aggregation) handleReceiveNewLedger(l xdr.LedgerCloseMeta) {
 			}
 			historicalTrade.TradeTimestamp = tx.Time
 			historicalTrade.TradeId = uint64(tx.Ops[0].ID())
+			historicalTrade.TickerId = "PHO_USDC"
 
 			// create historycal trade
 			as.db.CreateHistoricalTrades(&historicalTrade)

@@ -10,27 +10,6 @@ import (
 	"github.com/stellar/go/xdr"
 )
 
-type Tickers struct {
-	TickerId       string // PHO_USDC
-	BaseCurrency   string // PHO
-	TargetCurrency string // USDC
-	PoolId         string // "CAZ6W4WHVGQBGURYTUOLCUOOHW6VQGAAPSPCD72VEDZMBBPY7H43AYEC"
-	LastPrice      string // Last price trade
-	BaseVolume     string // base currency trade volume (24h)
-	TargetVolume   string // target currency trade volume (24h)
-	LiquidityInUsd string // liquidity in usd
-	UpdatedLedger  uint32 // updated ledger
-}
-
-type HistoricalTrades struct {
-	TradeId        string // A unique ID associated with the trade for the currency pair transaction
-	Price          string // Transaction price of base asset in target currency
-	BaseVolume     string // volume trade of base currency (float)
-	TargetVolume   string // volume trade of target currency (float)
-	TradeTimestamp uint64 // time stamp of trade
-	TradeType      string // buy/sell
-}
-
 func (as *Aggregation) handleReceiveNewContractDataEntry(e models.ContractsData) {
 	_, err := as.db.CreateContractEntry(&e)
 	if err != nil {

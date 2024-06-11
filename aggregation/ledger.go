@@ -3,6 +3,7 @@ package aggregation
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"time"
 
 	"github.com/decentrio/soro-book/database/models"
@@ -117,59 +118,91 @@ func (as *Aggregation) handleReceiveNewLedger(l xdr.LedgerCloseMeta) {
 			continue
 		}
 
-		var historicalTrade HistoricalTrades
+		var historicalTrade models.HistoricalTrades
+		var tickers models.Tickers
+		_ = historicalTrade
 		if invokes[0].ContractId == MultiHopContract {
 			var argsXdr xdr.InvokeContractArgs
 			argsXdr.UnmarshalBinary(invokes[0].Args)
 
-			// args layout
-			// sender
-			// swap(Vec(Map))
-			// max_spread_bps(option)(i64)
-			// amount(i128)
-			// we only care about arg1 and arg3
+			method := string(argsXdr.FunctionName)
 
-			// extract arg1
-			arg1 := argsXdr.Args[1].MustVec()
-			var askAsset string
-			var offerAsset string
-			for _, av := range *arg1 {
-				am := av.MustMap()
-				for _, e := range *am {
-					key := string(e.Key.MustSym())
-					switch key {
-					case "ask_asset":
-						val := e.Val.MustAddress()
-						askAsset, _ = val.String()
-
-						fmt.Printf("ask_asset: %s\n", askAsset)
-					case "ask_asset_min_amount":
-						// TODO
-
-					case "offer_asset":
-						val := e.Val.MustAddress()
-						offerAsset, _ = val.String()
-
-						fmt.Printf("offer_asset: %s\n", offerAsset)
-					default:
-						continue
-					}
-				}
+			if method != "swap" {
+				break
 			}
 
-			if askAsset == PHOTokenContract && offerAsset == USDCTokenContract {
-				historicalTrade.TradeType = "buy"
-			} else if askAsset == USDCTokenContract && offerAsset == PHOTokenContract {
-				historicalTrade.TradeType = "sell"
-			} else {
-				as.Logger.Errorf("unknown trading pair %s - %s", askAsset, offerAsset)
+			//extract contract event to retrieve data
+			wasmEvents, _, err := tx.GetContractEvents()
+			if err != nil {
 				continue
 			}
 
-			//extract arg3
-			arg3 := argsXdr.Args[3].MustI128()
-			amount := uint64(arg3.Lo)
-			fmt.Println("amount ", amount)
+			var buyToken string
+			var sellToken string
+			var offerAmount uint64
+			var returnAmount uint64
+			var price float64
+			for _, e := range wasmEvents {
+				var ebd xdr.ContractEventBody
+				err := ebd.UnmarshalBinary(e.EventBodyXdr)
+				if err != nil {
+					continue
+				}
+
+				v0 := ebd.MustV0()
+
+				topics := v0.Topics
+				data := v0.Data
+				_ = data
+
+				if len(topics) != 2 {
+					continue
+				}
+
+				action := string(topics[1].MustStr())
+
+				switch action {
+				case "sell_token":
+					sellToken, err = data.MustAddress().String()
+					if err != nil {
+						continue
+					}
+				case "buy_token":
+					buyToken, err = data.MustAddress().String()
+					if err != nil {
+						continue
+					}
+				case "offer_amount":
+					offerAmount = uint64(data.MustI128().Lo)
+				case "return_amount":
+					returnAmount = uint64(data.MustI128().Lo)
+				default:
+				}
+
+			}
+
+			if buyToken == PHOTokenContract && sellToken == USDCTokenContract { // offer USDC - return PHO
+				historicalTrade.TradeType = "buy"
+				historicalTrade.BaseVolume = strconv.FormatUint(returnAmount, 10)  // PHO
+				historicalTrade.TargetVolume = strconv.FormatUint(offerAmount, 10) // USDC
+				price = float64(offerAmount) / float64(returnAmount)               // amount USDC / amount PHO
+				historicalTrade.Price = strconv.FormatFloat(price, 'f', 6, 64)     // Price
+
+			} else if buyToken == USDCTokenContract && sellToken == PHOTokenContract { // offer PHO - return USDC
+				historicalTrade.TradeType = "sell"
+				historicalTrade.BaseVolume = strconv.FormatUint(offerAmount, 10)    // PHO
+				historicalTrade.TargetVolume = strconv.FormatUint(returnAmount, 10) // USDC
+				price = float64(returnAmount) / float64(offerAmount)                // amount USDC / amount PHO
+				historicalTrade.Price = strconv.FormatFloat(price, 'f', 6, 64)      // Price
+			} else {
+				as.Logger.Errorf("unknown trading pair %s - %s", buyToken, sellToken)
+				continue
+			}
+			historicalTrade.TradeTimestamp = tx.Time
+			historicalTrade.TradeId = uint64(tx.Ops[0].ID())
+
+			// create historycal trade
+			as.db.CreateHistoricalTrades(&historicalTrade)
 
 			// retrive contract pool liquidity data
 			var usdcLiquidity uint64
@@ -192,15 +225,20 @@ func (as *Aggregation) handleReceiveNewLedger(l xdr.LedgerCloseMeta) {
 						usdcLiquidity = uint64(val.Lo)
 					default:
 					}
-
 				}
 			}
-			fmt.Println("Pho: ", phoLiquidity)
-			fmt.Println("usdc: ", usdcLiquidity)
-		}
+			liquidityInUsd := float64(usdcLiquidity) + float64(phoLiquidity)*price
 
+			tickers.TickerId = "PHO_USDC"
+			tickers.LastPrice = historicalTrade.Price
+			tickers.LiquidityInUsd = strconv.FormatFloat(liquidityInUsd, 'f', 6, 64)
+			tickers.UpdatedLedger = ledger.Seq
+
+			// update ticker
+			as.db.CreateOrUpdateTickers(&tickers)
+
+		}
 	}
-	fmt.Println("===================================")
 }
 
 func (as *Aggregation) prepare() (uint32, uint32) {

@@ -39,8 +39,6 @@ type Aggregation struct {
 	CurrLedgerSeq  uint32
 
 	db *db.DBHandler
-
-	current_ticker Tickers
 }
 
 // AggregationOption sets an optional parameter on the State.

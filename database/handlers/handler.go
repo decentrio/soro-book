@@ -120,3 +120,19 @@ func (h *DBHandler) CreateContractEntry(data *models.ContractsData) (string, err
 
 	return fmt.Sprintf("%s: %s-%s", data.EntryType, data.ContractId, string(data.KeyXdr)), nil
 }
+
+func (h *DBHandler) CreateHistoricalTrades(data *models.HistoricalTrades) (uint64, error) {
+	if err := h.db.Create(data).Error; err != nil {
+		return 0, err
+	}
+
+	return data.TradeId, nil
+}
+
+func (h *DBHandler) CreateOrUpdateTickers(data *models.Tickers) (string, error) {
+	if err := h.db.Table("tickers").Save(data).Error; err != nil {
+		return "ERROR: update old contract data entry", err
+	}
+
+	return data.TickerId, nil
+}

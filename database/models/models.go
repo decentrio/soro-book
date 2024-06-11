@@ -16,6 +16,28 @@ type Ledger struct {
 	LedgerTime   uint64 `json:"ledger_time,omitempty"`
 }
 
+type HistoricalTrades struct {
+	TradeId        uint64 `json:"trade_id,omitempty"`        // A unique ID associated with the trade for the currency pair transaction
+	Price          string `json:"price,omitempty"`           // Transaction price of base asset in target currency
+	TickerId       string `json:"ticker_id,omitempty"`       // PHO_USDC
+	BaseVolume     string `json:"base_volume,omitempty"`     // volume trade of base currency (float)
+	TargetVolume   string `json:"target_volume,omitempty"`   // volume trade of target currency (float)
+	TradeTimestamp uint64 `json:"trade_timestamp,omitempty"` // time stamp of trade
+	TradeType      string `json:"trade_type,omitempty"`      // buy/sell
+}
+
+type Tickers struct {
+	TickerId string `json:"ticker_id,omitempty"` // PHO_USDC
+	// BaseCurrency   string // PHO
+	// TargetCurrency string // USDC
+	// PoolId         string // "CAZ6W4WHVGQBGURYTUOLCUOOHW6VQGAAPSPCD72VEDZMBBPY7H43AYEC"
+	LastPrice string `json:"last_price,omitempty"` // Last price trade
+	// BaseVolume     string // base currency trade volume (24h)
+	// TargetVolume   string // target currency trade volume (24h)
+	LiquidityInUsd string `json:"liquidity_in_usd,omitempty"` // liquidity in usd
+	UpdatedLedger  uint32 `json:"updated_ledger,omitempty"`   // updated ledger
+}
+
 type Transaction struct {
 	Hash             string `json:"hash,omitempty"`
 	Status           string `json:"status,omitempty"`

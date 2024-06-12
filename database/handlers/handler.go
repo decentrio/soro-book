@@ -141,6 +141,9 @@ func (h *DBHandler) CreateOrUpdateTickers(data *models.Tickers) (string, error) 
 		Where("trade_timestamp >= ?", time.Now().Unix()-86400).
 		Select("sum(target_volume) as total").Scan(&targetVolume)
 
+	data.BaseVolume = baseVolome
+	data.TargetVolume = targetVolume
+
 	if err := h.db.Table("tickers").Where("ticker_id = ?", data.TickerId).Save(data).Error; err != nil {
 		if err := h.db.Create(data).Error; err != nil {
 			return "", err

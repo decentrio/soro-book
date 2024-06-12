@@ -3,6 +3,7 @@ package aggregation
 import (
 	"fmt"
 	"io"
+	"math"
 	"strconv"
 	"time"
 
@@ -14,7 +15,7 @@ import (
 
 var (
 	MultiHopContract    = "CCLZRD4E72T7JCZCN3P7KNPYNXFYKQCL64ECLX7WP5GNVYPYJGU2IO2G"
-	PHOUSDCPoolContract = "CAZ6W4WHVGQBGURYTUOLCUOOHW6VQGAAPSPCD72VEDZMBBPY7H43AYEC"
+	PHOUSDCPoolContract = "CAZ6W4WHVGQBGURYTUOLCUOOHW6VQGAAPSPCD72VEDZMBBPY7H43AYEC" // 3
 	//PHO key 1
 	PHOTokenKey      = uint32(1)
 	PHOTokenContract = "CBZ7M5B3Y4WWBZ5XK5UZCAFOEZ23KSSZXYECYX3IXM6E2JOLQC52DK32"
@@ -83,9 +84,6 @@ func (as *Aggregation) ledgerProcessing() {
 func (as *Aggregation) handleReceiveNewLedger(l xdr.LedgerCloseMeta) {
 	ledger := getLedgerFromCloseMeta(l)
 	// get tx
-	if l.LedgerSequence() != 51994989 {
-		return
-	}
 	txReader, err := ingest.NewLedgerTransactionReaderFromLedgerCloseMeta(as.Cfg.NetworkPassphrase, l)
 	panicIf(err)
 	defer txReader.Close()
@@ -183,25 +181,32 @@ func (as *Aggregation) handleReceiveNewLedger(l xdr.LedgerCloseMeta) {
 
 			if buyToken == PHOTokenContract && sellToken == USDCTokenContract { // offer USDC - return PHO
 				historicalTrade.TradeType = "buy"
-				historicalTrade.BaseVolume = strconv.FormatUint(returnAmount, 10)  // PHO
-				historicalTrade.TargetVolume = strconv.FormatUint(offerAmount, 10) // USDC
-				price = float64(offerAmount) / float64(returnAmount)               // amount USDC / amount PHO
-				historicalTrade.Price = strconv.FormatFloat(price, 'f', 6, 64)     // Price
-
+				historicalTrade.BaseVolume = returnAmount                      // PHO
+				historicalTrade.TargetVolume = offerAmount                     // USDC
+				price = float64(offerAmount) / float64(returnAmount)           // amount USDC / amount PHO
+				historicalTrade.Price = strconv.FormatFloat(price, 'f', 6, 64) // Price
 			} else if buyToken == USDCTokenContract && sellToken == PHOTokenContract { // offer PHO - return USDC
 				historicalTrade.TradeType = "sell"
-				historicalTrade.BaseVolume = strconv.FormatUint(offerAmount, 10)    // PHO
-				historicalTrade.TargetVolume = strconv.FormatUint(returnAmount, 10) // USDC
-				price = float64(returnAmount) / float64(offerAmount)                // amount USDC / amount PHO
-				historicalTrade.Price = strconv.FormatFloat(price, 'f', 6, 64)      // Price
+				historicalTrade.BaseVolume = offerAmount                       // PHO
+				historicalTrade.TargetVolume = returnAmount                    // USDC
+				price = float64(returnAmount) / float64(offerAmount)           // amount USDC / amount PHO
+				historicalTrade.Price = strconv.FormatFloat(price, 'f', 6, 64) // Price
 			} else {
 				as.Logger.Errorf("unknown trading pair %s - %s", buyToken, sellToken)
 				continue
 			}
 			historicalTrade.TradeTimestamp = tx.Time
-			historicalTrade.TradeId = uint64(tx.Ops[0].ID())
+
+			idStr := "3" + strconv.FormatUint(uint64(tx.LedgerSequence), 10) + strconv.FormatUint(uint64(tx.Tx.Index), 10)
+			tempId, err := strconv.ParseUint(idStr, 10, 64)
+			if err != nil {
+				as.Logger.Error(err)
+			}
+			id := tempId % math.MaxInt32
+			historicalTrade.TradeId = id
 			historicalTrade.TickerId = "PHO_USDC"
 
+			fmt.Println(historicalTrade)
 			// create historycal trade
 			as.db.CreateHistoricalTrades(&historicalTrade)
 
@@ -228,15 +233,16 @@ func (as *Aggregation) handleReceiveNewLedger(l xdr.LedgerCloseMeta) {
 					}
 				}
 			}
-			liquidityInUsd := float64(usdcLiquidity) + float64(phoLiquidity)*price
+			liquidityInUsd := usdcLiquidity + uint64(float64(phoLiquidity)*price)
 
 			tickers.TickerId = "PHO_USDC"
 			tickers.BaseCurrency = "PHO"
 			tickers.TargetCurrency = "USDC"
 			tickers.PoolId = "CAZ6W4WHVGQBGURYTUOLCUOOHW6VQGAAPSPCD72VEDZMBBPY7H43AYEC"
 			tickers.LastPrice = historicalTrade.Price
-			tickers.LiquidityInUsd = strconv.FormatFloat(liquidityInUsd, 'f', 6, 64)
-			tickers.UpdatedLedger = ledger.Seq
+			tickers.LiquidityInUsd = liquidityInUsd
+
+			fmt.Println(tickers)
 
 			// update ticker
 			as.db.CreateOrUpdateTickers(&tickers)

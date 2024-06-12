@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/decentrio/soro-book/database/models"
 )
@@ -130,8 +131,20 @@ func (h *DBHandler) CreateHistoricalTrades(data *models.HistoricalTrades) (uint6
 }
 
 func (h *DBHandler) CreateOrUpdateTickers(data *models.Tickers) (string, error) {
-	if err := h.db.Table("tickers").Save(data).Error; err != nil {
-		return "ERROR: update old contract data entry", err
+	var baseVolome uint64
+	h.db.Table("historical_trades").
+		Where("trade_timestamp >= ?", time.Now().Unix()-86400).
+		Select("sum(base_volume) as total").Scan(&baseVolome)
+
+	var targetVolume uint64
+	h.db.Table("historical_trades").
+		Where("trade_timestamp >= ?", time.Now().Unix()-86400).
+		Select("sum(target_volume) as total").Scan(&targetVolume)
+
+	if err := h.db.Table("tickers").Where("ticker_id = ?", data.TickerId).Save(data).Error; err != nil {
+		if err := h.db.Create(data).Error; err != nil {
+			return "", err
+		}
 	}
 
 	return data.TickerId, nil

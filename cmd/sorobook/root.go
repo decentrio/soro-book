@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	DefaultCometDir = ".soro-book"
+	DefaultCometDir = ".price_feed"
 )
 
 var rootCmd = &cobra.Command{

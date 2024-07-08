@@ -38,9 +38,10 @@ type ContractsCode struct {
 type InvokeTransaction struct {
 	Hash         string `json:"hash,omitempty"`
 	ContractId   string `json:"contract_id,omitempty"`
-	FunctionType string `json:"func_type,omitempty"`
+	FunctionType string `json:"function_type,omitempty"`
 	FunctionName string `json:"function_name,omitempty"`
 	Args         []byte `json:"args,omitempty"`
+	TimeStamp    uint64 `json:"time_stamp,omitempty"`
 }
 
 type ScAddress struct {

@@ -38,7 +38,7 @@ func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
 	}
 
 	// if this is invokeHostFuncTx, we should store the detail
-	invokeHostFuncTx, createContractTx, err := isInvokeHostFunctionTx(tw.Tx, tw.LedgerSequence)
+	invokeHostFuncTx, createContractTx, err := isInvokeHostFunctionTx(tw.Tx, tw.LedgerSequence, tw.Time)
 	if err != nil {
 		as.Logger.Error(fmt.Sprintf("error invoke host function %s", err.Error()))
 	}
@@ -77,7 +77,7 @@ func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
 	}
 }
 
-func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32) ([]models.InvokeTransaction, []models.ContractsCode, error) {
+func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32, timeStamp uint64) ([]models.InvokeTransaction, []models.ContractsCode, error) {
 	var invokeFuncTxs []models.InvokeTransaction
 	var createdContracts []models.ContractsCode
 
@@ -107,6 +107,7 @@ func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32) ([]mo
 				invokeFuncTx.FunctionType = "invoke_host_function"
 				invokeFuncTx.FunctionName = fn
 				invokeFuncTx.Args = args
+				invokeFuncTx.TimeStamp = timeStamp
 
 				invokeFuncTxs = append(invokeFuncTxs, invokeFuncTx)
 

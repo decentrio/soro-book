@@ -70,6 +70,8 @@ func (tw TransactionWrapper) GetModelsContractDataEntry() []models.ContractsData
 					if err != nil {
 						continue
 					}
+				} else {
+					accountId = tw.Tx.Envelope.SourceAccount().ToAccountId().Address()
 				}
 
 				entry := models.ContractsData{

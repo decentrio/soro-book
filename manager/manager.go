@@ -7,8 +7,8 @@ import (
 
 	"github.com/decentrio/soro-book/aggregation"
 	"github.com/decentrio/soro-book/config"
-	"github.com/decentrio/soro-book/lib/log"
 	"github.com/decentrio/soro-book/lib/service"
+	"github.com/stellar/go/support/log"
 )
 
 // Manager is the root service that manage all services
@@ -22,6 +22,10 @@ type Manager struct {
 	as *aggregation.Aggregation
 }
 
+const (
+	PaddingLedger = 2560
+)
+
 // StateOption sets an optional parameter on the State.
 type ManagerOption func(*Manager)
 
@@ -29,7 +33,6 @@ type ManagerOption func(*Manager)
 func NewManager(
 	cfg *config.ManagerConfig,
 	as *aggregation.Aggregation,
-	log log.Logger,
 	options ...ManagerOption,
 ) *Manager {
 	m := &Manager{
@@ -42,7 +45,7 @@ func NewManager(
 		opt(m)
 	}
 
-	m.BaseService.SetLogger(log.With("module", "manager"))
+	m.BaseService.SetLogger(log.New().WithField("module", "manager"))
 
 	return m
 }
@@ -57,8 +60,8 @@ func (m *Manager) OnStop() error {
 	m.Logger.Info("Stop")
 	m.as.Stop()
 
-	asConfig := *m.as.Cfg
-	asConfig.LedgerHeight = m.as.CurrLedgerSeq
+	asConfig := *m.as.ACfg
+	asConfig.StartLedgerHeight = m.as.StartLedgerSeq - PaddingLedger
 
 	bz, err := json.Marshal(asConfig)
 	if err != nil {

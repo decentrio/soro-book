@@ -34,14 +34,10 @@ var (
 // aggregation process
 func (as *Aggregation) contractEventsProcessing() {
 	for {
-		if as.state != CONTRACT {
-			continue
-		}
-
 		select {
 		// Receive a new tx
 		case event := <-as.assetContractEventsQueue:
-			as.Logger.Info("Getting new asset contract event")
+			as.Logger.Info("getting new asset contract event")
 			eventType := event.GetType()
 			switch eventType {
 			case EventTypeTransfer:
@@ -75,7 +71,7 @@ func (as *Aggregation) contractEventsProcessing() {
 			}
 		case event := <-as.wasmContractEventsQueue:
 			// Create WasmContractEvents
-			as.Logger.Info("Getting new wasm contract event")
+			as.Logger.Info("getting new wasm contract event")
 			_, err := as.db.CreateWasmContractEvent(&event)
 			if err != nil {
 				as.Logger.Error(fmt.Sprintf("Error create wasm contract event tx %s: %s", event.TxHash, err.Error()))

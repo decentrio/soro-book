@@ -13,6 +13,7 @@ type Ledger struct {
 	Seq          uint32 `json:"seq,omitempty"`
 	Transactions uint32 `json:"transaction,omitempty"`
 	Operations   uint32 `json:"operations,omitempty"`
+	LedgerTime   uint64 `json:"ledger_time,omitempty"`
 }
 
 type Transaction struct {
@@ -24,6 +25,23 @@ type Transaction struct {
 	ResultXdr        []byte `json:"result_xdr,omitempty"`
 	ResultMetaXdr    []byte `json:"result_meta_xdr,omitempty"`
 	SourceAddress    string `json:"source_address,omitempty"`
+	TransactionTime  uint64 `json:"transaction_time,omitempty"`
+}
+
+type ContractsCode struct {
+	CreatorAddress string `json:"creator_address,omitempty"`
+	ContractId     string `json:"contract_id,omitempty"`
+	ContractCode   string `json:"contract_code,omitempty"`
+	CreatedLedger  uint32 `json:"created_ledger,omitempty"`
+}
+
+type InvokeTransaction struct {
+	Hash         string `json:"hash,omitempty"`
+	ContractId   string `json:"contract_id,omitempty"`
+	FunctionType string `json:"function_type,omitempty"`
+	FunctionName string `json:"function_name,omitempty"`
+	Args         []byte `json:"args,omitempty"`
+	TimeStamp    uint64 `json:"time_stamp,omitempty"`
 }
 
 type ScAddress struct {
@@ -31,17 +49,18 @@ type ScAddress struct {
 	ContractId *string `json:"contract_id,omitempty"`
 }
 
-type Contract struct {
-	Id         string `json:"id,omitempty"`
-	ContractId string `json:"contract_id,omitempty"`
-	AccountId  string `json:"account_id,omitempty"`
-	TxHash     string `json:"tx_hash,omitempty"`
-	Ledger     uint32 `json:"ledger,omitempty"`
-	EntryType  string `json:"entry_type,omitempty"`
-	KeyXdr     []byte `json:"key_xdr,omitempty"`
-	ValueXdr   []byte `json:"value_xdr,omitempty"`
-	Durability int32  `json:"durability,omitempty"`
-	IsNewest   bool   `json:"is_newest,omitempty"`
+type ContractsData struct {
+	Id            string `json:"id,omitempty"`
+	ContractId    string `json:"contract_id,omitempty"`
+	AccountId     string `json:"account_id,omitempty"`
+	TxHash        string `json:"tx_hash,omitempty"`
+	Ledger        uint32 `json:"ledger,omitempty"`
+	EntryType     string `json:"entry_type,omitempty"`
+	KeyXdr        []byte `json:"key_xdr,omitempty"`
+	ValueXdr      []byte `json:"value_xdr,omitempty"`
+	Durability    int32  `json:"durability,omitempty"`
+	IsNewest      bool   `json:"is_newest,omitempty"`
+	UpdatedLedger uint32 `json:"updated_ledger,omitempty"` // previous updated ledger (TODO: we should correct the name here)
 }
 
 type Int128Parts struct {

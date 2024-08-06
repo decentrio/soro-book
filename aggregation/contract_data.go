@@ -2,6 +2,7 @@ package aggregation
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/decentrio/soro-book/database/models"
@@ -12,14 +13,10 @@ import (
 
 func (as *Aggregation) contractDataEntryProcessing() {
 	for {
-		if as.state != CONTRACT {
-			continue
-		}
-
 		select {
 		// Receive a new tx
 		case e := <-as.contractDataEntrysQueue:
-			as.Logger.Info("Getting new contract data entry")
+			as.Logger.Info("getting new contract data entry")
 			as.handleReceiveNewContractDataEntry(e)
 		// Terminate process
 		case <-as.BaseService.Terminate():
@@ -30,20 +27,20 @@ func (as *Aggregation) contractDataEntryProcessing() {
 	}
 }
 
-func (as *Aggregation) handleReceiveNewContractDataEntry(e models.Contract) {
+func (as *Aggregation) handleReceiveNewContractDataEntry(e models.ContractsData) {
 	_, err := as.db.CreateContractEntry(&e)
 	if err != nil {
 		as.Logger.Error(fmt.Sprintf("Error create contract data entry ledger %d tx %s: %s", e.Ledger, e.TxHash, err.Error()))
 	}
 }
 
-func (tw TransactionWrapper) GetModelsContractDataEntry() []models.Contract {
+func (tw TransactionWrapper) GetModelsContractDataEntry() []models.ContractsData {
 	v3 := tw.Tx.UnsafeMeta.V3
 	if v3 == nil {
 		return nil
 	}
 
-	var entries []models.Contract
+	var entries []models.ContractsData
 	for _, op := range v3.Operations {
 		for _, change := range op.Changes {
 			entry, entryType, found := ContractDataEntry(change)
@@ -73,19 +70,22 @@ func (tw TransactionWrapper) GetModelsContractDataEntry() []models.Contract {
 					if err != nil {
 						continue
 					}
+				} else {
+					accountId = tw.Tx.Envelope.SourceAccount().ToAccountId().Address()
 				}
 
-				entry := models.Contract{
-					Id:         uuid.New().String(),
-					ContractId: contractId,
-					AccountId:  accountId,
-					TxHash:     tw.GetTransactionHash(),
-					Ledger:     tw.GetLedgerSequence(),
-					EntryType:  entryType,
-					KeyXdr:     keyBz,
-					ValueXdr:   valBz,
-					Durability: int32(entry.Durability),
-					IsNewest:   true,
+				entry := models.ContractsData{
+					Id:            uuid.New().String(),
+					ContractId:    contractId,
+					AccountId:     accountId,
+					TxHash:        tw.GetTransactionHash(),
+					Ledger:        tw.GetLedgerSequence(),
+					EntryType:     entryType,
+					KeyXdr:        keyBz,
+					ValueXdr:      valBz,
+					Durability:    int32(entry.Durability),
+					IsNewest:      true,
+					UpdatedLedger: uint32(math.MaxInt32),
 				}
 				entries = append(entries, entry)
 			}

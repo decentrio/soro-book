@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	QueueSize          = 1000
-	DefaultPrepareStep = 64
+	QueueSize          = 2000
+	DefaultPrepareStep = 512
 )
 
 type Aggregation struct {

@@ -146,7 +146,6 @@ func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32, timeS
 }
 
 func getCreatedContractId(op xdr.TransactionEnvelope) (string, bool) {
-
 	switch op.Type {
 	case xdr.EnvelopeTypeEnvelopeTypeTxFeeBump:
 		return "", false
@@ -253,7 +252,7 @@ func (tw TransactionWrapper) GetModelsTransaction() *models.Transaction {
 		ApplicationOrder: tw.GetApplicationOrder(),
 		EnvelopeXdr:      tw.GetEnvelopeXdr(),   // xdr.TransactionEnvelope
 		ResultXdr:        tw.GetResultXdr(),     // xdr.TransactionResultPair
-		ResultMetaXdr:    tw.GetResultMetaXdr(), //xdr.TransactionResultMeta
+		ResultMetaXdr:    tw.GetResultMetaXdr(), // xdr.TransactionResultMeta
 		SourceAddress:    tw.Tx.Envelope.SourceAccount().ToAccountId().Address(),
 		TransactionTime:  tw.Time,
 	}

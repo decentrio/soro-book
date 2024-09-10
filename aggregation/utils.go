@@ -25,7 +25,6 @@ func GetLatestLedger(config backends.CaptiveCoreConfig) (uint32, error) {
 	if config.NetworkPassphrase != "Test SDF Network ; September 2015" {
 		// todo: mainnet
 		return rpcGetLatestLedger("", requestBody)
-
 	}
 
 	url := "https://soroban-testnet.stellar.org"

@@ -22,14 +22,12 @@ const (
 	EventTypeSetAdmin
 )
 
-var (
-	STELLAR_ASSET_CONTRACT_TOPICS = map[xdr.ScSymbol]string{
-		xdr.ScSymbol("transfer"): EventTypeTransfer,
-		xdr.ScSymbol("mint"):     EventTypeMint,
-		xdr.ScSymbol("clawback"): EventTypeClawback,
-		xdr.ScSymbol("burn"):     EventTypeBurn,
-	}
-)
+var STELLAR_ASSET_CONTRACT_TOPICS = map[xdr.ScSymbol]string{
+	xdr.ScSymbol("transfer"): EventTypeTransfer,
+	xdr.ScSymbol("mint"):     EventTypeMint,
+	xdr.ScSymbol("clawback"): EventTypeClawback,
+	xdr.ScSymbol("burn"):     EventTypeBurn,
+}
 
 // aggregation process
 func (as *Aggregation) contractEventsProcessing() {
@@ -89,7 +87,7 @@ func (tx TransactionWrapper) GetContractEvents() ([]models.WasmContractEvent, []
 	var wasmContractevents []models.WasmContractEvent
 	var assetContractEvents []models.StellarAssetContractEvent
 	for _, op := range tx.Ops {
-		var order = uint32(1)
+		order := uint32(1)
 		if op.OperationType() == xdr.OperationTypeInvokeHostFunction {
 			diagnosticEvents, innerErr := tx.Tx.GetDiagnosticEvents()
 			if innerErr != nil {

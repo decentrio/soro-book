@@ -68,8 +68,8 @@ func (as *Aggregation) handleReceiveNewLedger(l xdr.LedgerCloseMeta) {
 	ledger := getLedgerFromCloseMeta(l)
 
 	var txWrappers []TransactionWrapper
-	var transactions = uint32(0)
-	var operations = uint32(0)
+	transactions := uint32(0)
+	operations := uint32(0)
 	// get tx
 	txReader, err := ingest.NewLedgerTransactionReaderFromLedgerCloseMeta(as.Cfg.NetworkPassphrase, l)
 	panicIf(err)

@@ -20,12 +20,15 @@ var (
 	TestnetDefaultConfig []byte
 )
 
-const Pubnet = "pubnet"
-const Testnet = "testnet"
+const (
+	Pubnet  = "pubnet"
+	Testnet = "testnet"
+)
 
 var (
 	// PublicNetworkhistoryArchiveURLs is a list of history archive URLs for stellar 'pubnet'
-	PublicNetworkhistoryArchiveURLs = []string{"https://history.stellar.org/prd/core-live/core_live_001/",
+	PublicNetworkhistoryArchiveURLs = []string{
+		"https://history.stellar.org/prd/core-live/core_live_001/",
 		"https://history.stellar.org/prd/core-live/core_live_002/",
 		"https://history.stellar.org/prd/core-live/core_live_003/",
 		"https://stellar-history-sg-sin.satoshipay.io/",
@@ -40,9 +43,11 @@ var (
 	}
 
 	// TestNetworkhistoryArchiveURLs is a list of history archive URLs for stellar 'testnet'
-	TestNetworkhistoryArchiveURLs = []string{"https://history.stellar.org/prd/core-testnet/core_testnet_001/",
+	TestNetworkhistoryArchiveURLs = []string{
+		"https://history.stellar.org/prd/core-testnet/core_testnet_001/",
 		"https://history.stellar.org/prd/core-testnet/core_testnet_002/",
-		"https://history.stellar.org/prd/core-testnet/core_testnet_003"}
+		"https://history.stellar.org/prd/core-testnet/core_testnet_003",
+	}
 )
 
 const (

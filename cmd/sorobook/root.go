@@ -13,9 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	DefaultCometDir = ".soro-book"
-)
+var DefaultCometDir = ".soro-book"
 
 var rootCmd = &cobra.Command{
 	Use: "sorobook",
@@ -45,7 +43,7 @@ func NewRunNodeCmd() *cobra.Command {
 			signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
 			go func() {
-				for _ = range c {
+				for range c {
 					if m.IsRunning() {
 						if err := m.Stop(); err != nil {
 							fmt.Printf(err.Error())

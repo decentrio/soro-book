@@ -18,6 +18,7 @@ func (ms testService) OnStart() error {
 func (ms testService) OnStop() error {
 	return nil
 }
+
 func TestBaseServiceStart(t *testing.T) {
 	ts := &testService{}
 	ts.BaseService = *service.NewBaseService("TestService", ts)

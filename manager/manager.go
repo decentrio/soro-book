@@ -69,7 +69,7 @@ func (m *Manager) OnStop() error {
 	}
 
 	fmt.Println(m.cfg.AggregationConfigFile())
-	err = config.WriteState(m.cfg.AggregationConfigFile(), bz, 0777)
+	err = config.WriteState(m.cfg.AggregationConfigFile(), bz, 0o777)
 	if err != nil {
 		fmt.Println(err.Error())
 	}

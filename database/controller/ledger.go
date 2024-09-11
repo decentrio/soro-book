@@ -18,7 +18,6 @@ func CreateLedger(h *handlers.DBHandler) gin.HandlerFunc {
 		}
 
 		ledgerHash, err := h.CreateLedger(&dataItem)
-
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return

@@ -19,7 +19,6 @@ func CreateEvent(h *handlers.DBHandler) gin.HandlerFunc {
 		}
 
 		eventId, err := h.CreateWasmContractEvent(&dataItem)
-
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return

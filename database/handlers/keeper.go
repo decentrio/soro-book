@@ -4,10 +4,9 @@ import (
 	"log"
 	"os"
 
-	"gorm.io/gorm"
 	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
-
 
 type DBHandler struct {
 	db *gorm.DB
@@ -28,7 +27,6 @@ func createConnection() *gorm.DB {
 
 	// Open the connection
 	db, err := gorm.Open(postgres.Open(sqlUrl), &gorm.Config{})
-
 	if err != nil {
 		panic(err)
 	}

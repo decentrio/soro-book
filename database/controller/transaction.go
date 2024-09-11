@@ -18,7 +18,6 @@ func CreateTransaction(h *handlers.DBHandler) gin.HandlerFunc {
 		}
 
 		txHash, err := h.CreateTransaction(&dataItem)
-
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return

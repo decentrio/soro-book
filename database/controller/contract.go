@@ -18,7 +18,6 @@ func CreateContractEntry(h *handlers.DBHandler) gin.HandlerFunc {
 		}
 
 		entry, err := h.CreateContractEntry(&dataItem)
-
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return

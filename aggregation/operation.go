@@ -15,15 +15,15 @@ type transactionOperationWrapper struct {
 // ID returns the ID for the operation.
 func (operation *transactionOperationWrapper) ID() int64 {
 	return toid.New(
-		int32(operation.ledgerSequence),
-		int32(operation.txIndex),
-		int32(operation.index+1),
+		int32(operation.ledgerSequence), //nolint
+		int32(operation.txIndex),        //nolint
+		int32(operation.index+1),        //nolint
 	).ToInt64()
 }
 
 // TransactionID returns the id for the transaction related with this operation.
 func (operation *transactionOperationWrapper) TransactionID() int64 {
-	return toid.New(int32(operation.ledgerSequence), int32(operation.txIndex), 0).ToInt64()
+	return toid.New(int32(operation.ledgerSequence), int32(operation.txIndex), 0).ToInt64() //nolint
 }
 
 // SourceAccount returns the operation's source account.

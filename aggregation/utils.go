@@ -32,7 +32,7 @@ func GetLatestLedger(config backends.CaptiveCoreConfig) (uint32, error) {
 }
 
 func rpcGetLatestLedger(url string, requestBody []byte) (uint32, error) {
-	response, err := http.Post(url, "application/json", bytes.NewBuffer(requestBody))
+	response, err := http.Post(url, "application/json", bytes.NewBuffer(requestBody)) //nolint
 	if err != nil {
 		fmt.Println("Error sending POST request:", err)
 		return 0, err

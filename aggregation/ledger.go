@@ -12,8 +12,8 @@ import (
 )
 
 type LedgerWrapper struct {
-	ledger models.Ledger
-	txs    []TransactionWrapper
+	ledger models.Ledger        //nolint
+	txs    []TransactionWrapper //nolint
 }
 
 func (as *Aggregation) getNewLedger() {
@@ -90,7 +90,7 @@ func (as *Aggregation) handleReceiveNewLedger(l xdr.LedgerCloseMeta) {
 		txWrapper := NewTransactionWrapper(tx, ledger.Seq, ledger.LedgerTime)
 		txWrappers = append(txWrappers, txWrapper)
 
-		operations += uint32(len(tx.Envelope.Operations()))
+		operations += uint32(len(tx.Envelope.Operations())) //nolint
 		transactions++
 	}
 
@@ -128,10 +128,8 @@ func (as *Aggregation) prepare() (uint32, uint32) {
 		if err != nil {
 			as.Logger.Errorf("error prepare %s", err.Error())
 			return 0, 0 // if prepare error, we should skip here
-		} else {
-			if to > as.CurrLedgerSeq {
-				as.isSync = true
-			}
+		} else if to > as.CurrLedgerSeq {
+			as.isSync = true
 		}
 		as.StartLedgerSeq += DefaultPrepareStep
 		return from, to

@@ -57,7 +57,7 @@ const (
 	TestNetworkPassphrase = "Test SDF Network ; September 2015"
 )
 
-func newLedgerBackend(ctx context.Context, config config.AggregationConfig, log *log.Entry) (ledgerbackend.LedgerBackend, ledgerbackend.CaptiveCoreConfig) {
+func newLedgerBackend(_ context.Context, config config.AggregationConfig, log *log.Entry) (ledgerbackend.LedgerBackend, ledgerbackend.CaptiveCoreConfig) {
 	// generate CaptiveCoreConfig
 	var (
 		networkPassphrase  string

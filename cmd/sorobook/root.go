@@ -17,7 +17,7 @@ var DefaultCometDir = ".soro-book"
 
 var rootCmd = &cobra.Command{
 	Use: "sorobook",
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) (err error) {
+	PersistentPreRunE: func(_ *cobra.Command, _ []string) (err error) {
 		return nil
 	},
 }
@@ -28,7 +28,7 @@ func NewRunNodeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "start",
 		Aliases: []string{"node", "run"},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			config, err := ParseConfig(cmd)
 			if err != nil {
 				return err
@@ -46,7 +46,7 @@ func NewRunNodeCmd() *cobra.Command {
 				for range c {
 					if m.IsRunning() {
 						if err := m.Stop(); err != nil {
-							fmt.Printf(err.Error())
+							fmt.Printf(err.Error()) //nolint
 						}
 					}
 					os.Exit(0)

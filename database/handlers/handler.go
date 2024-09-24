@@ -27,7 +27,7 @@ func (h *DBHandler) CreateContractCreatedTransaction(data *models.ContractsCode)
 		return "", err
 	}
 
-	return data.ContractId, nil
+	return data.ContractID, nil
 }
 
 func (h *DBHandler) CreateContractInvokedTransaction(data *models.InvokeTransaction) (string, error) {
@@ -43,7 +43,7 @@ func (h *DBHandler) CreateWasmContractEvent(data *models.WasmContractEvent) (str
 		return "", err
 	}
 
-	return data.Id, nil
+	return data.ID, nil
 }
 
 func (h *DBHandler) CreateAssetContractTransferEvent(data *models.AssetContractTransferEvent) (string, error) {
@@ -51,7 +51,7 @@ func (h *DBHandler) CreateAssetContractTransferEvent(data *models.AssetContractT
 		return "", err
 	}
 
-	return data.Id, nil
+	return data.ID, nil
 }
 
 func (h *DBHandler) CreateAssetContractMintEvent(data *models.AssetContractMintEvent) (string, error) {
@@ -59,7 +59,7 @@ func (h *DBHandler) CreateAssetContractMintEvent(data *models.AssetContractMintE
 		return "", err
 	}
 
-	return data.Id, nil
+	return data.ID, nil
 }
 
 func (h *DBHandler) CreateAssetContractBurnEvent(data *models.AssetContractBurnEvent) (string, error) {
@@ -67,7 +67,7 @@ func (h *DBHandler) CreateAssetContractBurnEvent(data *models.AssetContractBurnE
 		return "", err
 	}
 
-	return data.Id, nil
+	return data.ID, nil
 }
 
 func (h *DBHandler) CreateAssetContractClawbackEvent(data *models.AssetContractClawbackEvent) (string, error) {
@@ -75,7 +75,7 @@ func (h *DBHandler) CreateAssetContractClawbackEvent(data *models.AssetContractC
 		return "", err
 	}
 
-	return data.Id, nil
+	return data.ID, nil
 }
 
 func (h *DBHandler) CreateContractEntry(data *models.ContractsData) (string, error) {
@@ -83,7 +83,7 @@ func (h *DBHandler) CreateContractEntry(data *models.ContractsData) (string, err
 	case "updated":
 		var oldData models.ContractsData
 		if err := h.db.Table("contracts_data").
-			Where("contract_id = ?", data.ContractId).
+			Where("contract_id = ?", data.ContractID).
 			Where("is_newest = ?", true).
 			Where("key_xdr = ?", data.KeyXdr).
 			First(&oldData).Error; err == nil {
@@ -95,11 +95,10 @@ func (h *DBHandler) CreateContractEntry(data *models.ContractsData) (string, err
 			}
 		}
 
-		break
 	case "removed":
 		var oldData models.ContractsData
 		if err := h.db.Table("contracts_data").
-			Where("contract_id = ?", data.ContractId).
+			Where("contract_id = ?", data.ContractID).
 			Where("is_newest = ?", true).
 			Where("key_xdr = ?", data.KeyXdr).
 			First(&oldData).Error; err == nil {
@@ -110,13 +109,11 @@ func (h *DBHandler) CreateContractEntry(data *models.ContractsData) (string, err
 				return "ERROR: update old contract data entry", err
 			}
 		}
-
-		break
 	}
 
 	if err := h.db.Create(data).Error; err != nil {
 		return "ERROR: create contract data entry", err
 	}
 
-	return fmt.Sprintf("%s: %s-%s", data.EntryType, data.ContractId, string(data.KeyXdr)), nil
+	return fmt.Sprintf("%s: %s-%s", data.EntryType, data.ContractID, string(data.KeyXdr)), nil
 }

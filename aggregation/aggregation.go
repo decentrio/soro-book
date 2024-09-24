@@ -47,12 +47,12 @@ type Aggregation struct {
 	db *db.DBHandler
 }
 
-// AggregationOption sets an optional parameter on the State.
-type AggregationOption func(*Aggregation)
+// AgrOption sets an optional parameter on the State.
+type AgrOption func(*Aggregation)
 
 func NewAggregation(
 	cfg *config.AggregationConfig,
-	options ...AggregationOption,
+	options ...AgrOption,
 ) *Aggregation {
 	as := &Aggregation{
 		ledgerQueue:              make(chan xdr.LedgerCloseMeta, QueueSize),

@@ -19,14 +19,14 @@ func NewDBHandler() *DBHandler {
 
 // create connection with postgres db
 func createConnection() *gorm.DB {
-	sqlUrl, ok := os.LookupEnv("POSTGRES_URL")
+	sqlURL, ok := os.LookupEnv("POSTGRES_URL")
 
 	if !ok {
 		log.Fatalf("Error get POSTGRES_URL")
 	}
 
 	// Open the connection
-	db, err := gorm.Open(postgres.Open(sqlUrl), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(sqlURL), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}

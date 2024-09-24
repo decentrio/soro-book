@@ -77,7 +77,7 @@ func (as *Aggregation) handleReceiveNewTransaction(tw TransactionWrapper) {
 	}
 }
 
-func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32, timeStamp uint64) ([]models.InvokeTransaction, []models.ContractsCode, error) {
+func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32, timeStamp uint64) ([]models.InvokeTransaction, []models.ContractsCode, error) { //nolint
 	var invokeFuncTxs []models.InvokeTransaction
 	var createdContracts []models.ContractsCode
 
@@ -103,7 +103,7 @@ func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32, timeS
 
 				var invokeFuncTx models.InvokeTransaction
 				invokeFuncTx.Hash = tx.Result.TransactionHash.HexString()
-				invokeFuncTx.ContractId = *ca.ContractId
+				invokeFuncTx.ContractID = *ca.ContractId
 				invokeFuncTx.FunctionType = "invoke_host_function"
 				invokeFuncTx.FunctionName = fn
 				invokeFuncTx.Args = args
@@ -117,18 +117,18 @@ func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32, timeS
 				var createContractTx models.ContractsCode
 				creator := tx.Envelope.SourceAccount().ToAccountId().Address()
 
-				contractId, found := getCreatedContractId(tx.Envelope)
+				contractID, found := getCreatedContractID(tx.Envelope)
 				if !found {
 					continue
 				}
 
 				var contractCode string
 				if ccop.Executable.WasmHash != nil {
-					contractCode = (*ccop.Executable.WasmHash).HexString()
+					contractCode = ccop.Executable.WasmHash.HexString()
 				}
 
 				createContractTx.CreatorAddress = creator
-				createContractTx.ContractId = contractId
+				createContractTx.ContractID = contractID
 				createContractTx.ContractCode = contractCode
 				createContractTx.CreatedLedger = ledgerSeq
 
@@ -145,7 +145,7 @@ func isInvokeHostFunctionTx(tx ingest.LedgerTransaction, ledgerSeq uint32, timeS
 	return invokeFuncTxs, createdContracts, nil
 }
 
-func getCreatedContractId(op xdr.TransactionEnvelope) (string, bool) {
+func getCreatedContractID(op xdr.TransactionEnvelope) (string, bool) {
 	switch op.Type {
 	case xdr.EnvelopeTypeEnvelopeTypeTxFeeBump:
 		return "", false
@@ -158,11 +158,11 @@ func getCreatedContractId(op xdr.TransactionEnvelope) (string, bool) {
 		for _, fp := range footprints {
 			if fp.Type == xdr.LedgerEntryTypeContractData {
 				contractData := fp.MustContractData()
-				contractId, _ := converter.ConvertScAddress(contractData.Contract)
-				if contractId.ContractId == nil {
+				contractID, _ := converter.ConvertScAddress(contractData.Contract)
+				if contractID.ContractId == nil {
 					return "", false
 				}
-				return *contractId.ContractId, true
+				return *contractID.ContractId, true
 			}
 		}
 
@@ -185,7 +185,7 @@ func NewTransactionWrapper(tx ingest.LedgerTransaction, ledgerSeq uint32, proces
 	var ops []transactionOperationWrapper
 	for opi, op := range tx.Envelope.Operations() {
 		operation := transactionOperationWrapper{
-			index:          uint32(opi),
+			index:          uint32(opi), //nolint
 			txIndex:        tx.Index,
 			operation:      op,
 			ledgerSequence: ledgerSeq,

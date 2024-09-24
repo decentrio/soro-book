@@ -18,17 +18,17 @@ func CreateEvent(h *handlers.DBHandler) gin.HandlerFunc {
 			return
 		}
 
-		eventId, err := h.CreateWasmContractEvent(&dataItem)
+		eventID, err := h.CreateWasmContractEvent(&dataItem)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"data": eventId})
+		c.JSON(http.StatusOK, gin.H{"data": eventID})
 	}
 }
 
-func HelloEvent(h *handlers.DBHandler) gin.HandlerFunc {
+func HelloEvent(_ *handlers.DBHandler) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"hello": "ok"})
 	}

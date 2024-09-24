@@ -55,29 +55,29 @@ func (tw TransactionWrapper) GetModelsContractDataEntry() []models.ContractsData
 				if entryType != "removed" {
 					valBz, _ = entry.Val.MarshalBinary()
 				}
-				var contractId string
+				var contractID string
 				var err error
 				if entry.Contract.ContractId != nil {
-					contractId, err = strkey.Encode(strkey.VersionByteContract, entry.Contract.ContractId[:])
+					contractID, err = strkey.Encode(strkey.VersionByteContract, entry.Contract.ContractId[:])
 					if err != nil {
 						continue
 					}
 				}
 
-				var accountId string
+				var accountID string
 				if entry.Contract.AccountId != nil {
-					accountId, err = entry.Contract.AccountId.GetAddress()
+					accountID, err = entry.Contract.AccountId.GetAddress()
 					if err != nil {
 						continue
 					}
 				} else {
-					accountId = tw.Tx.Envelope.SourceAccount().ToAccountId().Address()
+					accountID = tw.Tx.Envelope.SourceAccount().ToAccountId().Address()
 				}
 
 				entry := models.ContractsData{
-					Id:            uuid.New().String(),
-					ContractId:    contractId,
-					AccountId:     accountId,
+					ID:            uuid.New().String(),
+					ContractID:    contractID,
+					AccountID:     accountID,
 					TxHash:        tw.GetTransactionHash(),
 					Ledger:        tw.GetLedgerSequence(),
 					EntryType:     entryType,

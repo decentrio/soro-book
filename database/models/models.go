@@ -30,14 +30,14 @@ type Transaction struct {
 
 type ContractsCode struct {
 	CreatorAddress string `json:"creator_address,omitempty"`
-	ContractId     string `json:"contract_id,omitempty"`
+	ContractID     string `json:"contract_id,omitempty"`
 	ContractCode   string `json:"contract_code,omitempty"`
 	CreatedLedger  uint32 `json:"created_ledger,omitempty"`
 }
 
 type InvokeTransaction struct {
 	Hash         string `json:"hash,omitempty"`
-	ContractId   string `json:"contract_id,omitempty"`
+	ContractID   string `json:"contract_id,omitempty"`
 	FunctionType string `json:"function_type,omitempty"`
 	FunctionName string `json:"function_name,omitempty"`
 	Args         []byte `json:"args,omitempty"`
@@ -45,14 +45,14 @@ type InvokeTransaction struct {
 }
 
 type ScAddress struct {
-	AccountId  *string `json:"account_id,omitempty"`
-	ContractId *string `json:"contract_id,omitempty"`
+	AccountID  *string `json:"account_id,omitempty"`
+	ContractID *string `json:"contract_id,omitempty"`
 }
 
 type ContractsData struct {
-	Id            string `json:"id,omitempty"`
-	ContractId    string `json:"contract_id,omitempty"`
-	AccountId     string `json:"account_id,omitempty"`
+	ID            string `json:"id,omitempty"`
+	ContractID    string `json:"contract_id,omitempty"`
+	AccountID     string `json:"account_id,omitempty"`
 	TxHash        string `json:"tx_hash,omitempty"`
 	Ledger        uint32 `json:"ledger,omitempty"`
 	EntryType     string `json:"entry_type,omitempty"`
@@ -68,8 +68,8 @@ type Int128Parts struct {
 	Lo uint64 `json:"lo,omitempty"`
 }
 type WasmContractEvent struct {
-	Id           string `json:"id,omitempty"`
-	ContractId   string `json:"contract_id,omitempty"`
+	ID           string `json:"id,omitempty"`
+	ContractID   string `json:"contract_id,omitempty"`
 	TxHash       string `json:"tx_hash,omitempty"`
 	EventBodyXdr []byte `json:"event_body_xdr,omitempty"`
 }
@@ -88,8 +88,8 @@ var (
 )
 
 type AssetContractTransferEvent struct {
-	Id         string `json:"id,omitempty"`
-	ContractId string `json:"contract_id,omitempty"`
+	ID         string `json:"id,omitempty"`
+	ContractID string `json:"contract_id,omitempty"`
 	TxHash     string `json:"tx_hash,omitempty"`
 	FromAddr   string `json:"from_addr,omitempty"`
 	ToAddr     string `json:"to_addr,omitempty"`
@@ -121,8 +121,8 @@ func (a *AssetContractTransferEvent) Parse(topics xdr.ScVec, value xdr.ScVal) er
 }
 
 type AssetContractMintEvent struct {
-	Id         string `json:"id,omitempty"`
-	ContractId string `json:"contract_id,omitempty"`
+	ID         string `json:"id,omitempty"`
+	ContractID string `json:"contract_id,omitempty"`
 	TxHash     string `json:"tx_hash,omitempty"`
 	AdminAddr  string `json:"admin_addr,omitempty"`
 	ToAddr     string `json:"to_addr,omitempty"`
@@ -154,8 +154,8 @@ func (a *AssetContractMintEvent) Parse(topics xdr.ScVec, value xdr.ScVal) error 
 }
 
 type AssetContractBurnEvent struct {
-	Id         string `json:"id,omitempty"`
-	ContractId string `json:"contract_id,omitempty"`
+	ID         string `json:"id,omitempty"`
+	ContractID string `json:"contract_id,omitempty"`
 	TxHash     string `json:"tx_hash,omitempty"`
 	FromAddr   string `json:"from_addr,omitempty"`
 	AmountHi   int64  `json:"amount_hi,omitempty"`
@@ -204,8 +204,8 @@ func (event *AssetContractBurnEvent) Parse(topics xdr.ScVec, value xdr.ScVal) er
 }
 
 type AssetContractClawbackEvent struct {
-	Id         string `json:"id,omitempty"`
-	ContractId string `json:"contract_id,omitempty"`
+	ID         string `json:"id,omitempty"`
+	ContractID string `json:"contract_id,omitempty"`
 	TxHash     string `json:"tx_hash,omitempty"`
 	AdminAddr  string `json:"admin_addr,omitempty"`
 	FromAddr   string `json:"from_addr,omitempty"`
@@ -251,32 +251,32 @@ func parseBalanceChangeEvent(topics xdr.ScVec, value xdr.ScVal) (
 	err = ErrNotBalanceChangeEvent
 	if len(topics) != 4 {
 		err = fmt.Errorf("")
-		return
+		return first, second, amountHi, amountlo, err
 	}
 
 	firstSc, ok := topics[1].GetAddress()
 	if !ok {
-		return
+		return first, second, amountHi, amountlo, err
 	}
 	first, err = firstSc.String()
 	if err != nil {
 		err = errors.Wrap(err, ErrNotBalanceChangeEvent.Error())
-		return
+		return first, second, amountHi, amountlo, err
 	}
 
 	secondSc, ok := topics[2].GetAddress()
 	if !ok {
-		return
+		return first, second, amountHi, amountlo, err
 	}
 	second, err = secondSc.String()
 	if err != nil {
 		err = errors.Wrap(err, ErrNotBalanceChangeEvent.Error())
-		return
+		return first, second, amountHi, amountlo, err
 	}
 
 	xdrAmount, ok := value.GetI128()
 	if !ok {
-		return
+		return first, second, amountHi, amountlo, err
 	}
 
 	amount := XdrInt128PartsConvert(xdrAmount)

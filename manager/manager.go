@@ -27,13 +27,13 @@ const (
 )
 
 // StateOption sets an optional parameter on the State.
-type ManagerOption func(*Manager)
+type MgrOption func(*Manager)
 
 // NewBaseService creates a new manager.
 func NewManager(
 	cfg *config.ManagerConfig,
 	as *aggregation.Aggregation,
-	options ...ManagerOption,
+	options ...MgrOption,
 ) *Manager {
 	m := &Manager{
 		cfg: cfg,
@@ -52,13 +52,17 @@ func NewManager(
 
 func (m *Manager) OnStart() error {
 	m.Logger.Info("Start")
-	m.as.Start()
+	if err := m.as.Start(); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (m *Manager) OnStop() error {
 	m.Logger.Info("Stop")
-	m.as.Stop()
+	if err := m.as.Stop(); err != nil {
+		return err
+	}
 
 	asConfig := *m.as.ACfg
 	asConfig.StartLedgerHeight = m.as.StartLedgerSeq - PaddingLedger

@@ -80,7 +80,12 @@ func WriteState(path string, content []byte, mode os.FileMode) error {
 		if err := os.MkdirAll(filepath.Dir(path), mode); err != nil {
 			return err
 		}
-		os.Create(path)
+
+		_, err := os.Create(path)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	return os.WriteFile(path, content, mode)

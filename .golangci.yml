@@ -43,3 +43,11 @@ linters-settings:
     allow-leading-space: true
     require-explanation: false
     require-specific: false
+
+  depguard:
+    rules:
+      main:
+        list-mode: lax
+        allow:
+          - github.com/pkg/errors
+        deny:
